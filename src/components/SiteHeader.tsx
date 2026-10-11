@@ -1,0 +1,66 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { ClosetMark } from './Logo';
+import { NatureToggle } from './NatureToggle';
+import { useNature } from './NatureProvider';
+
+// Nature mode names things like a government; monochrome mode uses plain words.
+const NAV = [
+  { href: '/gazette', nature: 'Gazette', plain: 'Blog', full: 'Gazette of Closet Republic' },
+  { href: '/constitution', nature: 'Constitution', plain: 'Constitution', full: 'Constitution of CR' },
+  { href: '/funding', nature: 'Ministry of Finance', plain: 'Funding', full: 'Ministry of Finance' },
+  { href: '/lawmakers', nature: 'Lawmakers', plain: 'Writers', full: 'Members of GCR' },
+  { href: '/passport', nature: 'Passport', plain: 'Passport', full: 'Passport of CR' },
+];
+
+export function SiteHeader() {
+  const { on } = useNature();
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  useEffect(() => setOpen(false), [pathname]);
+
+  return (
+    <header className="site-header">
+      <a href="#main" className="skip-link">
+        Skip to content
+      </a>
+      <div className="site-header__inner">
+        <Link href="/" className="brand" aria-label="Closet Republic, home">
+          <ClosetMark size={40} />
+          <span className="brand__name">
+            Closet
+            <br />
+            Republic
+          </span>
+        </Link>
+        <button
+          type="button"
+          className="nav-button"
+          aria-expanded={open}
+          aria-controls="site-nav"
+          onClick={() => setOpen((o) => !o)}
+        >
+          Menu
+        </button>
+        <nav id="site-nav" aria-label="Main" className="site-nav" data-open={open}>
+          <ul>
+            {NAV.map((item) => {
+              const current = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              return (
+                <li key={item.href}>
+                  <Link href={item.href} aria-current={current ? 'page' : undefined} title={item.full}>
+                    {on ? item.nature : item.plain}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+        <NatureToggle />
+      </div>
+    </header>
+  );
+}

@@ -1,0 +1,540 @@
+{
+  "head": [
+    {
+      "id": "afro",
+      "label": "Afro"
+    },
+    {
+      "id": "bangs-2",
+      "label": "Bangs 2"
+    },
+    {
+      "id": "bangs",
+      "label": "Bangs"
+    },
+    {
+      "id": "bantu-knots",
+      "label": "Bantu Knots"
+    },
+    {
+      "id": "bear",
+      "label": "Bear"
+    },
+    {
+      "id": "bun-2",
+      "label": "Bun 2"
+    },
+    {
+      "id": "bun",
+      "label": "Bun"
+    },
+    {
+      "id": "buns",
+      "label": "Buns"
+    },
+    {
+      "id": "cornrows-2",
+      "label": "Cornrows 2"
+    },
+    {
+      "id": "cornrows",
+      "label": "Cornrows"
+    },
+    {
+      "id": "flat-top-long",
+      "label": "Flat Top Long"
+    },
+    {
+      "id": "flat-top",
+      "label": "Flat Top"
+    },
+    {
+      "id": "gray-bun",
+      "label": "Gray Bun"
+    },
+    {
+      "id": "gray-medium",
+      "label": "Gray Medium"
+    },
+    {
+      "id": "gray-short",
+      "label": "Gray Short"
+    },
+    {
+      "id": "hijab",
+      "label": "Hijab"
+    },
+    {
+      "id": "long-afro",
+      "label": "Long Afro"
+    },
+    {
+      "id": "long-bangs",
+      "label": "Long Bangs"
+    },
+    {
+      "id": "long-curly",
+      "label": "Long Curly"
+    },
+    {
+      "id": "long",
+      "label": "Long"
+    },
+    {
+      "id": "medium-1",
+      "label": "Medium 1"
+    },
+    {
+      "id": "medium-2",
+      "label": "Medium 2"
+    },
+    {
+      "id": "medium-3",
+      "label": "Medium 3"
+    },
+    {
+      "id": "medium-bangs-2",
+      "label": "Medium Bangs 2"
+    },
+    {
+      "id": "medium-bangs-3",
+      "label": "Medium Bangs 3"
+    },
+    {
+      "id": "medium-bangs",
+      "label": "Medium Bangs"
+    },
+    {
+      "id": "medium-straight",
+      "label": "Medium Straight"
+    },
+    {
+      "id": "mohawk-2",
+      "label": "Mohawk 2"
+    },
+    {
+      "id": "mohawk",
+      "label": "Mohawk"
+    },
+    {
+      "id": "no-hair-1",
+      "label": "No Hair 1"
+    },
+    {
+      "id": "no-hair-2",
+      "label": "No Hair 2"
+    },
+    {
+      "id": "no-hair-3",
+      "label": "No Hair 3"
+    },
+    {
+      "id": "pomp",
+      "label": "Pomp"
+    },
+    {
+      "id": "shaved-1",
+      "label": "Shaved 1"
+    },
+    {
+      "id": "shaved-2",
+      "label": "Shaved 2"
+    },
+    {
+      "id": "shaved-3",
+      "label": "Shaved 3"
+    },
+    {
+      "id": "short-1",
+      "label": "Short 1"
+    },
+    {
+      "id": "short-2",
+      "label": "Short 2"
+    },
+    {
+      "id": "short-3",
+      "label": "Short 3"
+    },
+    {
+      "id": "short-4",
+      "label": "Short 4"
+    },
+    {
+      "id": "short-5",
+      "label": "Short 5"
+    },
+    {
+      "id": "turban",
+      "label": "Turban"
+    },
+    {
+      "id": "twists-2",
+      "label": "Twists 2"
+    },
+    {
+      "id": "twists",
+      "label": "Twists"
+    },
+    {
+      "id": "hat-beanie",
+      "label": "Hat beanie"
+    },
+    {
+      "id": "hat-hip",
+      "label": "Hat hip"
+    }
+  ],
+  "face": [
+    {
+      "id": "angry-with-fang",
+      "label": "Angry with Fang"
+    },
+    {
+      "id": "awe",
+      "label": "Awe"
+    },
+    {
+      "id": "blank",
+      "label": "Blank"
+    },
+    {
+      "id": "calm",
+      "label": "Calm"
+    },
+    {
+      "id": "cheeky",
+      "label": "Cheeky"
+    },
+    {
+      "id": "concerned-fear",
+      "label": "Concerned Fear"
+    },
+    {
+      "id": "concerned",
+      "label": "Concerned"
+    },
+    {
+      "id": "contempt",
+      "label": "Contempt"
+    },
+    {
+      "id": "cute",
+      "label": "Cute"
+    },
+    {
+      "id": "cyclops",
+      "label": "Cyclops"
+    },
+    {
+      "id": "driven",
+      "label": "Driven"
+    },
+    {
+      "id": "eating-happy",
+      "label": "Eating Happy"
+    },
+    {
+      "id": "explaining",
+      "label": "Explaining"
+    },
+    {
+      "id": "eyes-closed",
+      "label": "Eyes Closed"
+    },
+    {
+      "id": "fear",
+      "label": "Fear"
+    },
+    {
+      "id": "hectic",
+      "label": "Hectic"
+    },
+    {
+      "id": "loving-grin-1",
+      "label": "Loving Grin 1"
+    },
+    {
+      "id": "loving-grin-2",
+      "label": "Loving Grin 2"
+    },
+    {
+      "id": "monster",
+      "label": "Monster"
+    },
+    {
+      "id": "old",
+      "label": "Old"
+    },
+    {
+      "id": "rage",
+      "label": "Rage"
+    },
+    {
+      "id": "serious",
+      "label": "Serious"
+    },
+    {
+      "id": "smile-big",
+      "label": "Smile Big"
+    },
+    {
+      "id": "smile-lol",
+      "label": "Smile LOL"
+    },
+    {
+      "id": "smile-teeth-gap",
+      "label": "Smile Teeth Gap"
+    },
+    {
+      "id": "smile",
+      "label": "Smile"
+    },
+    {
+      "id": "solemn",
+      "label": "Solemn"
+    },
+    {
+      "id": "suspicious",
+      "label": "Suspicious"
+    },
+    {
+      "id": "tired",
+      "label": "Tired"
+    },
+    {
+      "id": "very-angry",
+      "label": "Very Angry"
+    }
+  ],
+  "facial-hair": [
+    {
+      "id": "none",
+      "label": "None"
+    },
+    {
+      "id": "chin",
+      "label": "Chin"
+    },
+    {
+      "id": "full-2",
+      "label": "Full 2"
+    },
+    {
+      "id": "full-3",
+      "label": "Full 3"
+    },
+    {
+      "id": "full-4",
+      "label": "Full 4"
+    },
+    {
+      "id": "full",
+      "label": "Full"
+    },
+    {
+      "id": "goatee-1",
+      "label": "Goatee 1"
+    },
+    {
+      "id": "goatee-2",
+      "label": "Goatee 2"
+    },
+    {
+      "id": "moustache-1",
+      "label": "Moustache 1"
+    },
+    {
+      "id": "moustache-2",
+      "label": "Moustache 2"
+    },
+    {
+      "id": "moustache-3",
+      "label": "Moustache 3"
+    },
+    {
+      "id": "moustache-4",
+      "label": "Moustache 4"
+    },
+    {
+      "id": "moustache-5",
+      "label": "Moustache 5"
+    },
+    {
+      "id": "moustache-6",
+      "label": "Moustache 6"
+    },
+    {
+      "id": "moustache-7",
+      "label": "Moustache 7"
+    },
+    {
+      "id": "moustache-8",
+      "label": "Moustache 8"
+    },
+    {
+      "id": "moustache-9",
+      "label": "Moustache 9"
+    }
+  ],
+  "accessories": [
+    {
+      "id": "none",
+      "label": "None"
+    },
+    {
+      "id": "eyepatch",
+      "label": "Eyepatch"
+    },
+    {
+      "id": "glasses-2",
+      "label": "Glasses 2"
+    },
+    {
+      "id": "glasses-3",
+      "label": "Glasses 3"
+    },
+    {
+      "id": "glasses-4",
+      "label": "Glasses 4"
+    },
+    {
+      "id": "glasses-5",
+      "label": "Glasses 5"
+    },
+    {
+      "id": "glasses",
+      "label": "Glasses"
+    },
+    {
+      "id": "sunglasses-2",
+      "label": "Sunglasses 2"
+    },
+    {
+      "id": "sunglasses",
+      "label": "Sunglasses"
+    }
+  ],
+  "body": [
+    {
+      "id": "blazer-black-tee",
+      "label": "Blazer Black Tee"
+    },
+    {
+      "id": "button-shirt-1",
+      "label": "Button Shirt 1"
+    },
+    {
+      "id": "button-shirt-2",
+      "label": "Button Shirt 2"
+    },
+    {
+      "id": "coffee",
+      "label": "Coffee"
+    },
+    {
+      "id": "device",
+      "label": "Device"
+    },
+    {
+      "id": "dress",
+      "label": "Dress"
+    },
+    {
+      "id": "explaining",
+      "label": "Explaining"
+    },
+    {
+      "id": "fur-jacket",
+      "label": "Fur Jacket"
+    },
+    {
+      "id": "gaming",
+      "label": "Gaming"
+    },
+    {
+      "id": "gym-shirt",
+      "label": "Gym Shirt"
+    },
+    {
+      "id": "hoodie",
+      "label": "Hoodie"
+    },
+    {
+      "id": "killer",
+      "label": "Killer"
+    },
+    {
+      "id": "macbook",
+      "label": "Macbook"
+    },
+    {
+      "id": "paper",
+      "label": "Paper"
+    },
+    {
+      "id": "pointing-up",
+      "label": "Pointing Up"
+    },
+    {
+      "id": "polka-dot-jacket",
+      "label": "Polka Dot Jacket"
+    },
+    {
+      "id": "polo-and-sweater",
+      "label": "Polo and Sweater"
+    },
+    {
+      "id": "shirt-and-coat",
+      "label": "Shirt and Coat"
+    },
+    {
+      "id": "sporty-tee",
+      "label": "Sporty Tee"
+    },
+    {
+      "id": "striped-pocket-tee",
+      "label": "Striped Pocket Tee"
+    },
+    {
+      "id": "striped-tee",
+      "label": "Striped Tee"
+    },
+    {
+      "id": "sweater-dots",
+      "label": "Sweater Dots"
+    },
+    {
+      "id": "sweater",
+      "label": "Sweater"
+    },
+    {
+      "id": "tee-1",
+      "label": "Tee 1"
+    },
+    {
+      "id": "tee-2",
+      "label": "Tee 2"
+    },
+    {
+      "id": "tee-arms-crossed",
+      "label": "Tee Arms Crossed"
+    },
+    {
+      "id": "tee-selena",
+      "label": "Tee Selena"
+    },
+    {
+      "id": "thunder-t-shirt",
+      "label": "Thunder T Shirt"
+    },
+    {
+      "id": "turtleneck",
+      "label": "Turtleneck"
+    },
+    {
+      "id": "whatever",
+      "label": "Whatever"
+    }
+  ]
+}
