@@ -19,8 +19,15 @@ Get the Content API key in Ghost Admin → Settings → Integrations → Add cus
 | --- | --- |
 | `GHOST_URL` | Ghost backend, defaults to `https://management-of.closetrepublic.com` |
 | `GHOST_CONTENT_API_KEY` | Ghost Content API key (required) |
-| `NEXT_PUBLIC_GOFUNDME_URL` | GoFundMe campaign link, used by the donate / "Pay your unfair tax" button and the embedded GoFundMe widget |
-| `GOFUNDME_GOAL`, `GOFUNDME_RAISED`, `GOFUNDME_CURRENCY` | Numbers for the collection widgets. GoFundMe has no public API, so update these by hand |
+| `NEXT_PUBLIC_DONATE_URL`, `NEXT_PUBLIC_DONATE_LABEL` | Your Buy Me a Coffee page and the button text (default "Buy me a compute") |
+| `NEXT_PUBLIC_UPI_ID`, `NEXT_PUBLIC_UPI_NAME` | Optional UPI ID: adds a "Pay by UPI" button that opens the visitor's UPI app |
+| `BMC_WEBHOOK_SECRET` | Secret of the Buy Me a Coffee webhook (required for tracking donations) |
+| `BMC_EXCHANGE_RATES` | Converts Buy Me a Coffee payments into `FUNDING_CURRENCY`, e.g. `USD=84,EUR=91` |
+| `BMC_ACCEPT_TEST_EVENTS` | `true` to record Buy Me a Coffee test events while setting up |
+| `ADMIN_TOKEN` | Secret for `/admin` and the admin API (16+ characters) |
+| `DATABASE_PATH` | SQLite file for the treasury, default `./data/closet-republic.db` |
+| `FUNDING_CURRENCY`, `FUNDING_TIMEZONE` | Default `INR` and `Asia/Kolkata` (when the month rolls over) |
+| `FUNDING_GOAL`, `LEGAL_FUND_GOAL` | Starting goals; after that, set them on `/admin` |
 | `SITE_URL` | Public site URL for social previews, defaults to `https://closetrepublic.com` |
 
 ## Nature mode
@@ -48,7 +55,7 @@ Nature editions are separate Ghost posts or pages whose slug is the original slu
 | `/constitution` | Post/page `constitution` as the introduction; lists sections 1…N where N is the number in `constitution-details` |
 | `/constitution/1`, `/constitution/1/2` | `constitution-1`, `constitution-1-2`; sub-sections counted by `constitution-1-details` |
 | `/constitution/details`, `/constitution/1/details` | `constitution-details`, `constitution-1-details` (the first number in the text is the section count) |
-| `/funding` | Budget from the page/post `finance` (nature: `finance-nature`), GoFundMe widgets, every Ghost author as seeking funding |
+| `/funding` | Budget text from the page/post `finance` (nature: `finance-nature`), donate and UPI buttons, this month's budget and the legal fund (from the treasury), every Ghost author as seeking funding |
 | `/lawmakers`, `/lawmakers/<author-slug>` | Ghost authors: name, photo, bio, location, website and social links, and their posts |
 | `/passport` | Passport generator (no Ghost content) |
 
@@ -69,3 +76,47 @@ The standard PDF fonts only cover Latin characters; anything else (for example D
 
 - `public/brand`: CR logos. `public/art`: Transhumans illustrations by Pablo Stanley (CC0), shown inverted to white on black.
 - `public/peeps`: Open Peeps parts by Pablo Stanley (CC0) for the avatar builder. Re-import them with `node scripts/import-peeps.mjs "<path to Flat Assets/Separate Atoms>"`.
+
+## Treasury: monthly budget and legal fund
+
+Money is tracked in a SQLite ledger (`src/lib/funds.ts`). Every change is an entry, so the history is never overwritten.
+
+- **Monthly budget:** only this month's entries count, so it starts again from zero on the 1st of every month (`FUNDING_TIMEZONE`). Earlier months stay in the history.
+- **Legal fund:** a running balance that never resets.
+- **Buy Me a Coffee:** each payment (donation, membership, extra) adds to the fund chosen on `/admin` (monthly budget by default); refunds take it back out. Retries are ignored. Payments in other currencies are converted with `BMC_EXCHANGE_RATES`.
+
+### Admin page
+
+`/admin` (not linked anywhere): sign in with `ADMIN_TOKEN`. Add credits or deductions to either fund, set the legal fund to an exact balance, change goals and where Buy Me a Coffee money goes, browse and delete ledger entries, and see past months.
+
+### API
+
+Public:
+
+- `GET /api/funds`: this month's budget (`raised`, `goal`), legal fund (`balance`, `goal`), currency.
+
+Admin (send `Authorization: Bearer <ADMIN_TOKEN>`; amounts in major units, e.g. rupees):
+
+| Call | What it does |
+| --- | --- |
+| `GET /api/admin/settings` | Settings, current totals and the last 12 months of the budget |
+| `PUT /api/admin/settings` `{ budgetGoal?, legalGoal?, donationFund?: "budget" \| "legal" }` | Change goals or where Buy Me a Coffee money goes |
+| `GET /api/admin/ledger?fund=legal&month=2026-10` | List entries |
+| `POST /api/admin/ledger` `{ fund, kind: "credit" \| "deduction" \| "adjustment", amount, note? }` | Add money, record a deduction, or a signed correction |
+| `DELETE /api/admin/ledger/<id>` | Remove a mistaken entry |
+| `GET /api/admin/legal-balance` | Legal fund balance |
+| `PUT /api/admin/legal-balance` `{ balance, note? }` | Set the legal fund to an exact amount (records the difference) |
+
+```bash
+curl -X POST https://closetrepublic.com/api/admin/ledger \
+  -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" \
+  -d '{"fund":"legal","kind":"deduction","amount":3500,"note":"Court filing fee"}'
+```
+
+## Running on your server with pm2
+
+1. `npm install` (builds the SQLite driver for that machine; it needs Node 20.9+), then `npm run build`.
+2. Put the production values in `.env.local` next to `package.json`: at least `GHOST_CONTENT_API_KEY`, `ADMIN_TOKEN`, `BMC_WEBHOOK_SECRET`, `NEXT_PUBLIC_DONATE_URL`. Variables starting with `NEXT_PUBLIC_` are baked in at build time, so rebuild after changing them.
+3. `pm2 start ecosystem.config.cjs && pm2 save`. The site listens on port 40001; point your reverse proxy (nginx, Caddy…) for closetrepublic.com at it.
+4. In Buy Me a Coffee → Settings → Webhooks, add `https://closetrepublic.com/api/webhooks/buymeacoffee`, tick the payment events, and copy the secret into `BMC_WEBHOOK_SECRET`. Set `BMC_ACCEPT_TEST_EVENTS=true` while you try "send test", then back to `false`.
+5. Back up `data/closet-republic.db` (it holds the whole treasury). Keep the `data` folder when you redeploy.

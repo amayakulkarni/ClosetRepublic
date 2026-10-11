@@ -5,21 +5,25 @@ import { Art } from '@/components/Art';
 import { AuthorCard } from '@/components/AuthorCard';
 import { GhostContent } from '@/components/GhostContent';
 import { Notice } from '@/components/Notice';
+import { FundWidget } from '@/components/FundWidget';
+import { CURRENCY, getSummary } from '@/lib/funds';
 
 export const metadata: Metadata = { title: 'Ministry of Finance' };
+export const dynamic = 'force-dynamic';
 
-const GOFUNDME_URL = process.env.NEXT_PUBLIC_GOFUNDME_URL || '';
-const GOAL = Number(process.env.GOFUNDME_GOAL) || 0;
-const RAISED = Number(process.env.GOFUNDME_RAISED) || 0;
-const CURRENCY = process.env.GOFUNDME_CURRENCY || 'USD';
+// Donations go through Buy Me a Coffee (its webhook keeps the treasury up to date), plus an optional UPI ID.
+// The older NEXT_PUBLIC_GOFUNDME_URL is still read so existing .env files keep working.
+const env = (name: string, legacy?: string) => process.env[name] || (legacy ? process.env[legacy] : '') || '';
+const DONATE_URL = env('NEXT_PUBLIC_DONATE_URL', 'NEXT_PUBLIC_GOFUNDME_URL');
+const DONATE_LABEL = env('NEXT_PUBLIC_DONATE_LABEL') || 'Buy me a compute';
+const UPI_ID = env('NEXT_PUBLIC_UPI_ID');
+const UPI_NAME = env('NEXT_PUBLIC_UPI_NAME') || 'Closet Republic';
 
-const money = (n: number) => new Intl.NumberFormat('en', { style: 'currency', currency: CURRENCY, maximumFractionDigits: 0 }).format(n);
+const money = (n: number) =>
+  new Intl.NumberFormat(CURRENCY === 'INR' ? 'en-IN' : 'en', { style: 'currency', currency: CURRENCY, maximumFractionDigits: 0 }).format(n);
 
-/** GoFundMe's embeddable widget lives at /f/<campaign>/widget/large. */
-function widgetUrl(url: string) {
-  const m = url.match(/gofundme\.com\/f\/([^/?#]+)/);
-  return m ? `https://www.gofundme.com/f/${m[1]}/widget/large` : null;
-}
+/** Opens the visitor's UPI app (GPay, PhonePe, Paytm, BHIM…) with the payee filled in. */
+const upiLink = (id: string) => `upi://pay?pa=${encodeURIComponent(id)}&pn=${encodeURIComponent(UPI_NAME)}&cu=INR`;
 
 export default async function FundingPage() {
   const { on } = await getNature();
@@ -31,8 +35,7 @@ export default async function FundingPage() {
     { budget: null, natureBudget: null, authors: [] },
   );
   const budget = on && data.natureBudget ? data.natureBudget : data.budget;
-  const pct = GOAL ? Math.min(100, Math.round((RAISED / GOAL) * 100)) : 0;
-  const widget = GOFUNDME_URL ? widgetUrl(GOFUNDME_URL) : null;
+  const funds = getSummary();
 
   return (
     <>
@@ -42,14 +45,27 @@ export default async function FundingPage() {
           <p className="lede">
             {on
               ? 'The proposed budget for the governance and management of the Republic. Citizens are kindly reminded that the tax is unfair and entirely optional.'
-              : 'Closet Republic is run by volunteers and funded by a GoFundMe campaign. Here is where the money goes.'}
+              : 'Closet Republic is run by volunteers and funded by donations. Here is where the money goes.'}
           </p>
-          {GOFUNDME_URL && (
-            <p>
-              <a className="button" href={GOFUNDME_URL} target="_blank" rel="noopener noreferrer">
-                {on ? 'Pay your unfair tax' : 'Donate on GoFundMe'}
-                <span className="sr-only"> (opens GoFundMe in a new tab)</span>
-              </a>
+          {(DONATE_URL || UPI_ID) && (
+            <p className="hero__actions">
+              {DONATE_URL && (
+                <a className="button" href={DONATE_URL} target="_blank" rel="noopener noreferrer">
+                  {on ? 'Pay your unfair tax' : DONATE_LABEL}
+                  <span className="sr-only"> (opens in a new tab)</span>
+                </a>
+              )}
+              {UPI_ID && (
+                <a className={DONATE_URL ? 'button button--ghost' : 'button'} href={upiLink(UPI_ID)}>
+                  {on ? 'Pay tax by UPI' : 'Pay by UPI'}
+                  <span className="sr-only"> (opens your UPI app)</span>
+                </a>
+              )}
+            </p>
+          )}
+          {UPI_ID && (
+            <p className="hint">
+              UPI ID: <code>{UPI_ID}</code>
             </p>
           )}
         </div>
@@ -58,46 +74,26 @@ export default async function FundingPage() {
 
       {problem && <Notice tone="warn">{problem}</Notice>}
 
-      <section aria-labelledby="collection-heading" className="section stats">
-        <h2 id="collection-heading">{on ? 'Tax collection' : 'Fundraising progress'}</h2>
-        {GOAL > 0 ? (
-          <>
-            <dl className="stat-row">
-              <div className="stat">
-                <dt>{on ? 'Tax collected' : 'Raised'}</dt>
-                <dd>{money(RAISED)}</dd>
-              </div>
-              <div className="stat">
-                <dt>{on ? 'Target collection' : 'Goal'}</dt>
-                <dd>{money(GOAL)}</dd>
-              </div>
-              <div className="stat">
-                <dt>{on ? 'Treasury filled' : 'Progress'}</dt>
-                <dd>{pct}%</dd>
-              </div>
-            </dl>
-            <div
-              className="meter"
-              role="progressbar"
-              aria-valuemin={0}
-              aria-valuemax={GOAL}
-              aria-valuenow={RAISED}
-              aria-valuetext={`${money(RAISED)} of ${money(GOAL)}, ${pct}%`}
-            >
-              <span style={{ width: `${pct}%` }} />
-            </div>
-          </>
-        ) : (
-          <Notice>The fundraising goal has not been set yet.</Notice>
-        )}
-        {widget && (
-          <iframe
-            className="gofundme-widget"
-            src={widget}
-            title="GoFundMe campaign widget for Closet Republic, showing the amount raised and the goal"
-            loading="lazy"
+      <section aria-labelledby="collection-heading" className="section">
+        <h2 id="collection-heading">{on ? 'Treasury' : 'Where the money stands'}</h2>
+        <div className="fund-widgets">
+          <FundWidget
+            title={on ? `Tax collected in ${funds.monthLabel}` : `Monthly budget, ${funds.monthLabel}`}
+            amount={funds.budget.raised}
+            goal={funds.budget.goal}
+            goalLabel={on ? 'target collection' : 'monthly goal'}
+            hint={on ? 'The treasury is emptied with great ceremony on the 1st of every month.' : 'Starts again from zero on the 1st of every month.'}
+            money={money}
           />
-        )}
+          <FundWidget
+            title={on ? 'Legal defence fund' : 'Legal fund'}
+            amount={funds.legal.balance}
+            goal={funds.legal.goal}
+            goalLabel="target"
+            hint={on ? 'For challenging laws that try to put people back in boxes.' : 'Set aside for legal challenges. It does not reset.'}
+            money={money}
+          />
+        </div>
       </section>
 
       <section aria-labelledby="budget-heading" className="section">
