@@ -104,6 +104,41 @@ export default async function FundingPage() {
             hint={on ? 'For challenging laws that try to put people back in boxes.' : 'Set aside for legal challenges. It does not reset.'}
             money={money}
           />
+          <FundWidget
+            title={on ? 'Ministry of Welfare' : 'Welfare fund'}
+            amount={funds.welfare.balance}
+            goal={funds.welfare.goal}
+            goalLabel="target"
+            hint={on ? 'Paid to the people who build the Republic, and to citizens who need a hand.' : 'Pays contributors and helps queer people in need. It does not reset.'}
+            money={money}
+          >
+            <dl className="fund-split">
+              <div>
+                <dt>
+                  {on ? 'Builders of the Republic' : 'Developers, artists, writers and interns'} ({funds.welfare.creatorsPct}%)
+                </dt>
+                <dd>{money(funds.welfare.creators)}</dd>
+              </div>
+              <div>
+                <dt>
+                  {on ? 'Mutual aid for citizens' : 'Need-based help for queer people'} ({100 - funds.welfare.creatorsPct}%)
+                </dt>
+                <dd>{money(funds.welfare.community)}</dd>
+              </div>
+            </dl>
+          </FundWidget>
+          <FundWidget
+            title={on ? 'Department of Infrastructure' : 'Infrastructure fund'}
+            amount={funds.infrastructure.balance}
+            goal={funds.infrastructure.goal}
+            goalLabel="target"
+            hint={
+              on
+                ? 'Computers, tablets, accessories and servers, so the Republic stays standing.'
+                : 'Computers, tablets, accessories, servers and other equipment. It does not reset.'
+            }
+            money={money}
+          />
         </div>
         {sponsors.count > 0 && (
           <p className="hint sponsor-thanks">

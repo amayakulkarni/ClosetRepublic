@@ -5,9 +5,10 @@ type Props = {
   goalLabel: string;
   hint: string;
   money: (n: number) => string;
+  children?: React.ReactNode;
 };
 
-export function FundWidget({ title, amount, goal, goalLabel, hint, money }: Props) {
+export function FundWidget({ title, amount, goal, goalLabel, hint, money, children }: Props) {
   const pct = goal > 0 ? Math.max(0, Math.min(100, Math.round((amount / goal) * 100))) : null;
   return (
     <article className="fund-widget">
@@ -31,6 +32,7 @@ export function FundWidget({ title, amount, goal, goalLabel, hint, money }: Prop
           </div>
         </>
       )}
+      {children}
       <p className="hint">{hint}</p>
     </article>
   );

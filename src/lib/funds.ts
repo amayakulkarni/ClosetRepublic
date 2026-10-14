@@ -1,21 +1,31 @@
 import 'server-only';
 import { db } from './db';
 
-// The Republic's treasury: one SQLite ledger for two funds.
+// The Republic's treasury: one SQLite ledger for four funds.
 //  - "budget": the monthly budget. Only entries from the current month count, so it
 //    starts again from zero on the 1st of every month (in FUNDING_TIMEZONE).
-//  - "legal": the legal fund, a running balance that never resets.
+//  - "legal", "welfare", "infrastructure": running balances that never reset.
+// Welfare money is shared between two pots: creators (developers, artists, writers and
+// interns, 80% by default) and need-based help for queer people (20%). Money coming in
+// is split by that percentage; money paid out is taken from the pot it was paid from.
 // Every change is a ledger entry (donation, refund, credit, deduction, adjustment), so
 // the history stays auditable; nothing is ever overwritten in place.
 
-export type Fund = 'budget' | 'legal';
+export type Fund = 'budget' | 'legal' | 'welfare' | 'infrastructure';
+export type WelfarePot = 'creators' | 'community';
 export type EntryKind = 'donation' | 'refund' | 'credit' | 'deduction' | 'adjustment';
-export const FUNDS: Fund[] = ['budget', 'legal'];
+export const FUNDS: Fund[] = ['budget', 'legal', 'welfare', 'infrastructure'];
+/** Funds that keep a running balance (everything except the monthly budget). */
+export const BALANCE_FUNDS: Fund[] = ['legal', 'welfare', 'infrastructure'];
+export const WELFARE_POTS: WelfarePot[] = ['creators', 'community'];
+export const isFund = (v: unknown): v is Fund => FUNDS.includes(v as Fund);
 export const KINDS: EntryKind[] = ['donation', 'refund', 'credit', 'deduction', 'adjustment'];
 
 export type LedgerEntry = {
   id: number;
   fund: Fund;
+  /** Welfare only: the pot money was paid from. Null means it is split by percentage. */
+  pot: WelfarePot | null;
   kind: EntryKind;
   /** Signed amount in the fund currency, in minor units (paise / cents). */
   amountMinor: number;
@@ -32,7 +42,10 @@ export type LedgerEntry = {
 export type Settings = {
   budgetGoal: number; // monthly, major units
   legalGoal: number; // major units, 0 = no target
-  donationFund: Fund; // where Buy Me a Coffee money goes
+  welfareGoal: number;
+  infrastructureGoal: number;
+  welfareCreatorsPct: number; // share of welfare money for creators; the rest is need-based help
+  donationFund: Fund; // where Buy Me a Coffee and GitHub Sponsors money goes
 };
 
 export const CURRENCY = process.env.FUNDING_CURRENCY || 'INR';
@@ -41,6 +54,7 @@ export const TIMEZONE = process.env.FUNDING_TIMEZONE || 'Asia/Kolkata';
 type Row = {
   id: number;
   fund: Fund;
+  pot: WelfarePot | null;
   kind: EntryKind;
   amount_minor: number;
   original_amount: number | null;
@@ -56,6 +70,7 @@ type Row = {
 const toEntry = (r: Row): LedgerEntry => ({
   id: r.id,
   fund: r.fund,
+  pot: r.pot,
   kind: r.kind,
   amountMinor: r.amount_minor,
   originalAmount: r.original_amount,
@@ -90,7 +105,10 @@ export function getSettings(): Settings {
   return {
     budgetGoal: Number(s.budgetGoal ?? process.env.FUNDING_GOAL ?? 0) || 0,
     legalGoal: Number(s.legalGoal ?? process.env.LEGAL_FUND_GOAL ?? 0) || 0,
-    donationFund: s.donationFund === 'legal' ? 'legal' : 'budget',
+    welfareGoal: Number(s.welfareGoal ?? 0) || 0,
+    infrastructureGoal: Number(s.infrastructureGoal ?? 0) || 0,
+    welfareCreatorsPct: s.welfareCreatorsPct === undefined ? 80 : Math.max(0, Math.min(100, Number(s.welfareCreatorsPct) || 0)),
+    donationFund: isFund(s.donationFund) ? s.donationFund : 'budget',
   };
 }
 
@@ -99,6 +117,9 @@ export function updateSettings(patch: Partial<Settings>) {
   const tx = db().transaction(() => {
     if (patch.budgetGoal !== undefined) put.run('budgetGoal', String(Math.max(0, patch.budgetGoal)));
     if (patch.legalGoal !== undefined) put.run('legalGoal', String(Math.max(0, patch.legalGoal)));
+    if (patch.welfareGoal !== undefined) put.run('welfareGoal', String(Math.max(0, patch.welfareGoal)));
+    if (patch.infrastructureGoal !== undefined) put.run('infrastructureGoal', String(Math.max(0, patch.infrastructureGoal)));
+    if (patch.welfareCreatorsPct !== undefined) put.run('welfareCreatorsPct', String(Math.max(0, Math.min(100, Math.round(patch.welfareCreatorsPct)))));
     if (patch.donationFund !== undefined) put.run('donationFund', patch.donationFund);
   });
   tx();
@@ -109,6 +130,7 @@ export function updateSettings(patch: Partial<Settings>) {
 
 export type NewEntry = {
   fund: Fund;
+  pot?: WelfarePot | null;
   kind: EntryKind;
   amountMinor: number;
   source: LedgerEntry['source'];
@@ -125,12 +147,13 @@ export function addEntry(e: NewEntry): LedgerEntry | null {
   const created = e.createdAt ?? new Date();
   const info = db()
     .prepare(
-      `INSERT INTO ledger (fund, kind, amount_minor, original_amount, original_currency, source, external_id, supporter_name, note, month, created_at)
-       VALUES (@fund, @kind, @amountMinor, @originalAmount, @originalCurrency, @source, @externalId, @supporterName, @note, @month, @createdAt)
+      `INSERT INTO ledger (fund, pot, kind, amount_minor, original_amount, original_currency, source, external_id, supporter_name, note, month, created_at)
+       VALUES (@fund, @pot, @kind, @amountMinor, @originalAmount, @originalCurrency, @source, @externalId, @supporterName, @note, @month, @createdAt)
        ON CONFLICT(external_id) DO NOTHING`,
     )
     .run({
       fund: e.fund,
+      pot: e.fund === 'welfare' ? (e.pot ?? null) : null,
       kind: e.kind,
       amountMinor: e.amountMinor,
       originalAmount: e.originalAmount ?? null,
@@ -172,18 +195,28 @@ export function listEntries(opts: { fund?: Fund; month?: string; limit?: number 
 
 const sum = (sql: string, ...args: unknown[]) => (db().prepare(sql).get(...args) as { total: number | null }).total ?? 0;
 
-/** Balance of the legal fund, in minor units. */
-export const legalBalanceMinor = () => sum("SELECT SUM(amount_minor) total FROM ledger WHERE fund = 'legal'");
+/** Running balance of a fund, in minor units. */
+export const balanceMinor = (fund: Fund) => sum('SELECT SUM(amount_minor) total FROM ledger WHERE fund = ?', fund);
+export const legalBalanceMinor = () => balanceMinor('legal');
+
+/** The welfare balance split into its two pots, in minor units. */
+export function welfareSplitMinor(creatorsPct = getSettings().welfareCreatorsPct) {
+  const shared = sum("SELECT SUM(amount_minor) total FROM ledger WHERE fund = 'welfare' AND pot IS NULL");
+  const fromPot = (pot: WelfarePot) => sum("SELECT SUM(amount_minor) total FROM ledger WHERE fund = 'welfare' AND pot = ?", pot);
+  const creatorsShare = Math.round((shared * creatorsPct) / 100);
+  return { creators: creatorsShare + fromPot('creators'), community: shared - creatorsShare + fromPot('community') };
+}
 
 /** What the monthly budget has raised (net of refunds and deductions) in a month, in minor units. */
 export const budgetForMonthMinor = (month = monthOf()) => sum("SELECT SUM(amount_minor) total FROM ledger WHERE fund = 'budget' AND month = ?", month);
 
-/** Sets the legal fund to an exact balance by recording an adjustment for the difference. */
-export function setLegalBalance(targetMinor: number, note?: string) {
-  const diff = targetMinor - legalBalanceMinor();
+/** Sets a running fund to an exact balance by recording an adjustment for the difference. */
+export function setBalance(fund: Fund, targetMinor: number, note?: string) {
+  const diff = targetMinor - balanceMinor(fund);
   if (diff === 0) return null;
-  return addEntry({ fund: 'legal', kind: 'adjustment', amountMinor: diff, source: 'admin', note: note || 'Balance set by admin' });
+  return addEntry({ fund, kind: 'adjustment', amountMinor: diff, source: 'admin', note: note || 'Balance set by admin' });
 }
+export const setLegalBalance = (targetMinor: number, note?: string) => setBalance('legal', targetMinor, note);
 
 /** Monthly budget totals, newest first, for the admin history. */
 export function budgetHistory(months = 12) {
@@ -198,6 +231,8 @@ export type FundsSummary = {
   monthLabel: string;
   budget: { raised: number; goal: number };
   legal: { balance: number; goal: number };
+  welfare: { balance: number; goal: number; creators: number; community: number; creatorsPct: number };
+  infrastructure: { balance: number; goal: number };
   donationFund: Fund;
 };
 
@@ -205,12 +240,21 @@ export type FundsSummary = {
 export function getSummary(): FundsSummary {
   const settings = getSettings();
   const month = monthOf();
+  const split = welfareSplitMinor(settings.welfareCreatorsPct);
   return {
     currency: CURRENCY,
     month,
     monthLabel: monthLabel(month),
     budget: { raised: toMajor(budgetForMonthMinor(month)), goal: settings.budgetGoal },
     legal: { balance: toMajor(legalBalanceMinor()), goal: settings.legalGoal },
+    welfare: {
+      balance: toMajor(balanceMinor('welfare')),
+      goal: settings.welfareGoal,
+      creators: toMajor(split.creators),
+      community: toMajor(split.community),
+      creatorsPct: settings.welfareCreatorsPct,
+    },
+    infrastructure: { balance: toMajor(balanceMinor('infrastructure')), goal: settings.infrastructureGoal },
     donationFund: settings.donationFund,
   };
 }

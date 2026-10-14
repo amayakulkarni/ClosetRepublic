@@ -94,18 +94,20 @@ The standard PDF fonts only cover Latin characters; anything else (for example D
 - `public/brand`: CR logos. `public/art`: Transhumans illustrations by Pablo Stanley (CC0), shown inverted to white on black.
 - `public/peeps`: Open Peeps parts by Pablo Stanley (CC0) for the avatar builder. Re-import them with `node scripts/import-peeps.mjs "<path to Flat Assets/Separate Atoms>"`.
 
-## Treasury: monthly budget and legal fund
+## Treasury: monthly budget, legal, welfare and infrastructure funds
 
 Money is tracked in a SQLite ledger (`src/lib/funds.ts`). Every change is an entry, so the history is never overwritten.
 
 - **Monthly budget:** only this month's entries count, so it starts again from zero on the 1st of every month (`FUNDING_TIMEZONE`). Earlier months stay in the history.
 - **Legal fund:** a running balance that never resets.
+- **Welfare fund:** a running balance shared between two pots: developers, artists, writers and interns (80%) and need-based help for queer people (20%). Money received is split by that percentage (change it on `/admin`); when you pay someone, record a deduction and pick the pot it came from. `/funding` shows both pots.
+- **Infrastructure fund:** a running balance for computers, tablets, accessories, servers and other equipment.
 - **Buy Me a Coffee:** each payment (donation, membership, extra) adds to the fund chosen on `/admin` (monthly budget by default); refunds take it back out. Retries are ignored. Payments in other currencies are converted with `EXCHANGE_RATES`.
 - **GitHub Sponsors:** a new sponsorship adds its first payment (in USD, converted with `EXCHANGE_RATES`) to the same fund. Monthly sponsors get one entry per month while they stay active, added the first time the treasury is read in a new month. Tier changes apply from the next month. Because GitHub doesn't send renewal events, a sponsor who cancels may get one extra month recorded if the cancellation arrives late; delete that entry on `/admin`. Private sponsors appear as "Private sponsor"; public ones are thanked by name on `/funding`. `.github/FUNDING.yml` adds the Sponsor button on the repository.
 
 ### Admin page
 
-`/admin` (not linked anywhere): sign in with `ADMIN_TOKEN`. Add credits or deductions to either fund, set the legal fund to an exact balance, change goals and where Buy Me a Coffee money goes, browse and delete ledger entries, and see past months.
+`/admin` (not linked anywhere): sign in with `ADMIN_TOKEN`. Add credits or deductions to any fund, set the legal, welfare or infrastructure fund to an exact balance, change goals, the welfare split and where donations go, browse and delete ledger entries, and see past months.
 
 ### Lifeline
 
@@ -134,7 +136,7 @@ The **Timeline and goals** tab on `/admin` adds, edits and deletes goals (status
 
 Public:
 
-- `GET /api/funds`: this month's budget (`raised`, `goal`), legal fund (`balance`, `goal`), currency.
+- `GET /api/funds`: this month's budget (`raised`, `goal`), the legal and infrastructure funds (`balance`, `goal`), the welfare fund (`balance`, `goal`, `creators`, `community`, `creatorsPct`), currency.
 - `GET /api/roadmap`: goals and timeline events.
 
 Admin (send `Authorization: Bearer <ADMIN_TOKEN>`; amounts in major units, e.g. rupees):
@@ -142,12 +144,13 @@ Admin (send `Authorization: Bearer <ADMIN_TOKEN>`; amounts in major units, e.g. 
 | Call | What it does |
 | --- | --- |
 | `GET /api/admin/settings` | Settings, current totals and the last 12 months of the budget |
-| `PUT /api/admin/settings` `{ budgetGoal?, legalGoal?, donationFund?: "budget" \| "legal" }` | Change goals or where Buy Me a Coffee money goes |
+| `PUT /api/admin/settings` `{ budgetGoal?, legalGoal?, welfareGoal?, infrastructureGoal?, welfareCreatorsPct?, donationFund? }` | Change goals, the welfare split (0 to 100) or where donations go (`budget`, `legal`, `welfare`, `infrastructure`) |
 | `GET /api/admin/ledger?fund=legal&month=2026-10` | List entries |
-| `POST /api/admin/ledger` `{ fund, kind: "credit" \| "deduction" \| "adjustment", amount, note? }` | Add money, record a deduction, or a signed correction |
+| `POST /api/admin/ledger` `{ fund, kind: "credit" \| "deduction" \| "adjustment", amount, note?, pot? }` | Add money, record a deduction, or a signed correction. `pot` (`creators` or `community`) is for welfare payouts |
 | `DELETE /api/admin/ledger/<id>` | Remove a mistaken entry |
 | `GET /api/admin/legal-balance` | Legal fund balance |
 | `PUT /api/admin/legal-balance` `{ balance, note? }` | Set the legal fund to an exact amount (records the difference) |
+| `PUT /api/admin/balance` `{ fund: "legal" \| "welfare" \| "infrastructure", balance, note? }` | Set any running fund to an exact amount |
 | `GET/POST /api/admin/goals` `{ title, description?, status?, progress?, targetDate?, sortOrder? }` | List or add goals (`status`: `planned`, `in_progress`, `achieved`) |
 | `PUT/DELETE /api/admin/goals/<id>` | Change any goal fields, or delete it |
 | `GET/POST /api/admin/timeline` `{ date: "2026-10-14", title, description?, link? }` | List or add timeline events |

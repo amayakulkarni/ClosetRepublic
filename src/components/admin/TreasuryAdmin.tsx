@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from './api';
 
-type Fund = 'budget' | 'legal';
+type Fund = 'budget' | 'legal' | 'welfare' | 'infrastructure';
+type Pot = 'creators' | 'community';
 type Entry = {
   id: number;
   fund: Fund;
+  pot: Pot | null;
   kind: string;
   amountMinor: number;
   originalAmount: number | null;
@@ -18,13 +20,24 @@ type Entry = {
   createdAt: string;
 };
 type Overview = {
-  settings: { budgetGoal: number; legalGoal: number; donationFund: Fund };
-  summary: { currency: string; month: string; monthLabel: string; budget: { raised: number; goal: number }; legal: { balance: number; goal: number } };
+  settings: { budgetGoal: number; legalGoal: number; welfareGoal: number; infrastructureGoal: number; welfareCreatorsPct: number; donationFund: Fund };
+  summary: {
+    currency: string;
+    month: string;
+    monthLabel: string;
+    budget: { raised: number; goal: number };
+    legal: { balance: number; goal: number };
+    welfare: { balance: number; goal: number; creators: number; community: number; creatorsPct: number };
+    infrastructure: { balance: number; goal: number };
+  };
   history: { month: string; total: number }[];
   githubSponsors: { count: number; monthlyUsd: number; publicLogins: string[] };
 };
 
-const FUND_LABEL: Record<Fund, string> = { budget: 'Monthly budget', legal: 'Legal fund' };
+const FUND_LABEL: Record<Fund, string> = { budget: 'Monthly budget', legal: 'Legal fund', welfare: 'Welfare fund', infrastructure: 'Infrastructure fund' };
+const FUND_ORDER: Fund[] = ['budget', 'legal', 'welfare', 'infrastructure'];
+const BALANCE_FUNDS: Fund[] = ['legal', 'welfare', 'infrastructure'];
+const POT_LABEL: Record<Pot, string> = { creators: 'Creators and interns', community: 'Need-based help' };
 const SOURCE_LABEL: Record<string, string> = { buymeacoffee: 'Buy Me a Coffee', github: 'GitHub Sponsors' };
 
 export function TreasuryAdmin() {
@@ -32,6 +45,8 @@ export function TreasuryAdmin() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [filter, setFilter] = useState<{ fund: '' | Fund; month: string }>({ fund: '', month: '' });
   const [message, setMessage] = useState<string | null>(null);
+  const [entryFund, setEntryFund] = useState<Fund>('legal');
+  const [balanceFund, setBalanceFund] = useState<Fund>('legal');
 
   const money = useCallback(
     (n: number) =>
@@ -70,10 +85,11 @@ export function TreasuryAdmin() {
 
   if (!overview) return <p>{message ?? 'Loading the treasury…'}</p>;
   const { summary, settings, history } = overview;
+  const balanceOf = (fund: Fund) => (fund === 'budget' ? summary.budget.raised : summary[fund as 'legal' | 'welfare' | 'infrastructure'].balance);
 
   return (
     <div>
-      <p className="lede">Monthly budget for {summary.monthLabel} and the legal fund.</p>
+      <p className="lede">Monthly budget for {summary.monthLabel}, and the legal, welfare and infrastructure funds.</p>
 
       <p className="sr-only" role="status" aria-live="polite">
         {message}
@@ -90,6 +106,18 @@ export function TreasuryAdmin() {
           <dt>Legal fund</dt>
           <dd>{money(summary.legal.balance)}</dd>
           {summary.legal.goal > 0 && <p className="hint">of {money(summary.legal.goal)} target</p>}
+        </div>
+        <div className="stat">
+          <dt>Welfare fund</dt>
+          <dd>{money(summary.welfare.balance)}</dd>
+          <p className="hint">
+            Creators and interns {money(summary.welfare.creators)} · need-based help {money(summary.welfare.community)}
+          </p>
+        </div>
+        <div className="stat">
+          <dt>Infrastructure fund</dt>
+          <dd>{money(summary.infrastructure.balance)}</dd>
+          {summary.infrastructure.goal > 0 && <p className="hint">of {money(summary.infrastructure.goal)} target</p>}
         </div>
         <div className="stat">
           <dt>GitHub sponsors</dt>
@@ -110,7 +138,7 @@ export function TreasuryAdmin() {
             const f = new FormData(document.getElementById('entry-form') as HTMLFormElement);
             await api('/api/admin/ledger', {
               method: 'POST',
-              body: JSON.stringify({ fund: f.get('fund'), kind: f.get('kind'), amount: f.get('amount'), note: f.get('note') }),
+              body: JSON.stringify({ fund: f.get('fund'), kind: f.get('kind'), amount: f.get('amount'), note: f.get('note'), pot: f.get('pot') || undefined }),
             });
           }, 'Entry added.')}
           id="entry-form"
@@ -118,11 +146,25 @@ export function TreasuryAdmin() {
           <h2>Add an entry</h2>
           <div className="field">
             <label htmlFor="e-fund">Fund</label>
-            <select id="e-fund" name="fund" defaultValue="legal">
-              <option value="legal">Legal fund</option>
-              <option value="budget">Monthly budget</option>
+            <select id="e-fund" name="fund" value={entryFund} onChange={(e) => setEntryFund(e.target.value as Fund)}>
+              {FUND_ORDER.map((f) => (
+                <option key={f} value={f}>
+                  {FUND_LABEL[f]}
+                </option>
+              ))}
             </select>
           </div>
+          {entryFund === 'welfare' && (
+            <div className="field">
+              <label htmlFor="e-pot">Welfare pot</label>
+              <select id="e-pot" name="pot" defaultValue="">
+                <option value="">Split {settings.welfareCreatorsPct}/{100 - settings.welfareCreatorsPct} (money received)</option>
+                <option value="creators">Creators and interns (paid out)</option>
+                <option value="community">Need-based help (paid out)</option>
+              </select>
+              <p className="hint">Money received is split between the pots. Choose a pot when you pay someone.</p>
+            </div>
+          )}
           <div className="field">
             <label htmlFor="e-kind">Type</label>
             <select id="e-kind" name="kind" defaultValue="deduction">
@@ -147,14 +189,27 @@ export function TreasuryAdmin() {
           id="balance-form"
           onSubmit={run(async () => {
             const f = new FormData(document.getElementById('balance-form') as HTMLFormElement);
-            await api('/api/admin/legal-balance', { method: 'PUT', body: JSON.stringify({ balance: f.get('balance'), note: f.get('note') || undefined }) });
-          }, 'Legal fund balance updated.')}
+            await api('/api/admin/balance', {
+              method: 'PUT',
+              body: JSON.stringify({ fund: f.get('fund'), balance: f.get('balance'), note: f.get('note') || undefined }),
+            });
+          }, `${FUND_LABEL[balanceFund]} balance updated.`)}
         >
-          <h2>Set legal fund balance</h2>
+          <h2>Set a fund balance</h2>
           <p className="hint">Records an adjustment for the difference, so the history stays intact.</p>
           <div className="field">
+            <label htmlFor="b-fund">Fund</label>
+            <select id="b-fund" name="fund" value={balanceFund} onChange={(e) => setBalanceFund(e.target.value as Fund)}>
+              {BALANCE_FUNDS.map((f) => (
+                <option key={f} value={f}>
+                  {FUND_LABEL[f]}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
             <label htmlFor="b-balance">New balance ({summary.currency})</label>
-            <input id="b-balance" name="balance" type="number" step="0.01" required defaultValue={summary.legal.balance} />
+            <input key={balanceFund} id="b-balance" name="balance" type="number" step="0.01" required defaultValue={balanceOf(balanceFund)} />
           </div>
           <div className="field">
             <label htmlFor="b-note">Note</label>
@@ -170,7 +225,14 @@ export function TreasuryAdmin() {
             const f = new FormData(document.getElementById('settings-form') as HTMLFormElement);
             await api('/api/admin/settings', {
               method: 'PUT',
-              body: JSON.stringify({ budgetGoal: f.get('budgetGoal'), legalGoal: f.get('legalGoal'), donationFund: f.get('donationFund') }),
+              body: JSON.stringify({
+                budgetGoal: f.get('budgetGoal'),
+                legalGoal: f.get('legalGoal'),
+                welfareGoal: f.get('welfareGoal'),
+                infrastructureGoal: f.get('infrastructureGoal'),
+                welfareCreatorsPct: f.get('welfareCreatorsPct'),
+                donationFund: f.get('donationFund'),
+              }),
             });
           }, 'Settings saved.')}
         >
@@ -184,10 +246,26 @@ export function TreasuryAdmin() {
             <input id="s-legal" name="legalGoal" type="number" step="1" min="0" defaultValue={settings.legalGoal} />
           </div>
           <div className="field">
+            <label htmlFor="s-welfare">Welfare fund target ({summary.currency}, 0 for none)</label>
+            <input id="s-welfare" name="welfareGoal" type="number" step="1" min="0" defaultValue={settings.welfareGoal} />
+          </div>
+          <div className="field">
+            <label htmlFor="s-split">Welfare share for creators and interns (%)</label>
+            <input id="s-split" name="welfareCreatorsPct" type="number" step="1" min="0" max="100" defaultValue={settings.welfareCreatorsPct} />
+            <p className="hint">The rest goes to need-based help. Default 80.</p>
+          </div>
+          <div className="field">
+            <label htmlFor="s-infra">Infrastructure fund target ({summary.currency}, 0 for none)</label>
+            <input id="s-infra" name="infrastructureGoal" type="number" step="1" min="0" defaultValue={settings.infrastructureGoal} />
+          </div>
+          <div className="field">
             <label htmlFor="s-fund">Buy Me a Coffee and GitHub Sponsors money goes to</label>
             <select id="s-fund" name="donationFund" defaultValue={settings.donationFund}>
-              <option value="budget">Monthly budget</option>
-              <option value="legal">Legal fund</option>
+              {FUND_ORDER.map((f) => (
+                <option key={f} value={f}>
+                  {FUND_LABEL[f]}
+                </option>
+              ))}
             </select>
           </div>
           <button className="button">Save settings</button>
@@ -200,9 +278,12 @@ export function TreasuryAdmin() {
           <div className="field">
             <label htmlFor="f-fund">Fund</label>
             <select id="f-fund" value={filter.fund} onChange={(e) => setFilter({ ...filter, fund: e.target.value as '' | Fund })}>
-              <option value="">Both</option>
-              <option value="budget">Monthly budget</option>
-              <option value="legal">Legal fund</option>
+              <option value="">All funds</option>
+              {FUND_ORDER.map((f) => (
+                <option key={f} value={f}>
+                  {FUND_LABEL[f]}
+                </option>
+              ))}
             </select>
           </div>
           <div className="field">
@@ -228,7 +309,10 @@ export function TreasuryAdmin() {
               {entries.map((e) => (
                 <tr key={e.id}>
                   <td>{new Date(e.createdAt).toLocaleDateString('en-GB', { dateStyle: 'medium' })}</td>
-                  <td>{FUND_LABEL[e.fund]}</td>
+                  <td>
+                    {FUND_LABEL[e.fund]}
+                    {e.pot && <span className="hint"> ({POT_LABEL[e.pot]})</span>}
+                  </td>
                   <td>{e.kind}</td>
                   <td className={e.amountMinor < 0 ? 'neg' : ''}>
                     {money(e.amountMinor / 100)}

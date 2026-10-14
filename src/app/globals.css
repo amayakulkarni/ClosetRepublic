@@ -634,7 +634,7 @@ html[data-nature='off'] .gh-content img {
 
 .stat-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
   gap: 16px;
   margin: 0 0 16px;
 }
@@ -649,7 +649,8 @@ html[data-nature='off'] .gh-content img {
 }
 .stat dd {
   margin: 0;
-  font-size: 2rem;
+  font-size: 1.7rem;
+  overflow-wrap: anywhere;
   font-weight: 800;
 }
 .meter {
@@ -1097,7 +1098,7 @@ html[data-nature='on'] .closet-mark {
 }
 .fund-widgets {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
   gap: 20px;
 }
 .fund-widget {
@@ -1398,4 +1399,26 @@ html[data-nature='on'] .closet-mark {
 
 .sponsor-thanks {
   margin-top: 14px;
+}
+
+.fund-split {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 8px;
+}
+.fund-split div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--fg) 25%, transparent);
+  padding-top: 8px;
+}
+.fund-split dt {
+  font-size: 0.9rem;
+}
+.fund-split dd {
+  margin: 0;
+  font-weight: 700;
+  white-space: nowrap;
 }

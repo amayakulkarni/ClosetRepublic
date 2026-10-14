@@ -13,7 +13,8 @@ const DB_PATH = path.resolve(/*turbopackIgnore: true*/ process.env.DATABASE_PATH
 const SCHEMA = `
   CREATE TABLE IF NOT EXISTS ledger (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    fund TEXT NOT NULL CHECK (fund IN ('budget', 'legal')),
+    fund TEXT NOT NULL CHECK (fund IN ('budget', 'legal', 'welfare', 'infrastructure')),
+    pot TEXT,
     kind TEXT NOT NULL,
     amount_minor INTEGER NOT NULL,
     original_amount REAL,
@@ -115,11 +116,26 @@ const SCHEMA = `
 
 const globalForDb = globalThis as unknown as { crDb?: Database.Database };
 
+/** Upgrades databases created before the welfare and infrastructure funds existed. */
+function migrate(conn: Database.Database) {
+  const ledger = conn.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'ledger'").get() as { sql: string } | undefined;
+  if (!ledger || ledger.sql.includes("'welfare'")) return;
+  // SQLite can't change a CHECK constraint in place, so rebuild the table with the same rows.
+  conn.transaction(() => {
+    conn.exec('ALTER TABLE ledger RENAME TO ledger_old; DROP INDEX IF EXISTS ledger_fund_month;');
+    conn.exec(SCHEMA);
+    conn.exec(`INSERT INTO ledger (id, fund, kind, amount_minor, original_amount, original_currency, source, external_id, supporter_name, note, month, created_at)
+      SELECT id, fund, kind, amount_minor, original_amount, original_currency, source, external_id, supporter_name, note, month, created_at FROM ledger_old`);
+    conn.exec('DROP TABLE ledger_old');
+  })();
+}
+
 export function db() {
   if (globalForDb.crDb) return globalForDb.crDb;
   fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
   const conn = new Database(DB_PATH);
   conn.pragma('journal_mode = WAL');
+  migrate(conn);
   conn.exec(SCHEMA);
   globalForDb.crDb = conn;
   return conn;
