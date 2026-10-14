@@ -15,7 +15,7 @@ export type ArtName = keyof typeof ART;
 
 export function Art({ name, className = '', nature }: { name: ArtName; className?: string; nature: boolean }) {
   const effect = nature
-    ? ' Drawn in white lines on black; where it meets the prism at the screen edges or under your pointer, the white lines split into rainbow colours.'
+    ? ' Drawn in white lines on black; where it meets the prism at the screen edges or under your pointer, the white lines blend softly into pastel rainbow colours.'
     : ' Drawn in white lines on black.';
   return (
     // eslint-disable-next-line @next/next/no-img-element

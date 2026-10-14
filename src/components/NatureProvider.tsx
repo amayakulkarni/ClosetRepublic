@@ -14,7 +14,7 @@ type NatureContextValue = {
 const NatureContext = createContext<NatureContextValue | null>(null);
 
 export const PRISM_DESCRIPTION =
-  'Nature mode is on. The page looks as if it is seen through a curved prism: near the top and bottom of the screen, and in a circle around your pointer, white splits into a seven-colour rainbow and other colours split into their own spectrum. Content in the middle of the screen is not distorted.';
+  'Nature mode is on. The page looks as if it is seen through a curved prism: near the top and bottom of the screen, and in a circle around your pointer, white softly melts into pastel rainbow colours and other colours take on a gentle tint of their own spectrum. Content in the middle of the screen is not distorted.';
 export const MONO_DESCRIPTION = 'Nature mode is off. The page is shown in plain monochrome black and white.';
 
 const SWIPE_MIN_X = 90;

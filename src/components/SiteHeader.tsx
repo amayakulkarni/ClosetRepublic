@@ -13,7 +13,9 @@ const NAV = [
   { href: '/constitution', nature: 'Constitution', plain: 'Constitution', full: 'Constitution of CR' },
   { href: '/funding', nature: 'Ministry of Finance', plain: 'Funding', full: 'Ministry of Finance' },
   { href: '/lawmakers', nature: 'Lawmakers', plain: 'Writers', full: 'Members of GCR' },
+  { href: '/timeline', nature: 'Five-Year Plan', plain: 'Timeline', full: 'Timeline and goals' },
   { href: '/passport', nature: 'Passport', plain: 'Passport', full: 'Passport of CR' },
+  { href: '/development', nature: 'Public Works', plain: 'Contribute', full: 'Development and contributing' },
 ];
 
 export function SiteHeader() {

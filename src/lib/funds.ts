@@ -1,7 +1,5 @@
 import 'server-only';
-import fs from 'node:fs';
-import path from 'node:path';
-import Database from 'better-sqlite3';
+import { db } from './db';
 
 // The Republic's treasury: one SQLite ledger for two funds.
 //  - "budget": the monthly budget. Only entries from the current month count, so it
@@ -39,7 +37,6 @@ export type Settings = {
 
 export const CURRENCY = process.env.FUNDING_CURRENCY || 'INR';
 export const TIMEZONE = process.env.FUNDING_TIMEZONE || 'Asia/Kolkata';
-const DB_PATH = path.resolve(/*turbopackIgnore: true*/ process.env.DATABASE_PATH || path.join(process.cwd(), 'data', 'closet-republic.db'));
 
 type Row = {
   id: number;
@@ -55,35 +52,6 @@ type Row = {
   month: string;
   created_at: string;
 };
-
-const globalForDb = globalThis as unknown as { crDb?: Database.Database };
-
-function db() {
-  if (globalForDb.crDb) return globalForDb.crDb;
-  fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
-  const conn = new Database(DB_PATH);
-  conn.pragma('journal_mode = WAL');
-  conn.exec(`
-    CREATE TABLE IF NOT EXISTS ledger (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      fund TEXT NOT NULL CHECK (fund IN ('budget', 'legal')),
-      kind TEXT NOT NULL,
-      amount_minor INTEGER NOT NULL,
-      original_amount REAL,
-      original_currency TEXT,
-      source TEXT NOT NULL,
-      external_id TEXT UNIQUE,
-      supporter_name TEXT,
-      note TEXT,
-      month TEXT NOT NULL,
-      created_at TEXT NOT NULL
-    );
-    CREATE INDEX IF NOT EXISTS ledger_fund_month ON ledger (fund, month);
-    CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
-  `);
-  globalForDb.crDb = conn;
-  return conn;
-}
 
 const toEntry = (r: Row): LedgerEntry => ({
   id: r.id,

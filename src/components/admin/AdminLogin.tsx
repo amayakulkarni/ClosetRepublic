@@ -21,7 +21,7 @@ export function AdminLogin() {
 
   return (
     <form className="admin-login" onSubmit={onSubmit}>
-      <h1>Treasury admin</h1>
+      <h1>Admin</h1>
       <div className="field">
         <label htmlFor="token">Admin token</label>
         <input id="token" name="token" type="password" required autoComplete="current-password" />

@@ -37,7 +37,7 @@ One site-wide switch, like dark/light mode, remembered in a cookie. It is **on b
 - The **Nature** switch in the header, or a quick sideways swipe anywhere on a touch screen, toggles it.
 - `?nature=true` or `?nature=false` (also `?nature=`) on any URL sets it.
 - Any URL ending in `/nature` shows that page's nature edition, e.g. `/gazette/my-post/nature`, `/constitution/2/nature`, `/funding/nature`.
-- **On:** the prism theme. The top and bottom of the screen act like a curved prism: white splits into a seven-colour spectrum and other colours split into their own components; the middle stays undistorted. A spectrum circle follows the pointer. (`src/components/PrismLayers.tsx`, bottom of `src/app/globals.css`.)
+- **On:** the prism theme. The top and bottom of the screen act like a curved prism: white melts into a soft pastel spectrum and other colours take a gentle tint of their own; the middle stays undistorted. A soft spectrum glow follows the pointer. Tune it with `--prism-blur`, `--prism-period` and `--prism-strength` at the top of `globals.css`. (`src/components/PrismLayers.tsx`, bottom of `src/app/globals.css`.)
 - **Off:** monochrome black and white; Ghost images are shown in greyscale.
 - Screen readers get a description of the current visual effect, and every illustration's alt text describes how it looks in the current mode.
 
@@ -58,8 +58,10 @@ Nature editions are separate Ghost posts or pages whose slug is the original slu
 | `/funding` | Budget text from the page/post `finance` (nature: `finance-nature`), donate and UPI buttons, this month's budget and the legal fund (from the treasury), every Ghost author as seeking funding |
 | `/lawmakers`, `/lawmakers/<author-slug>` | Ghost authors: name, photo, bio, location, website and social links, and their posts |
 | `/passport` | Passport generator (no Ghost content) |
+| `/timeline` | Goals and a dated timeline (past and upcoming), managed on `/admin`; not from Ghost |
+| `/development` | How to contribute, linking the GitHub repository (no Ghost content) |
 
-`/gazetee` and `/pass` redirect to `/gazette` and `/passport`.
+`/gazetee`, `/pass`, `/goals`, `/roadmap` and `/contribute` redirect to `/gazette`, `/passport`, `/timeline` and `/development`.
 
 ## Passport
 
@@ -89,11 +91,16 @@ Money is tracked in a SQLite ledger (`src/lib/funds.ts`). Every change is an ent
 
 `/admin` (not linked anywhere): sign in with `ADMIN_TOKEN`. Add credits or deductions to either fund, set the legal fund to an exact balance, change goals and where Buy Me a Coffee money goes, browse and delete ledger entries, and see past months.
 
+### Timeline and goals
+
+The **Timeline and goals** tab on `/admin` adds, edits and deletes goals (status planned / in progress / achieved, progress %, optional target date and position) and timeline events (date, title, description, optional link). They live in the same SQLite database. Events dated after today show under "Coming up" on `/timeline`.
+
 ### API
 
 Public:
 
 - `GET /api/funds`: this month's budget (`raised`, `goal`), legal fund (`balance`, `goal`), currency.
+- `GET /api/roadmap`: goals and timeline events.
 
 Admin (send `Authorization: Bearer <ADMIN_TOKEN>`; amounts in major units, e.g. rupees):
 
@@ -106,6 +113,10 @@ Admin (send `Authorization: Bearer <ADMIN_TOKEN>`; amounts in major units, e.g. 
 | `DELETE /api/admin/ledger/<id>` | Remove a mistaken entry |
 | `GET /api/admin/legal-balance` | Legal fund balance |
 | `PUT /api/admin/legal-balance` `{ balance, note? }` | Set the legal fund to an exact amount (records the difference) |
+| `GET/POST /api/admin/goals` `{ title, description?, status?, progress?, targetDate?, sortOrder? }` | List or add goals (`status`: `planned`, `in_progress`, `achieved`) |
+| `PUT/DELETE /api/admin/goals/<id>` | Change any goal fields, or delete it |
+| `GET/POST /api/admin/timeline` `{ date: "2026-10-14", title, description?, link? }` | List or add timeline events |
+| `PUT/DELETE /api/admin/timeline/<id>` | Change any event fields, or delete it |
 
 ```bash
 curl -X POST https://closetrepublic.com/api/admin/ledger \

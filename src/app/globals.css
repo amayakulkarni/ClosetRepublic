@@ -23,9 +23,19 @@
   --indigo: #7a6bff;
   --violet: #c35cff;
   --spectrum: var(--red), var(--orange), var(--yellow), var(--green), var(--blue), var(--indigo), var(--violet);
-  /* How soft the spectrum is: raise for dreamier bands, lower for crisper ones. */
-  --prism-blur: 22px;
-  --prism-period: 300px;
+  /* The prism uses a pastel version of the same spectrum, so colours melt into each other instead of striping. */
+  --soft-red: #ff978f;
+  --soft-orange: #ffb47f;
+  --soft-yellow: #ffe680;
+  --soft-green: #94e3b0;
+  --soft-blue: #8cc2ff;
+  --soft-indigo: #aa9fff;
+  --soft-violet: #e09fff;
+  --soft-spectrum: var(--soft-red), var(--soft-orange), var(--soft-yellow), var(--soft-green), var(--soft-blue), var(--soft-indigo), var(--soft-violet), var(--soft-red);
+  /* How soft the prism is: more blur and a longer period give wider, gentler bands; strength is how much it tints. */
+  --prism-blur: 48px;
+  --prism-period: 1100px;
+  --prism-strength: 0.9;
 }
 
 *,
@@ -144,7 +154,8 @@ code {
   border-bottom: var(--stroke) solid var(--fg);
 }
 .site-header__inner {
-  max-width: var(--max);
+  /* Wider than the page so all seven nav items fit beside the brand and the Nature switch. */
+  max-width: 1360px;
   margin: 0 auto;
   padding: 12px var(--gutter);
   display: flex;
@@ -174,7 +185,7 @@ code {
 }
 .site-nav a {
   display: block;
-  padding: 8px 12px;
+  padding: 8px 10px;
   border-radius: 999px;
   text-decoration: none;
   font-weight: 700;
@@ -230,7 +241,7 @@ code {
   box-shadow: 0 0 0 2px var(--fg);
 }
 
-@media (max-width: 860px) {
+@media (max-width: 1279px) {
   .site-header__inner {
     flex-wrap: wrap;
     gap: 10px 14px;
@@ -892,63 +903,65 @@ html[data-nature='off'] .gh-content img {
 .prism-cursor {
   position: fixed;
   pointer-events: none;
-  /* Multiply: white becomes the spectrum, other colours keep only their own components, black stays black. */
+  /* Multiply: white takes on the spectrum, other colours keep only their own components, black stays black. */
   mix-blend-mode: multiply;
 }
 .prism {
-  left: -10vw;
-  right: -10vw;
+  left: -15vw;
+  right: -15vw;
   /* Overshoot the screen edge so the blur does not fade out the very top and bottom. */
-  height: calc(clamp(130px, 24vh, 260px) + 40px);
+  height: calc(clamp(150px, 28vh, 300px) + 80px);
   z-index: 1000;
-  background: repeating-linear-gradient(100deg, var(--spectrum), var(--red) var(--prism-period));
-  filter: blur(var(--prism-blur));
-  animation: prism-drift 18s linear infinite;
+  /* A pastel colour wheel that ends where it starts, so the repeat has no seam. */
+  background: repeating-linear-gradient(100deg, var(--soft-spectrum) var(--prism-period));
+  filter: blur(var(--prism-blur)) saturate(0.9);
+  opacity: var(--prism-strength);
+  animation: prism-drift 45s linear infinite;
 }
-/* The curved lens: full dispersion at the very edge, fading out in an arc towards the undistorted centre. */
+/* The curved lens: gentle dispersion at the edge, fading out over a long arc towards the undistorted centre. */
 .prism--top {
-  top: -40px;
-  -webkit-mask-image: radial-gradient(75% 100% at 50% 0%, #000 45%, transparent 100%);
-  mask-image: radial-gradient(75% 100% at 50% 0%, #000 45%, transparent 100%);
+  top: -80px;
+  -webkit-mask-image: radial-gradient(80% 100% at 50% 0%, #000 30%, rgba(0, 0, 0, 0.5) 65%, transparent 100%);
+  mask-image: radial-gradient(80% 100% at 50% 0%, #000 30%, rgba(0, 0, 0, 0.5) 65%, transparent 100%);
 }
 .prism--bottom {
-  bottom: -40px;
+  bottom: -80px;
   animation-direction: reverse;
-  -webkit-mask-image: radial-gradient(75% 100% at 50% 100%, #000 40%, transparent 100%);
-  mask-image: radial-gradient(75% 100% at 50% 100%, #000 40%, transparent 100%);
+  -webkit-mask-image: radial-gradient(80% 100% at 50% 100%, #000 25%, rgba(0, 0, 0, 0.5) 60%, transparent 100%);
+  mask-image: radial-gradient(80% 100% at 50% 100%, #000 25%, rgba(0, 0, 0, 0.5) 60%, transparent 100%);
 }
 .prism-cursor {
   left: 0;
   top: 0;
-  width: 240px;
-  height: 240px;
-  margin: -120px 0 0 -120px;
+  width: 280px;
+  height: 280px;
+  margin: -140px 0 0 -140px;
   border-radius: 50%;
   z-index: 1001;
-  background: conic-gradient(from 200deg, var(--spectrum), var(--red));
-  -webkit-mask-image: radial-gradient(circle, #000 35%, transparent 70%);
-  mask-image: radial-gradient(circle, #000 35%, transparent 70%);
-  filter: blur(calc(var(--prism-blur) * 0.6));
+  background: conic-gradient(from 200deg, var(--soft-spectrum));
+  -webkit-mask-image: radial-gradient(circle, #000 30%, transparent 70%);
+  mask-image: radial-gradient(circle, #000 30%, transparent 70%);
+  filter: blur(calc(var(--prism-blur) * 0.4));
   opacity: 0;
-  transition: opacity 0.25s;
+  transition: opacity 0.4s;
   will-change: transform;
 }
 .prism-cursor[data-active='true'] {
-  opacity: 1;
+  opacity: var(--prism-strength);
 }
 
-/* A little chromatic split on the white header and footer lines while the prism is on. */
+/* A faint chromatic glow on the header and footer lines while the prism is on. */
 html[data-nature='on'] .site-header,
 html[data-nature='on'] .site-footer {
   border-color: transparent;
-  border-image: linear-gradient(90deg, var(--spectrum)) 1;
+  border-image: linear-gradient(90deg, var(--soft-spectrum)) 1;
 }
 html[data-nature='on'] .brand,
 html[data-nature='on'] .site-footer__brand {
-  text-shadow: -1.5px 0 rgba(255, 59, 47, 0.75), 1.5px 0 rgba(47, 155, 255, 0.75);
+  text-shadow: -1px 0 rgba(255, 151, 143, 0.5), 1px 0 rgba(140, 194, 255, 0.5);
 }
 html[data-nature='on'] .closet-mark {
-  filter: drop-shadow(-1.5px 0 rgba(255, 59, 47, 0.8)) drop-shadow(1.5px 0 rgba(47, 155, 255, 0.8));
+  filter: drop-shadow(-1px 0 rgba(255, 151, 143, 0.55)) drop-shadow(1px 0 rgba(140, 194, 255, 0.55));
 }
 
 @keyframes prism-drift {
@@ -969,6 +982,54 @@ html[data-nature='on'] .closet-mark {
   .nature-toggle__track {
     transition: none;
   }
+}
+
+/* ---------- development page ---------- */
+
+.contribute-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+.contribute-card {
+  border: var(--stroke) solid var(--fg);
+  border-radius: var(--radius);
+  padding: 20px;
+  background: var(--panel);
+}
+.contribute-card h3 {
+  margin-top: 0;
+}
+.contribute-card p {
+  color: var(--muted);
+}
+.contribute-card a {
+  font-weight: 700;
+}
+.code-block {
+  border: var(--stroke) solid var(--fg);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  overflow-x: auto;
+  background: var(--panel);
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+.code-block code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+}
+.plain-list li + li {
+  margin-top: 8px;
+}
+.site-footer__small a {
+  color: inherit;
 }
 
 /* ---------- treasury admin ---------- */
@@ -1054,4 +1115,143 @@ html[data-nature='on'] .closet-mark {
 }
 .fund-widget .meter {
   margin: 12px 0 8px;
+}
+
+/* ---------- admin tabs, timeline and goals ---------- */
+
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 24px;
+}
+.admin-tabs [role='tab'] {
+  font: inherit;
+  font-weight: 700;
+  color: var(--fg);
+  background: none;
+  border: var(--stroke) solid var(--fg);
+  border-radius: 999px;
+  padding: 8px 18px;
+  cursor: pointer;
+}
+.admin-tabs [role='tab'][aria-selected='true'] {
+  background: var(--fg);
+  color: var(--bg);
+}
+.admin-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.admin-row-actions {
+  white-space: nowrap;
+}
+.admin-row-actions .link-button + .link-button {
+  margin-left: 14px;
+}
+.admin-link-cell {
+  word-break: break-all;
+  max-width: 220px;
+}
+
+.goal-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+.goal-grid__subhead {
+  margin: 32px 0 14px;
+}
+.goal-card {
+  border: var(--stroke) solid var(--fg);
+  border-radius: var(--radius);
+  padding: 20px;
+  background: var(--panel);
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+.goal-card h3 {
+  margin: 0;
+}
+.goal-card__text {
+  color: var(--muted);
+  margin: 0;
+}
+.goal-card__status {
+  justify-self: start;
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 2px solid var(--fg);
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+.goal-card[data-status='achieved'] .goal-card__status {
+  background: var(--fg);
+  color: var(--bg);
+}
+.goal-card[data-status='planned'] .goal-card__status {
+  border-style: dashed;
+}
+.goal-card .meter {
+  height: 14px;
+}
+.goal-card .hint {
+  margin: 0;
+}
+
+/* A vertical line with a dot per event; upcoming events get hollow dots and a dashed line. */
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 28px;
+  border-left: var(--stroke) solid var(--fg);
+}
+.timeline[data-kind='upcoming'] {
+  border-left-style: dashed;
+}
+.timeline__item {
+  position: relative;
+  padding: 0 0 28px;
+}
+.timeline__item:last-child {
+  padding-bottom: 4px;
+}
+.timeline__item::before {
+  content: '';
+  position: absolute;
+  left: -39px;
+  top: 4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: var(--stroke) solid var(--fg);
+  background: var(--fg);
+}
+.timeline[data-kind='upcoming'] .timeline__item::before {
+  background: var(--bg);
+}
+.timeline__date {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.timeline__title {
+  margin: 4px 0 6px;
+  font-size: 1.25rem;
+}
+.timeline__text {
+  margin: 0;
+  max-width: 70ch;
+  color: var(--muted);
 }
