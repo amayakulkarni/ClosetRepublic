@@ -1,17 +1,20 @@
 import { NextResponse } from 'next/server';
 import { adminRoute, amountFrom, BadRequest, readJson } from '@/lib/admin-api';
 import { budgetHistory, getSettings, getSummary, toMajor, updateSettings, type Fund } from '@/lib/funds';
+import { recordSponsorRenewals, sponsorSummary } from '@/lib/github-sponsors';
 
 export const dynamic = 'force-dynamic';
 
 /** GET /api/admin/settings  settings, current totals and the last 12 months of the budget. */
-export const GET = adminRoute(() =>
-  NextResponse.json({
+export const GET = adminRoute(() => {
+  recordSponsorRenewals();
+  return NextResponse.json({
     settings: getSettings(),
     summary: getSummary(),
+    githubSponsors: sponsorSummary(),
     history: budgetHistory().map((h) => ({ month: h.month, total: toMajor(h.total) })),
-  }),
-);
+  });
+});
 
 /** PUT /api/admin/settings  { budgetGoal?, legalGoal?, donationFund?: budget|legal } */
 export const PUT = adminRoute(async (request: Request) => {

@@ -3,26 +3,13 @@ import { BadRequest, readJson, textFrom } from '@/lib/admin-api';
 import { CONTRIBUTION_AREAS, type ContributionArea } from '@/lib/contribution-areas';
 import { addContributor } from '@/lib/contributors';
 import { sendSignupEmails } from '@/lib/contributor-mail';
+import { tooMany } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
 // POST /api/contribute  { area, name, pronouns?, email, portfolioUrl, agree: true }
 // Public sign-up for constitution, writing and art contributors. Only contact details and a
 // public link are accepted: there are no file or free-text fields, by design.
-
-const WINDOW_MS = 60 * 60 * 1000;
-const MAX_PER_WINDOW = 5;
-const recent = new Map<string, number[]>();
-
-/** A few sign-ups per address per hour is plenty; this keeps bots from filling the table. */
-function tooMany(ip: string) {
-  const now = Date.now();
-  const hits = (recent.get(ip) ?? []).filter((t) => now - t < WINDOW_MS);
-  hits.push(now);
-  recent.set(ip, hits);
-  if (recent.size > 5000) for (const [k, v] of recent) if (v.every((t) => now - t >= WINDOW_MS)) recent.delete(k);
-  return hits.length > MAX_PER_WINDOW;
-}
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -36,8 +23,7 @@ function publicLink(value: unknown) {
 }
 
 export async function POST(request: Request) {
-  const ip = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || request.headers.get('x-real-ip') || 'local';
-  if (tooMany(ip)) return NextResponse.json({ error: 'Too many sign-ups from here. Please try again in an hour.' }, { status: 429 });
+  if (tooMany('contribute', request)) return NextResponse.json({ error: 'Too many sign-ups from here. Please try again in an hour.' }, { status: 429 });
 
   try {
     const body = await readJson(request);

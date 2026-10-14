@@ -18,6 +18,7 @@ export function SiteFooter() {
             <li><Link href="/timeline">Timeline</Link></li>
             <li><Link href="/passport">Passport</Link></li>
             <li><Link href="/development">Contribute</Link></li>
+            <li><Link href="/lifeline">Lifeline</Link></li>
             <li>
               <a href="https://github.com/amayakulkarni/ClosetRepublic" target="_blank" rel="noopener noreferrer">
                 GitHub<span className="sr-only"> (opens in a new tab)</span>

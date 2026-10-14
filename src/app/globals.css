@@ -1360,3 +1360,42 @@ html[data-nature='on'] .closet-mark {
 .email-history {
   padding-left: 18px;
 }
+
+/* ---------- lifeline ---------- */
+
+.lifeline-form {
+  display: grid;
+  gap: 18px;
+  max-width: 720px;
+}
+.lifeline-form .button {
+  justify-self: start;
+}
+.lifeline-callout {
+  border: var(--stroke) dashed var(--fg);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+.lifeline-callout h2 {
+  margin-top: 0;
+}
+.unsubscribe {
+  max-width: 640px;
+}
+.lifeline-backup {
+  border: var(--stroke) solid var(--fg);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin: 8px 0 24px;
+}
+.lifeline-backup h2 {
+  margin-top: 0;
+  font-size: 1.3rem;
+}
+.lifeline-notice {
+  margin-bottom: 24px;
+}
+
+.sponsor-thanks {
+  margin-top: 14px;
+}

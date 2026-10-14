@@ -7,16 +7,19 @@ import { GhostContent } from '@/components/GhostContent';
 import { Notice } from '@/components/Notice';
 import { FundWidget } from '@/components/FundWidget';
 import { CURRENCY, getSummary } from '@/lib/funds';
+import { recordSponsorRenewals, sponsorSummary } from '@/lib/github-sponsors';
 
 export const metadata: Metadata = { title: 'Ministry of Finance' };
 export const dynamic = 'force-dynamic';
 
-// Donations go through Buy Me a Coffee (its webhook keeps the treasury up to date), plus an optional UPI ID.
+// Donations go through Buy Me a Coffee and GitHub Sponsors (their webhooks keep the treasury
+// up to date), plus an optional UPI ID.
 // The older NEXT_PUBLIC_GOFUNDME_URL is still read so existing .env files keep working.
 const env = (name: string, legacy?: string) => process.env[name] || (legacy ? process.env[legacy] : '') || '';
 const DONATE_URL = env('NEXT_PUBLIC_DONATE_URL', 'NEXT_PUBLIC_GOFUNDME_URL');
 const DONATE_LABEL = env('NEXT_PUBLIC_DONATE_LABEL') || 'Buy me a compute';
 const UPI_ID = env('NEXT_PUBLIC_UPI_ID');
+const SPONSORS_URL = env('NEXT_PUBLIC_GITHUB_SPONSORS_URL');
 const UPI_NAME = env('NEXT_PUBLIC_UPI_NAME') || 'Closet Republic';
 
 const money = (n: number) =>
@@ -35,7 +38,9 @@ export default async function FundingPage() {
     { budget: null, natureBudget: null, authors: [] },
   );
   const budget = on && data.natureBudget ? data.natureBudget : data.budget;
+  recordSponsorRenewals();
   const funds = getSummary();
+  const sponsors = sponsorSummary();
 
   return (
     <>
@@ -47,7 +52,7 @@ export default async function FundingPage() {
               ? 'The proposed budget for the governance and management of the Republic. Citizens are kindly reminded that the tax is unfair and entirely optional.'
               : 'Closet Republic is run by volunteers and funded by donations. Here is where the money goes.'}
           </p>
-          {(DONATE_URL || UPI_ID) && (
+          {(DONATE_URL || UPI_ID || SPONSORS_URL) && (
             <p className="hero__actions">
               {DONATE_URL && (
                 <a className="button" href={DONATE_URL} target="_blank" rel="noopener noreferrer">
@@ -55,8 +60,14 @@ export default async function FundingPage() {
                   <span className="sr-only"> (opens in a new tab)</span>
                 </a>
               )}
+              {SPONSORS_URL && (
+                <a className={DONATE_URL ? 'button button--ghost' : 'button'} href={SPONSORS_URL} target="_blank" rel="noopener noreferrer">
+                  Sponsor on GitHub
+                  <span className="sr-only"> (opens in a new tab)</span>
+                </a>
+              )}
               {UPI_ID && (
-                <a className={DONATE_URL ? 'button button--ghost' : 'button'} href={upiLink(UPI_ID)}>
+                <a className={DONATE_URL || SPONSORS_URL ? 'button button--ghost' : 'button'} href={upiLink(UPI_ID)}>
                   {on ? 'Pay tax by UPI' : 'Pay by UPI'}
                   <span className="sr-only"> (opens your UPI app)</span>
                 </a>
@@ -94,6 +105,25 @@ export default async function FundingPage() {
             money={money}
           />
         </div>
+        {sponsors.count > 0 && (
+          <p className="hint sponsor-thanks">
+            {sponsors.count} {sponsors.count === 1 ? 'person sponsors' : 'people sponsor'} us monthly on GitHub
+            {sponsors.publicLogins.length > 0 && (
+              <>
+                . Thank you{' '}
+                {sponsors.publicLogins.map((login, i) => (
+                  <span key={login}>
+                    {i > 0 && (i === sponsors.publicLogins.length - 1 ? ' and ' : ', ')}
+                    <a href={`https://github.com/${encodeURIComponent(login)}`} target="_blank" rel="noopener noreferrer">
+                      @{login}
+                    </a>
+                  </span>
+                ))}
+              </>
+            )}
+            .
+          </p>
+        )}
       </section>
 
       <section aria-labelledby="budget-heading" className="section">

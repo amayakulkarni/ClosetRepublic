@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { safeEqual } from '@/lib/admin-auth';
 import { CURRENCY, addEntry, getSettings, toMinor } from '@/lib/funds';
+import { rateFor } from '@/lib/exchange';
 
 // Buy Me a Coffee webhook: Buy Me a Coffee → Settings → Webhooks → add
 //   https://<your site>/api/webhooks/buymeacoffee
@@ -15,16 +16,6 @@ export const dynamic = 'force-dynamic';
 
 const SECRET = process.env.BMC_WEBHOOK_SECRET || '';
 const ACCEPT_TEST_EVENTS = process.env.BMC_ACCEPT_TEST_EVENTS === 'true';
-
-/** BMC_EXCHANGE_RATES="USD=84,EUR=91" converts other currencies into FUNDING_CURRENCY. */
-function rateFor(currency: string) {
-  if (!currency || currency.toUpperCase() === CURRENCY.toUpperCase()) return 1;
-  for (const pair of (process.env.BMC_EXCHANGE_RATES || '').split(',')) {
-    const [code, rate] = pair.split('=').map((s) => s.trim());
-    if (code?.toUpperCase() === currency.toUpperCase() && Number(rate) > 0) return Number(rate);
-  }
-  return null;
-}
 
 type BmcEvent = {
   type?: string;
@@ -87,7 +78,7 @@ export async function POST(request: Request) {
     supporterName: data.supporter_name || null,
     note: [
       type,
-      rate === null ? `not converted: add ${currency} to BMC_EXCHANGE_RATES` : null,
+      rate === null ? `not converted: add ${currency} to EXCHANGE_RATES` : null,
       !hidden && data.support_note ? data.support_note.slice(0, 300) : null,
     ]
       .filter(Boolean)

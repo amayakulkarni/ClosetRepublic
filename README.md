@@ -24,6 +24,9 @@ Get the Content API key in Ghost Admin → Settings → Integrations → Add cus
 | `BMC_WEBHOOK_SECRET` | Secret of the Buy Me a Coffee webhook (required for tracking donations) |
 | `BMC_EXCHANGE_RATES` | Converts Buy Me a Coffee payments into `FUNDING_CURRENCY`, e.g. `USD=84,EUR=91` |
 | `BMC_ACCEPT_TEST_EVENTS` | `true` to record Buy Me a Coffee test events while setting up |
+| `NEXT_PUBLIC_GITHUB_SPONSORS_URL` | Your GitHub Sponsors page, e.g. `https://github.com/sponsors/amayakulkarni`; shows a "Sponsor on GitHub" button on `/funding` and `/development` |
+| `GITHUB_SPONSORS_WEBHOOK_SECRET` | Secret of the GitHub Sponsors webhook (required for tracking sponsorships) |
+| `EXCHANGE_RATES` | Converts foreign payments into `FUNDING_CURRENCY` for both Buy Me a Coffee and GitHub Sponsors, e.g. `USD=84,EUR=91` (falls back to `BMC_EXCHANGE_RATES`) |
 | `ADMIN_TOKEN` | Secret for `/admin` and the admin API (16+ characters) |
 | `DATABASE_PATH` | SQLite file for the treasury, default `./data/closet-republic.db` |
 | `FUNDING_CURRENCY`, `FUNDING_TIMEZONE` | Default `INR` and `Asia/Kolkata` (when the month rolls over) |
@@ -63,6 +66,7 @@ Nature editions are separate Ghost posts or pages whose slug is the original slu
 | `/lawmakers`, `/lawmakers/<author-slug>` | Ghost authors: name, photo, bio, location, website and social links, and their posts |
 | `/passport` | Passport generator (no Ghost content) |
 | `/timeline` | Goals and a dated timeline (past and upcoming), managed on `/admin`; not from Ghost |
+| `/lifeline` | Lifeline sign-up (nature: Emergency Broadcast System): email, optional name. `/lifeline/unsubscribe?token=…` lets people leave |
 | `/development` | How to contribute code, linking the GitHub repository (no Ghost content) |
 | `/development/constitution`, `/writing`, `/art` | A sign-up form per area: name, pronouns, email and a public portfolio link only (no uploads, no free text), with the rules about public work, verification and sharing ideas in public |
 
@@ -96,11 +100,21 @@ Money is tracked in a SQLite ledger (`src/lib/funds.ts`). Every change is an ent
 
 - **Monthly budget:** only this month's entries count, so it starts again from zero on the 1st of every month (`FUNDING_TIMEZONE`). Earlier months stay in the history.
 - **Legal fund:** a running balance that never resets.
-- **Buy Me a Coffee:** each payment (donation, membership, extra) adds to the fund chosen on `/admin` (monthly budget by default); refunds take it back out. Retries are ignored. Payments in other currencies are converted with `BMC_EXCHANGE_RATES`.
+- **Buy Me a Coffee:** each payment (donation, membership, extra) adds to the fund chosen on `/admin` (monthly budget by default); refunds take it back out. Retries are ignored. Payments in other currencies are converted with `EXCHANGE_RATES`.
+- **GitHub Sponsors:** a new sponsorship adds its first payment (in USD, converted with `EXCHANGE_RATES`) to the same fund. Monthly sponsors get one entry per month while they stay active, added the first time the treasury is read in a new month. Tier changes apply from the next month. Because GitHub doesn't send renewal events, a sponsor who cancels may get one extra month recorded if the cancellation arrives late; delete that entry on `/admin`. Private sponsors appear as "Private sponsor"; public ones are thanked by name on `/funding`. `.github/FUNDING.yml` adds the Sponsor button on the repository.
 
 ### Admin page
 
 `/admin` (not linked anywhere): sign in with `ADMIN_TOKEN`. Add credits or deductions to either fund, set the legal fund to an exact balance, change goals and where Buy Me a Coffee money goes, browse and delete ledger entries, and see past months.
+
+### Lifeline
+
+The Lifeline is an email list kept for one job: if closetrepublic.com is taken down, everyone on it gets the new address, the GitHub repository and the donation link. People join on `/lifeline` (also linked from the home page and footer), get one welcome email, and every email has an unsubscribe link plus "reply unsubscribe".
+
+The **Lifeline** tab on `/admin`:
+
+- **Download CSV** (subscribed people; or include those who left). **Keep a copy off the server**: if the site is taken down the server and its database may go too. The tab shows when you last downloaded it and nags after 30 days. Any mail tool can import the CSV; or use **Copy addresses for BCC** and paste them into BCC (never To or CC).
+- **Send an emergency notice**: subject, message, new site address, GitHub, donation link and other resources. **Send a test to me** goes to `CONTRIBUTIONS_EMAIL`; the real send emails each subscriber one at a time with their own unsubscribe link, and shows progress.
 
 ### Contributors
 
@@ -141,6 +155,10 @@ Admin (send `Authorization: Bearer <ADMIN_TOKEN>`; amounts in major units, e.g. 
 | `GET /api/admin/contributors?area=art&status=new` | List contributor sign-ups |
 | `PUT/DELETE /api/admin/contributors/<id>` `{ status?, adminNote?, notify? }` | Update (verified/declined emails them unless `notify: false`) or delete a sign-up |
 | `GET/POST /api/admin/contributors/<id>/email` `{ subject, message }` | Emails sent to them, or send a new one |
+| `GET /api/admin/lifeline` | Lifeline subscribers, counts and past notices |
+| `GET /api/admin/lifeline/export[?all=1]` | The Lifeline list as CSV |
+| `POST /api/admin/lifeline/notice` `{ subject, message, siteUrl?, githubUrl?, donateUrl?, resources?, test? }` | Send the emergency notice (or a test to yourself) |
+| `DELETE /api/admin/lifeline/<id>` | Remove a subscriber |
 
 ```bash
 curl -X POST https://closetrepublic.com/api/admin/ledger \
@@ -154,4 +172,5 @@ curl -X POST https://closetrepublic.com/api/admin/ledger \
 2. Put the production values in `.env.local` next to `package.json`: at least `GHOST_CONTENT_API_KEY`, `ADMIN_TOKEN`, `BMC_WEBHOOK_SECRET`, `NEXT_PUBLIC_DONATE_URL`. Variables starting with `NEXT_PUBLIC_` are baked in at build time, so rebuild after changing them.
 3. `pm2 start ecosystem.config.cjs && pm2 save`. The site listens on port 40001; point your reverse proxy (nginx, Caddy…) for closetrepublic.com at it.
 4. In Buy Me a Coffee → Settings → Webhooks, add `https://closetrepublic.com/api/webhooks/buymeacoffee`, tick the payment events, and copy the secret into `BMC_WEBHOOK_SECRET`. Set `BMC_ACCEPT_TEST_EVENTS=true` while you try "send test", then back to `false`.
+5. GitHub Sponsors (once your profile is approved): in github.com/sponsors/amayakulkarni/dashboard → Webhooks, add `https://closetrepublic.com/api/webhooks/github-sponsors`, content type `application/json`, and a secret, which goes into `GITHUB_SPONSORS_WEBHOOK_SECRET`. Set `NEXT_PUBLIC_GITHUB_SPONSORS_URL` to show the buttons.
 5. Back up `data/closet-republic.db` (it holds the whole treasury). Keep the `data` folder when you redeploy.

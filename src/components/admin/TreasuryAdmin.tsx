@@ -21,9 +21,11 @@ type Overview = {
   settings: { budgetGoal: number; legalGoal: number; donationFund: Fund };
   summary: { currency: string; month: string; monthLabel: string; budget: { raised: number; goal: number }; legal: { balance: number; goal: number } };
   history: { month: string; total: number }[];
+  githubSponsors: { count: number; monthlyUsd: number; publicLogins: string[] };
 };
 
 const FUND_LABEL: Record<Fund, string> = { budget: 'Monthly budget', legal: 'Legal fund' };
+const SOURCE_LABEL: Record<string, string> = { buymeacoffee: 'Buy Me a Coffee', github: 'GitHub Sponsors' };
 
 export function TreasuryAdmin() {
   const [overview, setOverview] = useState<Overview | null>(null);
@@ -90,8 +92,14 @@ export function TreasuryAdmin() {
           {summary.legal.goal > 0 && <p className="hint">of {money(summary.legal.goal)} target</p>}
         </div>
         <div className="stat">
-          <dt>Buy Me a Coffee goes to</dt>
+          <dt>GitHub sponsors</dt>
+          <dd>{overview.githubSponsors.count}</dd>
+          <p className="hint">${overview.githubSponsors.monthlyUsd.toFixed(2)} a month</p>
+        </div>
+        <div className="stat">
+          <dt>Donations go to</dt>
           <dd className="stat__small">{FUND_LABEL[settings.donationFund]}</dd>
+          <p className="hint">Buy Me a Coffee and GitHub Sponsors</p>
         </div>
       </dl>
 
@@ -176,7 +184,7 @@ export function TreasuryAdmin() {
             <input id="s-legal" name="legalGoal" type="number" step="1" min="0" defaultValue={settings.legalGoal} />
           </div>
           <div className="field">
-            <label htmlFor="s-fund">Buy Me a Coffee money goes to</label>
+            <label htmlFor="s-fund">Buy Me a Coffee and GitHub Sponsors money goes to</label>
             <select id="s-fund" name="donationFund" defaultValue={settings.donationFund}>
               <option value="budget">Monthly budget</option>
               <option value="legal">Legal fund</option>
@@ -231,7 +239,7 @@ export function TreasuryAdmin() {
                       </span>
                     )}
                   </td>
-                  <td>{[e.source === 'buymeacoffee' ? `Buy Me a Coffee${e.supporterName ? `: ${e.supporterName}` : ''}` : 'Admin', e.note].filter(Boolean).join(' · ')}</td>
+                  <td>{[SOURCE_LABEL[e.source] ? `${SOURCE_LABEL[e.source]}${e.supporterName ? `: ${e.supporterName}` : ''}` : 'Admin', e.note].filter(Boolean).join(' · ')}</td>
                   <td>
                     <button
                       className="link-button"

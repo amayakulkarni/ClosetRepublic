@@ -25,6 +25,12 @@ export default async function DevelopmentLayout({ children }: { children: React.
               Issues
               <span className="sr-only"> (opens in a new tab)</span>
             </a>
+            {process.env.NEXT_PUBLIC_GITHUB_SPONSORS_URL && (
+              <a className="button button--ghost" href={process.env.NEXT_PUBLIC_GITHUB_SPONSORS_URL} target="_blank" rel="noopener noreferrer">
+                Sponsor
+                <span className="sr-only"> on GitHub (opens in a new tab)</span>
+              </a>
+            )}
           </p>
         </div>
         <Art name="looking-ahead" nature={on} className="page-head__art" />

@@ -77,6 +77,18 @@ export default async function Home() {
           </div>
         </section>
       )}
+
+      <section aria-labelledby="lifeline-heading" className="section lifeline-callout">
+        <h2 id="lifeline-heading">{on ? 'Register for the Emergency Broadcast' : 'If this site ever disappears'}</h2>
+        <p>
+          {on
+            ? 'Should the Republic be forced into exile, every registered citizen will be told where its new seat is.'
+            : 'Join the Lifeline and we will email you the new address, GitHub and donation links if closetrepublic.com is taken down. Nothing else.'}
+        </p>
+        <Link className="button" href="/lifeline">
+          {on ? 'Register' : 'Join the Lifeline'}
+        </Link>
+      </section>
     </>
   );
 }

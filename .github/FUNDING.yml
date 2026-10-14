@@ -1,0 +1,4 @@
+# Shows a "Sponsor" button on the GitHub repository.
+# Your GitHub Sponsors profile must be approved before the github entry works.
+github: [amayakulkarni]
+custom: ["https://buymeacoffee.com/amayakulkarni"]

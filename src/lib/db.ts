@@ -4,7 +4,8 @@ import path from 'node:path';
 import Database from 'better-sqlite3';
 
 // The site's one SQLite database: the treasury ledger and settings, the timeline and goals,
-// contributor sign-ups from /development, and a log of the emails sent about them.
+// contributor sign-ups from /development, a log of the emails sent, and the Lifeline
+// subscribers who get the new address if the site is ever taken down.
 // Tables are created on first use, so a new or existing database file just works.
 
 const DB_PATH = path.resolve(/*turbopackIgnore: true*/ process.env.DATABASE_PATH || path.join(process.cwd(), 'data', 'closet-republic.db'));
@@ -75,6 +76,41 @@ const SCHEMA = `
     created_at TEXT NOT NULL
   );
   CREATE INDEX IF NOT EXISTS email_log_contributor ON email_log (contributor_id, created_at);
+
+  CREATE TABLE IF NOT EXISTS subscribers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    name TEXT,
+    token TEXT NOT NULL UNIQUE,
+    status TEXT NOT NULL DEFAULT 'subscribed' CHECK (status IN ('subscribed', 'unsubscribed')),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS github_sponsors (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    node_id TEXT NOT NULL UNIQUE,
+    login TEXT NOT NULL,
+    is_public INTEGER NOT NULL,
+    tier_name TEXT,
+    monthly_cents INTEGER NOT NULL,
+    one_time INTEGER NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('active', 'cancelled')),
+    started_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS broadcasts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    subject TEXT NOT NULL,
+    body TEXT NOT NULL,
+    total INTEGER NOT NULL,
+    sent INTEGER NOT NULL DEFAULT 0,
+    failed INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL CHECK (status IN ('sending', 'done')),
+    created_at TEXT NOT NULL,
+    finished_at TEXT
+  );
 `;
 
 const globalForDb = globalThis as unknown as { crDb?: Database.Database };

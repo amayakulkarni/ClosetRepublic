@@ -37,6 +37,8 @@ export type Mail = {
   text: string;
   html: string;
   replyTo?: string;
+  /** Extra headers, e.g. List-Unsubscribe. */
+  headers?: Record<string, string>;
   /** For the log: what this email is about. */
   kind: string;
   contributorId?: number | null;
@@ -62,7 +64,7 @@ export async function sendMail(m: Mail): Promise<MailResult> {
     result = { status: 'skipped', error: 'Email is not set up (SMTP_HOST and MAIL_FROM)' };
   } else {
     try {
-      await transporter().sendMail({ from: MAIL_FROM, to: m.to, replyTo: m.replyTo, subject, text: m.text, html: m.html });
+      await transporter().sendMail({ from: MAIL_FROM, to: m.to, replyTo: m.replyTo, subject, text: m.text, html: m.html, headers: m.headers });
       result = { status: 'sent' };
     } catch (err) {
       console.error(`mail: could not send "${subject}" to ${m.to}`, err);
