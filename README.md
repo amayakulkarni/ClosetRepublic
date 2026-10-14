@@ -63,6 +63,12 @@ Nature editions are separate Ghost posts or pages whose slug is the original slu
 
 `/gazetee`, `/pass`, `/goals`, `/roadmap` and `/contribute` redirect to `/gazette`, `/passport`, `/timeline` and `/development`.
 
+## Search engines
+
+- `/robots.txt` (`src/app/robots.ts`) allows everything except `/admin` and `/api/`, and points to the sitemap.
+- `/sitemap.xml` (`src/app/sitemap.ts`) lists the fixed pages plus every gazette post, constitution section and lawmaker from Ghost. It refreshes every 30 minutes. Nature editions are left out because they are the same pages in the other mode.
+- Both use `SITE_URL` (default `https://closetrepublic.com`). Submit `https://closetrepublic.com/sitemap.xml` in Google Search Console and Bing Webmaster Tools.
+
 ## Passport
 
 Runs entirely in the browser (`src/components/passport`, `src/lib/passport-pdf.ts`): nothing is uploaded. People upload a photo or build an Open Peeps avatar, fill in their particulars, take the oath, and get a 6-page A4 PDF:
