@@ -1,10 +1,8 @@
 import type { Metadata } from 'next';
 import { getNature } from '@/lib/nature';
-import { Art } from '@/components/Art';
+import { GITHUB_URL as REPO } from '@/lib/community';
 
 export const metadata: Metadata = { title: 'Development of CR' };
-
-const REPO = 'https://github.com/amayakulkarni/ClosetRepublic';
 
 const WAYS = [
   {
@@ -17,7 +15,7 @@ const WAYS = [
   {
     nature: 'Draft a bill',
     plain: 'Suggest an idea',
-    text: 'A new page, a better passport, a kinder wording. Start a discussion in the issues before building something big.',
+    text: 'A new page, a better passport, a kinder wording. Ideas are discussed in public, so open an issue rather than sending them privately.',
     href: `${REPO}/issues`,
     link: 'Browse issues',
   },
@@ -28,44 +26,12 @@ const WAYS = [
     href: `${REPO}/fork`,
     link: 'Fork the repository',
   },
-  {
-    nature: 'Paint the walls',
-    plain: 'Make art',
-    text: 'Illustrations, icons and nature-mode effects are welcome, as long as they come with alt text that describes how they look.',
-    href: REPO,
-    link: 'See the art folders',
-  },
 ];
 
 export default async function DevelopmentPage() {
   const { on } = await getNature();
   return (
     <>
-      <header className="page-head">
-        <div>
-          <h1>{on ? 'Ministry of Public Works' : 'Development and contributing'}</h1>
-          <p className="lede">
-            {on
-              ? 'The Republic is built in the open by its citizens. Every road, bridge and passport stamp lives in a public repository, and anyone may pick up a shovel.'
-              : 'Closet Republic is open source. The whole site lives on GitHub, and contributions of every size are welcome.'}
-          </p>
-          <p className="hero__actions">
-            <a className="button" href={REPO} target="_blank" rel="noopener noreferrer">
-              {on ? 'Visit the public works' : 'View on GitHub'}
-              <span className="sr-only"> (opens in a new tab)</span>
-            </a>
-            <a className="button button--ghost" href={`${REPO}/issues`} target="_blank" rel="noopener noreferrer">
-              Issues
-              <span className="sr-only"> (opens in a new tab)</span>
-            </a>
-          </p>
-          <p className="hint">
-            <code>github.com/amayakulkarni/ClosetRepublic</code>
-          </p>
-        </div>
-        <Art name="looking-ahead" nature={on} className="page-head__art" />
-      </header>
-
       <section aria-labelledby="ways-heading" className="section">
         <h2 id="ways-heading">{on ? 'How citizens build the Republic' : 'Ways to contribute'}</h2>
         <ul className="contribute-grid">
@@ -80,6 +46,10 @@ export default async function DevelopmentPage() {
             </li>
           ))}
         </ul>
+        <p>
+          Want to help with the <a href="/development/constitution">constitution</a>, <a href="/development/writing">writing</a> or{' '}
+          <a href="/development/art">artwork</a>? Each has its own tab above.
+        </p>
       </section>
 
       <section aria-labelledby="setup-heading" className="section">

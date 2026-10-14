@@ -3,7 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import Database from 'better-sqlite3';
 
-// The site's one SQLite database: the treasury ledger and settings, and the timeline and goals.
+// The site's one SQLite database: the treasury ledger and settings, the timeline and goals,
+// contributor sign-ups from /development, and a log of the emails sent about them.
 // Tables are created on first use, so a new or existing database file just works.
 
 const DB_PATH = path.resolve(/*turbopackIgnore: true*/ process.env.DATABASE_PATH || path.join(process.cwd(), 'data', 'closet-republic.db'));
@@ -48,6 +49,32 @@ const SCHEMA = `
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS contributors (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    area TEXT NOT NULL CHECK (area IN ('constitution', 'writing', 'art')),
+    name TEXT NOT NULL,
+    pronouns TEXT,
+    email TEXT NOT NULL,
+    portfolio_url TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'new' CHECK (status IN ('new', 'verifying', 'verified', 'declined')),
+    admin_note TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS contributors_area ON contributors (area, created_at);
+
+  CREATE TABLE IF NOT EXISTS email_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    contributor_id INTEGER,
+    kind TEXT NOT NULL,
+    to_address TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('sent', 'failed', 'skipped')),
+    error TEXT,
+    created_at TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS email_log_contributor ON email_log (contributor_id, created_at);
 `;
 
 const globalForDb = globalThis as unknown as { crDb?: Database.Database };

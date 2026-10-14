@@ -28,6 +28,10 @@ Get the Content API key in Ghost Admin → Settings → Integrations → Add cus
 | `DATABASE_PATH` | SQLite file for the treasury, default `./data/closet-republic.db` |
 | `FUNDING_CURRENCY`, `FUNDING_TIMEZONE` | Default `INR` and `Asia/Kolkata` (when the month rolls over) |
 | `FUNDING_GOAL`, `LEGAL_FUND_GOAL` | Starting goals; after that, set them on `/admin` |
+| `COMMUNITY_REDDIT_URL`, `COMMUNITY_FORUM_URL`, `COMMUNITY_FORUM_NAME` | Public places for ideas, linked on the contribute tabs; empty shows "link coming soon" |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` | Any SMTP provider for contributor emails; email is off while `SMTP_HOST` is empty |
+| `MAIL_FROM` | Sender, e.g. `Closet Republic <hello@closetrepublic.com>` |
+| `CONTRIBUTIONS_EMAIL`, `MAIL_REPLY_TO` | Inbox for new-contributor alerts (and contributors' replies); optional separate reply-to |
 | `SITE_URL` | Public site URL for social previews, defaults to `https://closetrepublic.com` |
 
 ## Nature mode
@@ -59,7 +63,8 @@ Nature editions are separate Ghost posts or pages whose slug is the original slu
 | `/lawmakers`, `/lawmakers/<author-slug>` | Ghost authors: name, photo, bio, location, website and social links, and their posts |
 | `/passport` | Passport generator (no Ghost content) |
 | `/timeline` | Goals and a dated timeline (past and upcoming), managed on `/admin`; not from Ghost |
-| `/development` | How to contribute, linking the GitHub repository (no Ghost content) |
+| `/development` | How to contribute code, linking the GitHub repository (no Ghost content) |
+| `/development/constitution`, `/writing`, `/art` | A sign-up form per area: name, pronouns, email and a public portfolio link only (no uploads, no free text), with the rules about public work, verification and sharing ideas in public |
 
 `/gazetee`, `/pass`, `/goals`, `/roadmap` and `/contribute` redirect to `/gazette`, `/passport`, `/timeline` and `/development`.
 
@@ -97,6 +102,16 @@ Money is tracked in a SQLite ledger (`src/lib/funds.ts`). Every change is an ent
 
 `/admin` (not linked anywhere): sign in with `ADMIN_TOKEN`. Add credits or deductions to either fund, set the legal fund to an exact balance, change goals and where Buy Me a Coffee money goes, browse and delete ledger entries, and see past months.
 
+### Contributors
+
+The **Contributors** tab on `/admin` lists sign-ups from the constitution, writing and art forms. Open each portfolio link to verify the work is theirs (or commissioned by them), then set the status to verifying, verified or declined, add a private note, or delete their details. Sign-ups are limited to 5 per hour per visitor and include a hidden bot trap.
+
+Email (once the SMTP variables are set):
+
+- **New sign-up:** the contributor gets a confirmation that repeats the rules (public links only, verification, ideas go to the public community), and `CONTRIBUTIONS_EMAIL` gets an alert with their details.
+- **Verified or declined:** changing the status emails the contributor (untick "Email contributors when I verify or decline them" to skip it). Other statuses send nothing.
+- **Email button:** write to one contributor and see every email sent to them. Every attempt, including failures, is kept in the `email_log` table.
+
 ### Timeline and goals
 
 The **Timeline and goals** tab on `/admin` adds, edits and deletes goals (status planned / in progress / achieved, progress %, optional target date and position) and timeline events (date, title, description, optional link). They live in the same SQLite database. Events dated after today show under "Coming up" on `/timeline`.
@@ -123,6 +138,9 @@ Admin (send `Authorization: Bearer <ADMIN_TOKEN>`; amounts in major units, e.g. 
 | `PUT/DELETE /api/admin/goals/<id>` | Change any goal fields, or delete it |
 | `GET/POST /api/admin/timeline` `{ date: "2026-10-14", title, description?, link? }` | List or add timeline events |
 | `PUT/DELETE /api/admin/timeline/<id>` | Change any event fields, or delete it |
+| `GET /api/admin/contributors?area=art&status=new` | List contributor sign-ups |
+| `PUT/DELETE /api/admin/contributors/<id>` `{ status?, adminNote?, notify? }` | Update (verified/declined emails them unless `notify: false`) or delete a sign-up |
+| `GET/POST /api/admin/contributors/<id>/email` `{ subject, message }` | Emails sent to them, or send a new one |
 
 ```bash
 curl -X POST https://closetrepublic.com/api/admin/ledger \
