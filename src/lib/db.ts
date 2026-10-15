@@ -152,6 +152,23 @@ const SCHEMA = `
     created_at TEXT NOT NULL
   );
 
+  -- Crypto checkout (BTCPay). An order links an invoice to the Discord account that asked for it
+  -- and is deleted as soon as the invoice settles. Settled invoices are remembered by id only,
+  -- so a repeated webhook never grants twice.
+  CREATE TABLE IF NOT EXISTS crypto_orders (
+    token TEXT PRIMARY KEY,
+    discord_id TEXT NOT NULL,
+    tier TEXT NOT NULL,
+    months INTEGER NOT NULL,
+    amount_usd REAL NOT NULL,
+    invoice_id TEXT,
+    created_at TEXT NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS crypto_payments (
+    invoice_id TEXT PRIMARY KEY,
+    created_at TEXT NOT NULL
+  );
+
   -- Membership messages the bot has sent (or could not deliver yet), so none repeats.
   CREATE TABLE IF NOT EXISTS discord_notices (
     discord_id TEXT NOT NULL,
@@ -197,7 +214,7 @@ let lastPurge = 0;
 /**
  * Deletes data past the retention periods promised in the Privacy Policy (content/pages/privacy.md):
  * unsubscribed Lifeline addresses after 30 days, declined contributors after 90 days,
- * the email log after 12 months, ended memberships after 90 days and expired link codes.
+ * the email log after 12 months, ended memberships after 90 days, expired link codes, unpaid crypto orders after 7 days and expired grants after 90 days.
  * Runs at most once a day.
  */
 function purgeExpired(conn: Database.Database) {
@@ -211,6 +228,9 @@ function purgeExpired(conn: Database.Database) {
   // Memberships that ended more than 90 days ago (well past the 7-day grace period).
   conn.prepare("DELETE FROM memberships WHERE status IN ('ended', 'lapsed', 'revoked') AND updated_at < ?").run(before(90));
   conn.prepare('DELETE FROM discord_notices WHERE created_at < ?').run(before(90));
+  // Crypto orders never paid (the invoice lasts 30 minutes; a week allows late payments), and grants long expired.
+  conn.prepare('DELETE FROM crypto_orders WHERE created_at < ?').run(before(7));
+  conn.prepare('DELETE FROM discord_grants WHERE expires_at < ?').run(before(90));
 }
 
 export function db() {

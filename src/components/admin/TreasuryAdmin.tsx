@@ -38,7 +38,7 @@ const FUND_LABEL: Record<Fund, string> = { budget: 'Monthly budget', legal: 'Leg
 const FUND_ORDER: Fund[] = ['budget', 'legal', 'welfare', 'infrastructure'];
 const BALANCE_FUNDS: Fund[] = ['legal', 'welfare', 'infrastructure'];
 const POT_LABEL: Record<Pot, string> = { creators: 'Creators and interns', community: 'Need-based help' };
-const SOURCE_LABEL: Record<string, string> = { buymeacoffee: 'Buy Me a Coffee', github: 'GitHub Sponsors' };
+const SOURCE_LABEL: Record<string, string> = { buymeacoffee: 'Buy Me a Coffee', github: 'GitHub Sponsors', crypto: 'Crypto (BTCPay)' };
 
 export function TreasuryAdmin() {
   const [overview, setOverview] = useState<Overview | null>(null);

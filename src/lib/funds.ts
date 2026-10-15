@@ -31,7 +31,7 @@ export type LedgerEntry = {
   amountMinor: number;
   originalAmount: number | null;
   originalCurrency: string | null;
-  source: 'buymeacoffee' | 'github' | 'admin';
+  source: 'buymeacoffee' | 'github' | 'crypto' | 'admin';
   externalId: string | null;
   supporterName: string | null;
   note: string | null;
@@ -59,7 +59,7 @@ type Row = {
   amount_minor: number;
   original_amount: number | null;
   original_currency: string | null;
-  source: 'buymeacoffee' | 'github' | 'admin';
+  source: 'buymeacoffee' | 'github' | 'crypto' | 'admin';
   external_id: string | null;
   supporter_name: string | null;
   note: string | null;

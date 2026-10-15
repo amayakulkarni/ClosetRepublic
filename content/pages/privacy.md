@@ -78,6 +78,7 @@ If you are a Buy Me a Coffee member and want your class role in our Discord serv
 | From Buy Me a Coffee: your membership's level, status, dates and subscription ID, and your email | To know which class you have and when it ends | While the membership is active, then deleted 90 days after it ends |
 | Your settings (discreet mode, being thanked by name), the class we last gave you, and the membership messages the bot sent you | To apply your choices and avoid repeating messages | Messages: 90 days. The rest: until `/forget-me` |
 | A 6-digit code we email you, stored only in scrambled (hashed) form | To check the email is yours | 15 minutes, or until used |
+| If you pay with crypto: your Discord ID, the class and number of months you chose, and a random order code | To give your Discord account the class you paid for | The order is deleted as soon as the payment is confirmed (or 7 days after an unpaid order). The class itself is kept until it ends plus 90 days |
 
 Signing in with Discord only tells us your Discord ID and display name; we show the name on the page during sign-in and never store it, and we hand Discord's access back straight away. Our Discord bot reads your roles in our server and changes only class and lounge roles. If you join our forum with Discord, the forum uses the same Discord ID. Discord's own handling of your data is covered by Discord's privacy policy.
 
@@ -93,7 +94,10 @@ We never receive or store card numbers, bank details or billing addresses. The p
 | --- | --- | --- |
 | Buy Me a Coffee | The name you entered, the amount, currency and a transaction ID. For one-off donations it may also send your email address, which we discard. For memberships, see "Discord membership roles" above | Name (as you entered it), amount, currency, date and transaction ID in our treasury ledger |
 | GitHub Sponsors | Your GitHub username, your tier and amount, whether your sponsorship is public or private, and when it started or ended | The same. Public sponsors are thanked by username on the funding page; private sponsors are recorded as "Private sponsor" and never named |
+| Crypto (BTCPay Server, run by us) | The invoice, the amount and, on a public blockchain, the transaction. We never ask for or receive your name or email, and we see no wallet identity beyond what the blockchain shows | Amount, currency and date in our treasury ledger, with no name. BTCPay keeps the invoice, which is archived monthly |
 | UPI | Whatever your bank shows on our bank statement, usually your name or UPI ID | Only the amount and date are entered in the ledger, unless you ask to be thanked by name |
+
+Crypto payments to Bitcoin addresses and most other blockchains are public and permanent: anyone can see the amount and the addresses involved. Monero and Lightning hide most of this. Choose the network that matches how private you need to be.
 
 Treasury records are kept for as long as accounting and tax laws require (usually between 6 and 8 years). To avoid being named, use a nickname with Buy Me a Coffee or choose a private sponsorship on GitHub.
 

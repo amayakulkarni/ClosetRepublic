@@ -8,6 +8,7 @@ import { Notice } from '@/components/Notice';
 import { FundWidget } from '@/components/FundWidget';
 import { CURRENCY, getSummary } from '@/lib/funds';
 import { recordSponsorRenewals, sponsorSummary } from '@/lib/github-sponsors';
+import { btcpayConfigured } from '@/lib/btcpay';
 
 export const metadata: Metadata = { title: 'Ministry of Finance' };
 export const dynamic = 'force-dynamic';
@@ -52,7 +53,7 @@ export default async function FundingPage() {
               ? 'The proposed budget for the governance and management of the Republic. Citizens are kindly reminded that the tax is unfair and entirely optional.'
               : 'Closet Republic is run by volunteers and funded by donations. Here is where the money goes.'}
           </p>
-          {(DONATE_URL || UPI_ID || SPONSORS_URL) && (
+          {(DONATE_URL || UPI_ID || SPONSORS_URL || btcpayConfigured()) && (
             <p className="hero__actions">
               {DONATE_URL && (
                 <a className="button" href={DONATE_URL} target="_blank" rel="noopener noreferrer">
@@ -66,8 +67,13 @@ export default async function FundingPage() {
                   <span className="sr-only"> (opens in a new tab)</span>
                 </a>
               )}
+              {btcpayConfigured() && (
+                <a className={DONATE_URL || SPONSORS_URL ? 'button button--ghost' : 'button'} href="/discord/link#crypto">
+                  {on ? 'Pay tax in crypto' : 'Pay with crypto'}
+                </a>
+              )}
               {UPI_ID && (
-                <a className={DONATE_URL || SPONSORS_URL ? 'button button--ghost' : 'button'} href={upiLink(UPI_ID)}>
+                <a className={DONATE_URL || SPONSORS_URL || btcpayConfigured() ? 'button button--ghost' : 'button'} href={upiLink(UPI_ID)}>
                   {on ? 'Pay tax by UPI' : 'Pay by UPI'}
                   <span className="sr-only"> (opens your UPI app)</span>
                 </a>

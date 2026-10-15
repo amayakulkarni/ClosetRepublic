@@ -110,6 +110,16 @@ Money is tracked in a SQLite ledger (`src/lib/funds.ts`). Every change is an ent
 
 `/admin` (not linked anywhere): sign in with `ADMIN_TOKEN`. Add credits or deductions to any fund, set the legal, welfare or infrastructure fund to an exact balance, change goals, the welfare split and where donations go, browse and delete ledger entries, and see past months.
 
+### Crypto memberships (BTCPay Server)
+
+A self-hosted BTCPay Server (`deploy/btcpay`) takes Monero, Bitcoin and Lightning. The button on `/funding` and the "Pay with crypto" section on `/discord/link` appear once `BTCPAY_URL`, `BTCPAY_STORE_ID`, `BTCPAY_API_KEY` and `BTCPAY_WEBHOOK_SECRET` are set.
+
+- **Order:** a signed-in Discord member picks a class and 1, 3 or 12 months. `POST /api/crypto/order` stores a `crypto_orders` row (random token, Discord ID, class, months) and creates a 30-minute BTCPay invoice that carries only the token. No name or email is collected.
+- **Webhook:** `/api/webhooks/btcpay` checks the `BTCPay-Sig` HMAC, then re-reads the invoice from BTCPay. A settled invoice adds a `discord_grants` row (`granted_by = 'crypto'`, extending the current crypto grant for the same class), a treasury entry (source `crypto`, USD converted with `EXCHANGE_RATES`), deletes the order and wakes the bot. Each invoice grants once (`crypto_payments`).
+- **BTCPay setup:** Store > Settings > Webhooks > Create. Payload URL `https://closetrepublic.com/api/webhooks/btcpay`, events "An invoice has been settled" and "A payment has been settled", and the secret in `BTCPAY_WEBHOOK_SECRET`. Create an API key (Account > Manage account > API keys) limited to the store with "Can create invoice" and "Can view invoices".
+- **Not granted automatically:** underpaid, late (expired) and unmatched payments. They are logged (`[btcpay] settled invoice without a matching order`) and refunded by hand.
+- Prices are fixed in `src/lib/btcpay.ts` (`CRYPTO_TIERS`).
+
 ### Discord membership
 
 Buy Me a Coffee members get their class role (Alien, Citizen, Top 1%, Upper Middle Class, Middle Class) and lounges in the Discord server automatically.

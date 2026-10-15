@@ -33,7 +33,11 @@ Bitcoin (pruned node) and Monero. Lightning is a later phase. Strategy: https://
    - Server Settings > Plugins > install **Monero**, then restart BTCPay (`docker compose restart btcpayserver`).
    - Create a dedicated Monero wallet on a separate device. In Store > Monero settings enter its primary address, private **view** key and restore height. The server can watch payments but never spend.
 9. Checkout privacy: Store > Checkout Appearance. Turn off requests for buyer email and name, and turn off emailed receipts.
-10. Leave webhooks and API keys until the site's `/api/webhooks/btcpay` route exists. That route is not built yet; the strategy doc lists what it needs (`BTCPAY_URL`, `BTCPAY_STORE_ID`, `BTCPAY_API_KEY`, `BTCPAY_WEBHOOK_SECRET`).
+10. Connect the site (the site README section "Crypto memberships" has the details):
+    - Create an API key limited to the store with "Can create invoice" and "Can view invoices".
+    - Create a webhook with Payload URL `https://closetrepublic.com/api/webhooks/btcpay`, the events "An invoice has been settled" and "A payment has been settled", and a secret.
+    - Set `BTCPAY_URL=http://127.0.0.1:40009`, `BTCPAY_STORE_ID`, `BTCPAY_API_KEY` and `BTCPAY_WEBHOOK_SECRET` in the site's `.env.local`, then `npm run build` and `pm2 restart closet-republic`.
+    - Test with a small payment on testnet, or a real $1 Alien membership paid in Lightning or Monero.
 
 ## Operations
 

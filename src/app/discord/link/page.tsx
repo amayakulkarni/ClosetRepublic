@@ -3,6 +3,8 @@ import { getNature } from '@/lib/nature';
 import { Art } from '@/components/Art';
 import { Notice } from '@/components/Notice';
 import { DiscordLinkForm } from '@/components/discord/DiscordLinkForm';
+import { CryptoPay } from '@/components/discord/CryptoPay';
+import { CRYPTO_MONTHS, CRYPTO_TIERS, btcpayConfigured } from '@/lib/btcpay';
 import { discordSession, linkStatus, linkingConfigured, maskEmail } from '@/lib/discord-link';
 
 export const metadata: Metadata = {
@@ -26,9 +28,9 @@ const ERRORS: Record<string, string> = {
   discord: 'Discord did not let us sign you in. Please try again in a moment.',
 };
 
-export default async function DiscordLinkPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+export default async function DiscordLinkPage({ searchParams }: { searchParams: Promise<{ error?: string; paid?: string }> }) {
   const { on } = await getNature();
-  const { error } = await searchParams;
+  const { error, paid } = await searchParams;
   const session = await discordSession();
   const status = session ? linkStatus(session.id) : null;
   const donateUrl = process.env.NEXT_PUBLIC_DONATE_URL || '';
@@ -48,6 +50,7 @@ export default async function DiscordLinkPage({ searchParams }: { searchParams: 
       </header>
 
       {error && ERRORS[error] && <Notice tone="warn">{ERRORS[error]}</Notice>}
+      {paid && <Notice>Thank you. Once the payment is confirmed on the blockchain, your class appears in Discord. Monero takes about 20 minutes and Bitcoin 10 to 60 minutes; Lightning is instant. Reload this page to check.</Notice>}
 
       <section className="section discord-link" aria-labelledby="steps-heading">
         <h2 id="steps-heading">{on ? 'Your application' : 'Link your accounts'}</h2>
@@ -77,6 +80,22 @@ export default async function DiscordLinkPage({ searchParams }: { searchParams: 
           />
         )}
       </section>
+
+      {btcpayConfigured() && (
+        <section className="section discord-link" id="crypto" aria-labelledby="crypto-heading">
+          <h2 id="crypto-heading">{on ? 'Pay in crypto' : 'Pay with crypto'}</h2>
+          {session ? (
+            <div className="discord-link__card">
+              <p>Prepay a class with Monero, Bitcoin or Lightning. It goes to the Discord account you are signed in with (<strong>{session.name}</strong>), with no Buy Me a Coffee membership needed.</p>
+              <CryptoPay tiers={[...CRYPTO_TIERS]} months={[...CRYPTO_MONTHS]} />
+            </div>
+          ) : (
+            <p>
+              <a href="/discord/login">Continue with Discord</a> first, so the class goes to the right account. Then choose a class and pay with Monero, Bitcoin or Lightning.
+            </p>
+          )}
+        </section>
+      )}
 
       <section className="section" aria-labelledby="faq-heading">
         <h2 id="faq-heading">Good to know</h2>
