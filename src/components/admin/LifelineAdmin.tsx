@@ -158,7 +158,7 @@ export function LifelineAdmin() {
           </div>
           <div className="admin-actions">
             <button type="button" className="button button--ghost" disabled={busy || !mailEnabled} onClick={(e) => submit(e.currentTarget.form!, true)}>
-              Send a test to me
+              Send a test email
             </button>
             <button type="button" className="button" disabled={busy || !mailEnabled || counts.subscribed === 0} onClick={(e) => submit(e.currentTarget.form!, false)}>
               Send to {counts.subscribed} subscribers

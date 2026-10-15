@@ -3,7 +3,9 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { STAGE_URL } from '@/lib/community';
 import { ClosetMark } from './Logo';
+import { StageIcon } from './StageIcon';
 import { NatureToggle } from './NatureToggle';
 import { useNature } from './NatureProvider';
 
@@ -61,6 +63,16 @@ export function SiteHeader() {
             })}
           </ul>
         </nav>
+        <a
+          className="stage-link"
+          href={STAGE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={on ? 'The Stage, community forum (opens in a new tab)' : 'Stage, community forum (opens in a new tab)'}
+          title="Stage: community forum"
+        >
+          <StageIcon />
+        </a>
         <NatureToggle />
       </div>
     </header>

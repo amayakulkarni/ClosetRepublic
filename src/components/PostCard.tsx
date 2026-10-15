@@ -3,7 +3,7 @@ import { excerptOf, type GhostPost } from '@/lib/ghost';
 import { AuthorLink } from './AuthorLink';
 
 export function PostCard({ post, base, nature }: { post: GhostPost; base?: GhostPost; nature: boolean }) {
-  // `post` is what we show (maybe the nature edition); `base` is the gazette entry it belongs to.
+  // `post` is what gets shown (maybe the nature edition); `base` is the gazette entry it belongs to.
   const href = `/gazette/${(base ?? post).slug}`;
   return (
     <article className="post-card">

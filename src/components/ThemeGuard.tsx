@@ -7,7 +7,7 @@ export const THEME_ALERT =
 
 // Closet Republic is dark only. If the browser or an extension forces its own theme
 // (forced colours / high contrast, Dark Reader and similar, or injected styles that
-// repaint the page), we ask the visitor to turn it off.
+// repaint the page), the visitor is asked to turn it off.
 export function ThemeGuard() {
   useEffect(() => {
     let warned = false;

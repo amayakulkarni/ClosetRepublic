@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { getNature } from '@/lib/nature';
-import { GITHUB_URL as REPO } from '@/lib/community';
+import { GITHUB_URL as REPO, STAGE_REPO_URL, STAGE_URL } from '@/lib/community';
 
 export const metadata: Metadata = { title: 'Development of CR' };
 
@@ -50,6 +50,30 @@ export default async function DevelopmentPage() {
           Want to help with the <a href="/development/constitution">constitution</a>, <a href="/development/writing">writing</a> or{' '}
           <a href="/development/art">artwork</a>? Each has its own tab above.
         </p>
+      </section>
+
+      <section aria-labelledby="repos-heading" className="section">
+        <h2 id="repos-heading">{on ? 'Public works registry' : 'Repositories'}</h2>
+        <ul className="contribute-grid contribute-grid--wide">
+          <li className="contribute-card">
+            <h3>{on ? 'The Republic' : 'Website'}</h3>
+            <p>This site: the Gazette, constitution, passport, treasury, Lifeline and the Discord membership bot.</p>
+            <a href={REPO} target="_blank" rel="noopener noreferrer">
+              amayakulkarni/ClosetRepublic
+              <span className="sr-only"> on GitHub (opens in a new tab)</span>
+            </a>
+          </li>
+          <li className="contribute-card">
+            <h3>{on ? 'The Stage' : 'Stage forum'}</h3>
+            <p>
+              The community forum at <a href={STAGE_URL} target="_blank" rel="noopener noreferrer">{STAGE_URL.replace(/^https?:\/\//, '')}<span className="sr-only"> (opens in a new tab)</span></a>: NodeBB setup, theme, plugins and the Reddit and membership bridge.
+            </p>
+            <a href={STAGE_REPO_URL} target="_blank" rel="noopener noreferrer">
+              amayakulkarni/BenchAtClosetRepublic
+              <span className="sr-only"> on GitHub (opens in a new tab)</span>
+            </a>
+          </li>
+        </ul>
       </section>
 
       <section aria-labelledby="setup-heading" className="section">

@@ -8,6 +8,7 @@ import { ClosetMark } from '@/components/Logo';
 import { FeatureImage } from '@/components/FeatureImage';
 import { Notice } from '@/components/Notice';
 import { PostCard } from '@/components/PostCard';
+import { StageWidget } from '@/components/StageWidget';
 
 export default async function Home() {
   const { on } = await getNature();
@@ -77,6 +78,8 @@ export default async function Home() {
           </div>
         </section>
       )}
+
+      <StageWidget nature={on} />
 
       <section aria-labelledby="lifeline-heading" className="section lifeline-callout">
         <h2 id="lifeline-heading">{on ? 'Register for the Emergency Broadcast' : 'If this site ever disappears'}</h2>

@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server';
 import { safeEqual } from '@/lib/admin-auth';
 import { applySponsorshipEvent, type SponsorshipEvent } from '@/lib/github-sponsors';
 
-// GitHub Sponsors webhook: github.com/sponsors/<you>/dashboard → Webhooks → Add webhook
-//   Payload URL: https://<your site>/api/webhooks/github-sponsors
+// GitHub Sponsors webhook: github.com/sponsors/<account>/dashboard → Webhooks → Add webhook
+//   Payload URL: https://<site>/api/webhooks/github-sponsors
 //   Content type: application/json, Secret: the value of GITHUB_SPONSORS_WEBHOOK_SECRET
 // GitHub signs each delivery with an HMAC-SHA256 of the raw body in X-Hub-Signature-256.
 

@@ -7,9 +7,9 @@ import { SITE_URL } from './site-url';
 
 // Linking a Discord account to the email used on Buy Me a Coffee, at /discord/link:
 //  1. "Continue with Discord" (OAuth, scope identify only) proves which Discord account it is.
-//  2. The member types their Buy Me a Coffee email and we email them a 6-digit code.
+//  2. The member types their Buy Me a Coffee email and receives a 6-digit code there.
 //  3. The right code proves they own the email; the link is stored and the bot is woken.
-// We keep only the Discord ID and that email. The Discord username is shown on the page
+// Only the Discord ID and that email are stored. The Discord username is shown on the page
 // from the sign-in cookie and never stored.
 
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID || '';
@@ -44,7 +44,7 @@ export async function discordUserFromCode(code: string): Promise<{ id: string; n
   const userRes = await fetch(`${API}/users/@me`, { headers: { authorization: `Bearer ${access_token}` }, signal: AbortSignal.timeout(10_000) });
   if (!userRes.ok) throw new Error(`Could not read your Discord account (${userRes.status})`);
   const user = (await userRes.json()) as { id: string; username: string; global_name?: string | null };
-  // We don't need Discord access any more, so hand the token straight back.
+  // Discord access isn't needed after this, so the token is handed straight back.
   fetch(`${API}/oauth2/token/revoke`, {
     method: 'POST',
     headers: { 'content-type': 'application/x-www-form-urlencoded' },

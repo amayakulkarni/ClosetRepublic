@@ -3,7 +3,7 @@ import nodemailer, { type Transporter } from 'nodemailer';
 import { db } from './db';
 
 // Outgoing email over plain SMTP, so any provider works (Zoho, Gmail, Brevo, Amazon SES,
-// your host's mail server…). Email stays off until SMTP_HOST and MAIL_FROM are set.
+// the host's mail server…). Email stays off until SMTP_HOST and MAIL_FROM are set.
 // Every attempt is written to the email_log table, so the admin page can show what went out.
 
 const PORT = Number(process.env.SMTP_PORT) || 587;

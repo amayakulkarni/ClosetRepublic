@@ -81,7 +81,7 @@ export function parseMembershipEvent(event: { type?: string; data?: Data }, now 
   };
 }
 
-/** Stores a membership event. Returns whether the supporter still needs the "link your Discord" email. */
+/** Stores a membership event. Returns whether the supporter still needs the Discord link invite email. */
 export function recordMembership(e: MembershipEvent) {
   const at = new Date().toISOString();
   db()

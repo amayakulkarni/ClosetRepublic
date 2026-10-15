@@ -19,19 +19,20 @@ Get the Content API key in Ghost Admin → Settings → Integrations → Add cus
 | --- | --- |
 | `GHOST_URL` | Ghost backend, defaults to `https://management-of.closetrepublic.com` |
 | `GHOST_CONTENT_API_KEY` | Ghost Content API key (required) |
-| `NEXT_PUBLIC_DONATE_URL`, `NEXT_PUBLIC_DONATE_LABEL` | Your Buy Me a Coffee page and the button text (default "Buy me a compute") |
+| `NEXT_PUBLIC_DONATE_URL`, `NEXT_PUBLIC_DONATE_LABEL` | The Buy Me a Coffee page and the button text (default "Buy me a compute") |
 | `NEXT_PUBLIC_UPI_ID`, `NEXT_PUBLIC_UPI_NAME` | Optional UPI ID: adds a "Pay by UPI" button that opens the visitor's UPI app |
 | `BMC_WEBHOOK_SECRET` | Secret of the Buy Me a Coffee webhook (required for tracking donations) |
 | `BMC_EXCHANGE_RATES` | Converts Buy Me a Coffee payments into `FUNDING_CURRENCY`, e.g. `USD=84,EUR=91` |
 | `BMC_ACCEPT_TEST_EVENTS` | `true` to record Buy Me a Coffee test events while setting up |
-| `NEXT_PUBLIC_GITHUB_SPONSORS_URL` | Your GitHub Sponsors page, e.g. `https://github.com/sponsors/amayakulkarni`; shows a "Sponsor on GitHub" button on `/funding` and `/development` |
+| `NEXT_PUBLIC_GITHUB_SPONSORS_URL` | The GitHub Sponsors page, e.g. `https://github.com/sponsors/amayakulkarni`; shows a "Sponsor on GitHub" button on `/funding` and `/development` |
 | `GITHUB_SPONSORS_WEBHOOK_SECRET` | Secret of the GitHub Sponsors webhook (required for tracking sponsorships) |
 | `EXCHANGE_RATES` | Converts foreign payments into `FUNDING_CURRENCY` for both Buy Me a Coffee and GitHub Sponsors, e.g. `USD=84,EUR=91` (falls back to `BMC_EXCHANGE_RATES`) |
 | `ADMIN_TOKEN` | Secret for `/admin` and the admin API (16+ characters) |
 | `DATABASE_PATH` | SQLite file for the treasury, default `./data/closet-republic.db` |
 | `FUNDING_CURRENCY`, `FUNDING_TIMEZONE` | Default `INR` and `Asia/Kolkata` (when the month rolls over) |
 | `FUNDING_GOAL`, `LEGAL_FUND_GOAL` | Starting goals; after that, set them on `/admin` |
-| `COMMUNITY_REDDIT_URL`, `COMMUNITY_FORUM_URL`, `COMMUNITY_FORUM_NAME` | Public places for ideas, linked on the contribute tabs; empty shows "link coming soon" |
+| `COMMUNITY_REDDIT_URL`, `COMMUNITY_FORUM_URL`, `COMMUNITY_FORUM_NAME` | Public places for ideas, linked on the contribute tabs. Empty Reddit shows "link coming soon"; an empty forum falls back to Stage |
+| `NEXT_PUBLIC_STAGE_URL` | Stage, the community forum (default `https://stage.closetrepublic.com`): navbar icon, homepage widget and `/development`. Read at build time |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` | Any SMTP provider for contributor emails; email is off while `SMTP_HOST` is empty |
 | `MAIL_FROM` | Sender, e.g. `Closet Republic <hello@closetrepublic.com>` |
 | `CONTRIBUTIONS_EMAIL`, `MAIL_REPLY_TO` | Inbox for new-contributor alerts (and contributors' replies); optional separate reply-to |
@@ -83,7 +84,7 @@ Nature editions are separate Ghost posts or pages whose slug is the original slu
 Runs entirely in the browser (`src/components/passport`, `src/lib/passport-pdf.ts`): nothing is uploaded. People upload a photo or build an Open Peeps avatar, fill in their particulars, take the oath, and get a 6-page A4 PDF:
 
 - Passport pages are 78 × 115 mm (1 cm smaller than a real 88 × 125 mm passport); the booklet has 24 pages.
-- Sheet 1 (print on photo paper if you like): front has pages 24 + 1 and 22 + 3, back has 2 + 23 and 4 + 21. Page 1 is the cover with the white CR logo, 2 the agreement with the GCR, 3 a copy of the cover, 4 the identity page with an MRZ, 21 spouse and address, 22 a stamp page, 23 blank, 24 the back cover in the cover colour.
+- Sheet 1 (photo paper works well): front has pages 24 + 1 and 22 + 3, back has 2 + 23 and 4 + 21. Page 1 is the cover with the white CR logo, 2 the agreement with the GCR, 3 a copy of the cover, 4 the identity page with an MRZ, 21 spouse and address, 22 a stamp page, 23 blank, 24 the back cover in the cover colour.
 - Sheets 2 and 3 hold 16 more stamp pages, four on each side.
 - Print double-sided, flip on long edge, at 100%. Cut on the corner marks, fold on the dashed marks, nest the strips in order and staple.
 
@@ -100,7 +101,7 @@ Money is tracked in a SQLite ledger (`src/lib/funds.ts`). Every change is an ent
 
 - **Monthly budget:** only this month's entries count, so it starts again from zero on the 1st of every month (`FUNDING_TIMEZONE`). Earlier months stay in the history.
 - **Legal fund:** a running balance that never resets.
-- **Welfare fund:** a running balance shared between two pots: developers, artists, writers and interns (80%) and need-based help for queer people (20%). Money received is split by that percentage (change it on `/admin`); when you pay someone, record a deduction and pick the pot it came from. `/funding` shows both pots.
+- **Welfare fund:** a running balance shared between two pots: developers, artists, writers and interns (80%) and need-based help for queer people (20%). Money received is split by that percentage (change it on `/admin`); for each payout, record a deduction and pick the pot it came from. `/funding` shows both pots.
 - **Infrastructure fund:** a running balance for computers, tablets, accessories, servers and other equipment.
 - **Buy Me a Coffee:** each payment (donation, membership, extra) adds to the fund chosen on `/admin` (monthly budget by default); refunds take it back out. Retries are ignored. Payments in other currencies are converted with `EXCHANGE_RATES`.
 - **GitHub Sponsors:** a new sponsorship adds its first payment (in USD, converted with `EXCHANGE_RATES`) to the same fund. Monthly sponsors get one entry per month while they stay active, added the first time the treasury is read in a new month. Tier changes apply from the next month. Because GitHub doesn't send renewal events, a sponsor who cancels may get one extra month recorded if the cancellation arrives late; delete that entry on `/admin`. Private sponsors appear as "Private sponsor"; public ones are thanked by name on `/funding`. `.github/FUNDING.yml` adds the Sponsor button on the repository.
@@ -114,9 +115,9 @@ Money is tracked in a SQLite ledger (`src/lib/funds.ts`). Every change is an ent
 Buy Me a Coffee members get their class role (Alien, Citizen, Top 1%, Upper Middle Class, Middle Class) and lounges in the Discord server automatically.
 
 - **Webhook:** the existing `/api/webhooks/buymeacoffee` now also stores `membership.*` events in the `memberships` table, emails new members who haven't linked Discord yet (once), wakes the bot, and forwards every verified event to the forum bridge (`FORUM_BRIDGE_URL`, `FORUM_BRIDGE_SECRET`). Tick all `membership.*` events on the Buy Me a Coffee webhook, and leave Buy Me a Coffee's own Discord connection off.
-- **Linking:** `/discord/link` (also `/link` in Discord): sign in with Discord (scope `identify`), type the Buy Me a Coffee email, type the 6-digit code we email. Only the Discord ID and that email are stored (`discord_members`). Needs `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, SMTP, and the redirect `https://closetrepublic.com/discord/callback` added in the Discord developer portal under OAuth2.
+- **Linking:** `/discord/link` (also `/link` in Discord): sign in with Discord (scope `identify`), type the Buy Me a Coffee email, type the 6-digit code sent to that email. Only the Discord ID and that email are stored (`discord_members`). Needs `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, SMTP, and the redirect `https://closetrepublic.com/discord/callback` added in the Discord developer portal under OAuth2.
 - **Bot:** `bot/index.mjs`, a second pm2 app (`cr-discord-bot`). It compares each linked member's membership with their roles and fixes the difference: on every webhook, link, server join, and every 15 minutes. Class role plus the access role of that class and every cheaper one. Cancelled or paused memberships keep their class until the paid period ends, then a 7-day grace period (DMs on day 0 and day 5), then the roles are removed. With `BMC_API_TOKEN` it also checks Buy Me a Coffee every hour. It never touches staff, pronoun or other roles. Commands: `/link`, `/membership status`, `/membership grant` and `/membership revoke` (Founders), `/discreet on|off`, `/thanks on|off`, `/unlink`, `/forget-me`, `/tiers` (Founders).
-- **Config:** copy `discord-tiers.json` from the Discord setup script to `config/discord-tiers.json` (see `config/discord-tiers.example.json`). Levels are matched by name until you add each level's `bmcLevelIds`.
+- **Config:** copy `discord-tiers.json` from the Discord setup script to `config/discord-tiers.json` (see `config/discord-tiers.example.json`). Levels are matched by name until each level's `bmcLevelIds` is added.
 - **Tests:** `npm run test:bot` (rules, database and a fake Discord server).
 
 Start it on the server, after `npm install` and the site restart:
@@ -128,9 +129,9 @@ pm2 logs cr-discord-bot
 
 ### About and legal pages
 
-`/about`, `/terms`, `/privacy` and `/guidelines` (Community Guidelines and Moderation Charter) are Markdown files in `content/pages/`. Edit them like any Markdown; `{{EMAIL}}`, `{{OPERATOR}}`, `{{COUNTRY}}`, `{{SERVER_COUNTRY}}`, `{{UPDATED}}` and the postal tokens are filled in from `LEGAL_EMAIL`, `LEGAL_OPERATOR`, `LEGAL_COUNTRY`, `LEGAL_SERVER_COUNTRY`, `LEGAL_UPDATED` and `LEGAL_POSTAL_ADDRESS`. When you change the legal text, update `LAST_UPDATED` in `src/lib/pages.ts`.
+`/about`, `/terms`, `/privacy` and `/guidelines` (Community Guidelines and Moderation Charter) are Markdown files in `content/pages/`. Edit them like any Markdown; `{{EMAIL}}`, `{{OPERATOR}}`, `{{COUNTRY}}`, `{{SERVER_COUNTRY}}`, `{{UPDATED}}` and the postal tokens are filled in from `LEGAL_EMAIL`, `LEGAL_OPERATOR`, `LEGAL_COUNTRY`, `LEGAL_SERVER_COUNTRY`, `LEGAL_UPDATED` and `LEGAL_POSTAL_ADDRESS`. After changing the legal text, update `LAST_UPDATED` in `src/lib/pages.ts`.
 
-The Privacy Policy promises some retention periods, which the site enforces itself once a day: unsubscribed Lifeline addresses are deleted after 30 days, declined contributors after 90 days, and the email log after 12 months. It also promises web server logs are kept for at most 14 days: configure your reverse proxy (for example nginx) and pm2 log rotation to match.
+The Privacy Policy promises some retention periods, which the site enforces itself once a day: unsubscribed Lifeline addresses are deleted after 30 days, declined contributors after 90 days, and the email log after 12 months. It also promises web server logs are kept for at most 14 days: configure the reverse proxy (for example nginx) and pm2 log rotation to match.
 
 ### Lifeline
 
@@ -138,8 +139,8 @@ The Lifeline is an email list kept for one job: if closetrepublic.com is taken d
 
 The **Lifeline** tab on `/admin`:
 
-- **Download CSV** (subscribed people; or include those who left). **Keep a copy off the server**: if the site is taken down the server and its database may go too. The tab shows when you last downloaded it and nags after 30 days. Any mail tool can import the CSV; or use **Copy addresses for BCC** and paste them into BCC (never To or CC).
-- **Send an emergency notice**: subject, message, new site address, GitHub, donation link and other resources. **Send a test to me** goes to `CONTRIBUTIONS_EMAIL`; the real send emails each subscriber one at a time with their own unsubscribe link, and shows progress.
+- **Download CSV** (subscribed people; or include those who left). **Keep a copy off the server**: if the site is taken down the server and its database may go too. The tab shows the date of the last download and nags after 30 days. Any mail tool can import the CSV; or use **Copy addresses for BCC** and paste them into BCC (never To or CC).
+- **Send an emergency notice**: subject, message, new site address, GitHub, donation link and other resources. **Send a test email** goes to `CONTRIBUTIONS_EMAIL`; the real send emails each subscriber one at a time with their own unsubscribe link, and shows progress.
 
 ### Contributors
 
@@ -148,7 +149,7 @@ The **Contributors** tab on `/admin` lists sign-ups from the constitution, writi
 Email (once the SMTP variables are set):
 
 - **New sign-up:** the contributor gets a confirmation that repeats the rules (public links only, verification, ideas go to the public community), and `CONTRIBUTIONS_EMAIL` gets an alert with their details.
-- **Verified or declined:** changing the status emails the contributor (untick "Email contributors when I verify or decline them" to skip it). Other statuses send nothing.
+- **Verified or declined:** changing the status emails the contributor (untick "Email contributors when they are verified or declined" to skip it). Other statuses send nothing.
 - **Email button:** write to one contributor and see every email sent to them. Every attempt, including failures, is kept in the `email_log` table.
 
 ### Timeline and goals
@@ -183,7 +184,7 @@ Admin (send `Authorization: Bearer <ADMIN_TOKEN>`; amounts in major units, e.g. 
 | `GET/POST /api/admin/contributors/<id>/email` `{ subject, message }` | Emails sent to them, or send a new one |
 | `GET /api/admin/lifeline` | Lifeline subscribers, counts and past notices |
 | `GET /api/admin/lifeline/export[?all=1]` | The Lifeline list as CSV |
-| `POST /api/admin/lifeline/notice` `{ subject, message, siteUrl?, githubUrl?, donateUrl?, resources?, test? }` | Send the emergency notice (or a test to yourself) |
+| `POST /api/admin/lifeline/notice` `{ subject, message, siteUrl?, githubUrl?, donateUrl?, resources?, test? }` | Send the emergency notice (or a test to `CONTRIBUTIONS_EMAIL`) |
 | `DELETE /api/admin/lifeline/<id>` | Remove a subscriber |
 
 ```bash
@@ -192,11 +193,11 @@ curl -X POST https://closetrepublic.com/api/admin/ledger \
   -d '{"fund":"legal","kind":"deduction","amount":3500,"note":"Court filing fee"}'
 ```
 
-## Running on your server with pm2
+## Running on the server with pm2
 
 1. `npm install` (builds the SQLite driver for that machine; it needs Node 20.9+), then `npm run build`.
 2. Put the production values in `.env.local` next to `package.json`: at least `GHOST_CONTENT_API_KEY`, `ADMIN_TOKEN`, `BMC_WEBHOOK_SECRET`, `NEXT_PUBLIC_DONATE_URL`. Variables starting with `NEXT_PUBLIC_` are baked in at build time, so rebuild after changing them.
-3. `pm2 start ecosystem.config.cjs && pm2 save`. The site listens on port 40001; point your reverse proxy (nginx, Caddy…) for closetrepublic.com at it.
-4. In Buy Me a Coffee → Settings → Webhooks, add `https://closetrepublic.com/api/webhooks/buymeacoffee`, tick the payment events, and copy the secret into `BMC_WEBHOOK_SECRET`. Set `BMC_ACCEPT_TEST_EVENTS=true` while you try "send test", then back to `false`.
-5. GitHub Sponsors (once your profile is approved): in github.com/sponsors/amayakulkarni/dashboard → Webhooks, add `https://closetrepublic.com/api/webhooks/github-sponsors`, content type `application/json`, and a secret, which goes into `GITHUB_SPONSORS_WEBHOOK_SECRET`. Set `NEXT_PUBLIC_GITHUB_SPONSORS_URL` to show the buttons.
-5. Back up `data/closet-republic.db` (it holds the whole treasury). Keep the `data` folder when you redeploy.
+3. `pm2 start ecosystem.config.cjs && pm2 save`. The site listens on port 40001; point the reverse proxy (nginx, Caddy…) for closetrepublic.com at it.
+4. In Buy Me a Coffee → Settings → Webhooks, add `https://closetrepublic.com/api/webhooks/buymeacoffee`, tick the payment events, and copy the secret into `BMC_WEBHOOK_SECRET`. Set `BMC_ACCEPT_TEST_EVENTS=true` while trying "send test", then back to `false`.
+5. GitHub Sponsors (once the Sponsors profile is approved): in github.com/sponsors/amayakulkarni/dashboard → Webhooks, add `https://closetrepublic.com/api/webhooks/github-sponsors`, content type `application/json`, and a secret, which goes into `GITHUB_SPONSORS_WEBHOOK_SECRET`. Set `NEXT_PUBLIC_GITHUB_SPONSORS_URL` to show the buttons.
+5. Back up `data/closet-republic.db` (it holds the whole treasury). Keep the `data` folder across redeploys.

@@ -1,5 +1,5 @@
 {
-  "_readme": "Copy discord-tiers.json from the Discord setup script (discord/setup) to config/discord-tiers.json. Fill bmcLevelIds with each Buy Me a Coffee membership_level_id when you know it (/tiers in Discord lists unmatched levels); until then levels are matched by name. unknownLevelTier: the class for a level the file does not know.",
+  "_readme": "Copy discord-tiers.json from the Discord setup script (discord/setup) to config/discord-tiers.json. Fill bmcLevelIds with each Buy Me a Coffee membership_level_id once known (/tiers in Discord lists unmatched levels); until then levels are matched by name. unknownLevelTier: the class for a level the file does not know.",
   "guildId": "1496380917223133264",
   "tiers": [
     { "slug": "alien", "rank": 1, "roleId": "", "accessRoleId": "", "bmcLevelIds": [] },

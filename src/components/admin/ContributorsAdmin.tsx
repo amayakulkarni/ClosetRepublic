@@ -121,7 +121,7 @@ export function ContributorsAdmin() {
           {mailEnabled && (
             <label className="check admin-filters__check">
               <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} />
-              <span>Email contributors when I verify or decline them</span>
+              <span>Email contributors when they are verified or declined</span>
             </label>
           )}
         </div>

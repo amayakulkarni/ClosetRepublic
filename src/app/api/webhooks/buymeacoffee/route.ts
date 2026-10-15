@@ -7,7 +7,7 @@ import { forwardToForumBridge } from '@/lib/forum-bridge';
 import { parseMembershipEvent, pokeBot, recordMembership, sendLinkInvite } from '@/lib/memberships';
 
 // Buy Me a Coffee webhook: Buy Me a Coffee → Settings → Webhooks → add
-//   https://<your site>/api/webhooks/buymeacoffee
+//   https://<site>/api/webhooks/buymeacoffee
 // and copy its secret into BMC_WEBHOOK_SECRET. Every request is signed with an
 // HMAC-SHA256 of the raw body in the x-signature-sha256 header.
 //
