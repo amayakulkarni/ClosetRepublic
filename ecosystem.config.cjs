@@ -6,7 +6,7 @@ module.exports = {
       cwd: __dirname,
       script: 'node_modules/next/dist/bin/next',
       args: 'start -p 40001',
-      env: { NODE_ENV: 'production' },
+      env: { NODE_ENV: 'production', NEXT_TELEMETRY_DISABLED: '1' },
       // One instance: the SQLite treasury is a single file.
       instances: 1,
       autorestart: true,

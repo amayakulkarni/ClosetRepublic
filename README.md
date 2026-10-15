@@ -109,6 +109,12 @@ Money is tracked in a SQLite ledger (`src/lib/funds.ts`). Every change is an ent
 
 `/admin` (not linked anywhere): sign in with `ADMIN_TOKEN`. Add credits or deductions to any fund, set the legal, welfare or infrastructure fund to an exact balance, change goals, the welfare split and where donations go, browse and delete ledger entries, and see past months.
 
+### About and legal pages
+
+`/about`, `/terms`, `/privacy` and `/guidelines` (Community Guidelines and Moderation Charter) are Markdown files in `content/pages/`. Edit them like any Markdown; `{{EMAIL}}`, `{{OPERATOR}}`, `{{COUNTRY}}`, `{{SERVER_COUNTRY}}`, `{{UPDATED}}` and the postal tokens are filled in from `LEGAL_EMAIL`, `LEGAL_OPERATOR`, `LEGAL_COUNTRY`, `LEGAL_SERVER_COUNTRY`, `LEGAL_UPDATED` and `LEGAL_POSTAL_ADDRESS`. When you change the legal text, update `LAST_UPDATED` in `src/lib/pages.ts`.
+
+The Privacy Policy promises some retention periods, which the site enforces itself once a day: unsubscribed Lifeline addresses are deleted after 30 days, declined contributors after 90 days, and the email log after 12 months. It also promises web server logs are kept for at most 14 days: configure your reverse proxy (for example nginx) and pm2 log rotation to match.
+
 ### Lifeline
 
 The Lifeline is an email list kept for one job: if closetrepublic.com is taken down, everyone on it gets the new address, the GitHub repository and the donation link. People join on `/lifeline` (also linked from the home page and footer), get one welcome email, and every email has an unsubscribe link plus "reply unsubscribe".

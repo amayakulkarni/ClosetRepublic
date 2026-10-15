@@ -1422,3 +1422,34 @@ html[data-nature='on'] .closet-mark {
   font-weight: 700;
   white-space: nowrap;
 }
+
+/* ---------- About and legal pages (content/pages/*.md) ---------- */
+
+.legal-content {
+  max-width: 76ch;
+}
+.legal-content h2 {
+  margin-top: 2.2em;
+}
+.legal-content h3 {
+  margin-top: 1.6em;
+}
+.legal-content ul,
+.legal-content ol {
+  padding-left: 1.4em;
+}
+.legal-content li + li {
+  margin-top: 0.35em;
+}
+.legal-content table {
+  display: block;
+  overflow-x: auto;
+  font-size: 0.95rem;
+}
+.legal-content th {
+  text-align: left;
+}
+.site-footer ul.site-footer__legal {
+  margin-top: 10px;
+  font-size: 0.9rem;
+}

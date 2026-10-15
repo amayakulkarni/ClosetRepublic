@@ -10,6 +10,12 @@ const nextConfig: NextConfig = {
       { source: '/roadmap', destination: '/timeline', permanent: true },
       { source: '/contribute', destination: '/development', permanent: true },
       { source: '/dev', destination: '/development', permanent: true },
+      { source: '/about-us', destination: '/about', permanent: true },
+      { source: '/terms-and-conditions', destination: '/terms', permanent: true },
+      { source: '/tos', destination: '/terms', permanent: true },
+      { source: '/privacy-policy', destination: '/privacy', permanent: true },
+      { source: '/community-guidelines', destination: '/guidelines', permanent: true },
+      { source: '/code-of-conduct', destination: '/guidelines', permanent: true },
     ];
   },
 };

@@ -130,13 +130,34 @@ function migrate(conn: Database.Database) {
   })();
 }
 
+const DAY = 24 * 60 * 60 * 1000;
+let lastPurge = 0;
+
+/**
+ * Deletes data past the retention periods promised in the Privacy Policy (content/pages/privacy.md):
+ * unsubscribed Lifeline addresses after 30 days, declined contributors after 90 days,
+ * and the email log after 12 months. Runs at most once a day.
+ */
+function purgeExpired(conn: Database.Database) {
+  if (Date.now() - lastPurge < DAY) return;
+  lastPurge = Date.now();
+  const before = (days: number) => new Date(Date.now() - days * DAY).toISOString();
+  conn.prepare("DELETE FROM subscribers WHERE status = 'unsubscribed' AND updated_at < ?").run(before(30));
+  conn.prepare("DELETE FROM contributors WHERE status = 'declined' AND updated_at < ?").run(before(90));
+  conn.prepare('DELETE FROM email_log WHERE created_at < ?').run(before(365));
+}
+
 export function db() {
-  if (globalForDb.crDb) return globalForDb.crDb;
+  if (globalForDb.crDb) {
+    purgeExpired(globalForDb.crDb);
+    return globalForDb.crDb;
+  }
   fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
   const conn = new Database(DB_PATH);
   conn.pragma('journal_mode = WAL');
   migrate(conn);
   conn.exec(SCHEMA);
+  purgeExpired(conn);
   globalForDb.crDb = conn;
   return conn;
 }

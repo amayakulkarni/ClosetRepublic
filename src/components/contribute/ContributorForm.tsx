@@ -79,7 +79,8 @@ export function ContributorForm({ area, work }: { area: ContributionArea; work: 
         <input type="checkbox" name="agree" required />
         <span>
           The link shows {work} I made or commissioned, it is already public, and I understand it will be verified. I will share ideas in the
-          public community, not privately.
+          public community, not privately. I am 16 or older and agree to Closet Republic keeping these details as described in the{' '}
+          <a href="/privacy" target="_blank" rel="noopener">Privacy Policy<span className="sr-only"> (opens in a new tab)</span></a>.
         </span>
       </label>
       <p className="sr-only" role="status" aria-live="polite">

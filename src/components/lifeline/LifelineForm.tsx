@@ -45,7 +45,10 @@ export function LifelineForm({ compact = false }: { compact?: boolean }) {
       </div>
       <label className="check">
         <input type="checkbox" name="agree" required />
-        <span>Email me if Closet Republic moves, with the new address, GitHub and donation links. I can leave at any time.</span>
+        <span>
+          Email me if Closet Republic moves, with the new address, GitHub and donation links. I am 16 or older, I agree to Closet Republic
+          keeping my email as described in the <a href="/privacy" target="_blank" rel="noopener">Privacy Policy<span className="sr-only"> (opens in a new tab)</span></a>, and I can leave at any time.
+        </span>
       </label>
       <p className="sr-only" role="status" aria-live="polite">
         {state.kind === 'done' ? state.message : ''}

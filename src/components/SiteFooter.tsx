@@ -11,6 +11,7 @@ export function SiteFooter() {
         </div>
         <nav aria-label="Footer">
           <ul>
+            <li><Link href="/about">About</Link></li>
             <li><Link href="/gazette">Gazette</Link></li>
             <li><Link href="/constitution">Constitution</Link></li>
             <li><Link href="/funding">Funding</Link></li>
@@ -26,6 +27,16 @@ export function SiteFooter() {
             </li>
           </ul>
         </nav>
+        <nav aria-label="Legal">
+          <ul className="site-footer__legal">
+            <li><Link href="/guidelines">Community Guidelines</Link></li>
+            <li><Link href="/terms">Terms</Link></li>
+            <li><Link href="/privacy">Privacy</Link></li>
+          </ul>
+        </nav>
+        <p className="site-footer__small">
+          Closet Republic is a parody micronation and online community, not a state or registered charity. No trackers, no ads.
+        </p>
         <p className="site-footer__small">
           Swipe sideways or use the Nature switch to change modes. Add <code>?nature=true</code> or{' '}
           <code>?nature=false</code> to any link to share a mode. Illustrations: Open Peeps and Transhumans by Pablo Stanley (CC0).
