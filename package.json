@@ -6,10 +6,13 @@
     "dev": "next dev -p 40001",
     "build": "next build",
     "start": "next start -p 40001",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "bot": "node bot/index.mjs",
+    "test:bot": "node --test bot/test/*.test.mjs"
   },
   "dependencies": {
     "better-sqlite3": "12.11.1",
+    "discord.js": "14.27.0",
     "marked": "16.4.2",
     "next": "16.4.0",
     "nodemailer": "10.0.16",

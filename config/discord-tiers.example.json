@@ -1,0 +1,15 @@
+{
+  "_readme": "Copy discord-tiers.json from the Discord setup script (discord/setup) to config/discord-tiers.json. Fill bmcLevelIds with each Buy Me a Coffee membership_level_id when you know it (/tiers in Discord lists unmatched levels); until then levels are matched by name. unknownLevelTier: the class for a level the file does not know.",
+  "guildId": "1496380917223133264",
+  "tiers": [
+    { "slug": "alien", "rank": 1, "roleId": "", "accessRoleId": "", "bmcLevelIds": [] },
+    { "slug": "citizen", "rank": 2, "roleId": "", "accessRoleId": "", "bmcLevelIds": [] },
+    { "slug": "top-1", "rank": 3, "roleId": "", "accessRoleId": "", "bmcLevelIds": [] },
+    { "slug": "upper-middle-class", "rank": 4, "roleId": "", "accessRoleId": "", "bmcLevelIds": [] },
+    { "slug": "middle-class", "rank": 5, "roleId": "", "accessRoleId": "", "bmcLevelIds": [] }
+  ],
+  "staffRoleIds": ["", "", ""],
+  "grace": { "lapseDays": 7, "remindDaysBeforeEnd": [3], "remindDuringGrace": [0, 5] },
+  "channels": { "thankYou": "", "modLog": "", "botLog": "" },
+  "unknownLevelTier": "alien"
+}

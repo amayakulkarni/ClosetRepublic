@@ -1453,3 +1453,23 @@ html[data-nature='on'] .closet-mark {
   margin-top: 10px;
   font-size: 0.9rem;
 }
+
+/* ---------- Discord linking (/discord/link) ---------- */
+
+.discord-link__card {
+  max-width: 640px;
+  border: var(--stroke) solid var(--fg);
+  border-radius: calc(var(--radius) * 1.5);
+  padding: 22px;
+}
+.discord-link__card form {
+  display: grid;
+  gap: 12px;
+}
+.steps-list {
+  padding-left: 1.4em;
+  max-width: 640px;
+}
+.steps-list li + li {
+  margin-top: 0.4em;
+}

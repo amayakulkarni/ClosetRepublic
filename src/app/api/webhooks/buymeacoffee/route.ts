@@ -1,8 +1,10 @@
 import crypto from 'node:crypto';
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { safeEqual } from '@/lib/admin-auth';
 import { CURRENCY, addEntry, getSettings, toMinor } from '@/lib/funds';
 import { rateFor } from '@/lib/exchange';
+import { forwardToForumBridge } from '@/lib/forum-bridge';
+import { parseMembershipEvent, pokeBot, recordMembership, sendLinkInvite } from '@/lib/memberships';
 
 // Buy Me a Coffee webhook: Buy Me a Coffee → Settings → Webhooks → add
 //   https://<your site>/api/webhooks/buymeacoffee
@@ -11,6 +13,9 @@ import { rateFor } from '@/lib/exchange';
 //
 // Payments (donations, memberships, extras…) are added to the fund chosen in the admin
 // page; refunds take the money back out. Retries of the same event are ignored.
+// Membership events also update the memberships table and wake the Discord bot, and every
+// verified event is forwarded to the forum bridge (FORUM_BRIDGE_URL), so Buy Me a Coffee
+// needs only this one webhook.
 
 export const dynamic = 'force-dynamic';
 
@@ -23,6 +28,7 @@ type BmcEvent = {
   event_id?: number | string;
   created?: number;
   data?: {
+    [key: string]: unknown;
     id?: number | string;
     amount?: number | string;
     total_amount_charged?: number | string;
@@ -43,6 +49,8 @@ export async function POST(request: Request) {
   const expected = crypto.createHmac('sha256', SECRET).update(raw).digest('hex');
   if (!given || !safeEqual(given, expected)) return NextResponse.json({ error: 'Bad signature' }, { status: 401 });
 
+  forwardToForumBridge(raw);
+
   let event: BmcEvent;
   try {
     event = JSON.parse(raw);
@@ -54,11 +62,20 @@ export async function POST(request: Request) {
   const data = event.data || {};
   if (event.live_mode === false && !ACCEPT_TEST_EVENTS) return NextResponse.json({ ignored: 'test event' });
 
+  const membership = parseMembershipEvent(event);
+  if (membership) {
+    const { needsInvite } = recordMembership(membership);
+    after(async () => {
+      if (needsInvite) await sendLinkInvite(membership);
+      await pokeBot({ email: membership.email });
+    });
+  }
+
   const isRefund = /refund/i.test(type);
   const isPayment = !isRefund && /\.(created|started|renewed)$/.test(type);
   const amount = Number(data.amount ?? data.total_amount_charged);
   if ((!isRefund && !isPayment) || !Number.isFinite(amount) || amount <= 0) {
-    return NextResponse.json({ ignored: type || 'unknown event' });
+    return NextResponse.json(membership ? { membership: membership.status } : { ignored: type || 'unknown event' });
   }
 
   const currency = (data.currency || CURRENCY).toUpperCase();
@@ -86,5 +103,5 @@ export async function POST(request: Request) {
     createdAt: when ? new Date(Number(when) * 1000) : undefined,
   });
 
-  return NextResponse.json({ recorded: Boolean(entry), duplicate: !entry });
+  return NextResponse.json({ recorded: Boolean(entry), duplicate: !entry, ...(membership && { membership: membership.status }) });
 }

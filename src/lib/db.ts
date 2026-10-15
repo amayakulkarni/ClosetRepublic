@@ -101,6 +101,67 @@ const SCHEMA = `
     updated_at TEXT NOT NULL
   );
 
+  -- Buy Me a Coffee memberships (one row per subscription), written by the webhook.
+  -- The Discord bot (bot/) reads these to decide who gets which tier role.
+  CREATE TABLE IF NOT EXISTS memberships (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    subscription_id TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL COLLATE NOCASE,
+    level_id TEXT,
+    level_name TEXT,
+    status TEXT NOT NULL CHECK (status IN ('active', 'cancelling', 'paused', 'ended', 'lapsed', 'revoked')),
+    paid_until TEXT,
+    ended_at TEXT,
+    invited_at TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS memberships_email ON memberships (email);
+
+  -- Discord members the bot manages: the verified Buy Me a Coffee email they linked
+  -- (null after /unlink), their privacy choices, and what the bot last applied.
+  CREATE TABLE IF NOT EXISTS discord_members (
+    discord_id TEXT PRIMARY KEY,
+    email TEXT UNIQUE COLLATE NOCASE,
+    linked_at TEXT,
+    discreet INTEGER NOT NULL DEFAULT 0,
+    thanks INTEGER NOT NULL DEFAULT 0,
+    carry_tier TEXT,
+    carry_until TEXT,
+    applied_tier TEXT,
+    applied_state TEXT,
+    updated_at TEXT NOT NULL
+  );
+
+  -- One pending email code per Discord account while linking (hashed, 15 minutes).
+  CREATE TABLE IF NOT EXISTS discord_link_codes (
+    discord_id TEXT PRIMARY KEY,
+    email TEXT NOT NULL,
+    code_hash TEXT NOT NULL,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    expires_at TEXT NOT NULL
+  );
+
+  -- Complimentary classes granted by founders (/membership grant).
+  CREATE TABLE IF NOT EXISTS discord_grants (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    discord_id TEXT NOT NULL,
+    tier TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    granted_by TEXT,
+    created_at TEXT NOT NULL
+  );
+
+  -- Membership messages the bot has sent (or could not deliver yet), so none repeats.
+  CREATE TABLE IF NOT EXISTS discord_notices (
+    discord_id TEXT NOT NULL,
+    notice_key TEXT NOT NULL,
+    message TEXT NOT NULL,
+    delivered INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (discord_id, notice_key)
+  );
+
   CREATE TABLE IF NOT EXISTS broadcasts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     subject TEXT NOT NULL,
@@ -136,7 +197,8 @@ let lastPurge = 0;
 /**
  * Deletes data past the retention periods promised in the Privacy Policy (content/pages/privacy.md):
  * unsubscribed Lifeline addresses after 30 days, declined contributors after 90 days,
- * and the email log after 12 months. Runs at most once a day.
+ * the email log after 12 months, ended memberships after 90 days and expired link codes.
+ * Runs at most once a day.
  */
 function purgeExpired(conn: Database.Database) {
   if (Date.now() - lastPurge < DAY) return;
@@ -145,6 +207,10 @@ function purgeExpired(conn: Database.Database) {
   conn.prepare("DELETE FROM subscribers WHERE status = 'unsubscribed' AND updated_at < ?").run(before(30));
   conn.prepare("DELETE FROM contributors WHERE status = 'declined' AND updated_at < ?").run(before(90));
   conn.prepare('DELETE FROM email_log WHERE created_at < ?').run(before(365));
+  conn.prepare('DELETE FROM discord_link_codes WHERE expires_at < ?').run(new Date().toISOString());
+  // Memberships that ended more than 90 days ago (well past the 7-day grace period).
+  conn.prepare("DELETE FROM memberships WHERE status IN ('ended', 'lapsed', 'revoked') AND updated_at < ?").run(before(90));
+  conn.prepare('DELETE FROM discord_notices WHERE created_at < ?').run(before(90));
 }
 
 export function db() {

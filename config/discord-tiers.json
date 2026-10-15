@@ -1,0 +1,63 @@
+{
+  "guildId": "1496380917223133264",
+  "tiers": [
+    {
+      "slug": "alien",
+      "rank": 1,
+      "roleId": "1560210912219111425",
+      "accessRoleId": "1560210921597440001",
+      "bmcLevelIds": []
+    },
+    {
+      "slug": "citizen",
+      "rank": 2,
+      "roleId": "1560210910537195541",
+      "accessRoleId": "1560210920037425254",
+      "bmcLevelIds": []
+    },
+    {
+      "slug": "top-1",
+      "rank": 3,
+      "roleId": "1560210908834172978",
+      "accessRoleId": "1560210918359433216",
+      "bmcLevelIds": []
+    },
+    {
+      "slug": "upper-middle-class",
+      "rank": 4,
+      "roleId": "1560210907135479838",
+      "accessRoleId": "1560210916321009674",
+      "bmcLevelIds": []
+    },
+    {
+      "slug": "middle-class",
+      "rank": 5,
+      "roleId": "1560210905394839582",
+      "accessRoleId": "1560210913825390613",
+      "bmcLevelIds": []
+    }
+  ],
+  "staffRoleIds": [
+    "1560194486175277168",
+    "1560194488155111444",
+    "1560194489983832225"
+  ],
+  "grace": {
+    "lapseDays": 7,
+    "remindDaysBeforeEnd": [
+      3
+    ],
+    "remindDuringGrace": [
+      0,
+      5
+    ]
+  },
+  "channels": {
+    "emergency": "1560210946549358602",
+    "gazette": "1560210952618639431",
+    "treasury": "1560211005672259674",
+    "thankYou": "1560211007991971900",
+    "modLog": "1560210117780316272",
+    "botLog": "1560211058843713546"
+  }
+}

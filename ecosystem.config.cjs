@@ -12,5 +12,18 @@ module.exports = {
       autorestart: true,
       max_memory_restart: '512M',
     },
+    {
+      // Discord membership bot (bot/index.mjs). Start it once config/discord-tiers.json is in place:
+      //   pm2 start ecosystem.config.cjs --only cr-discord-bot && pm2 save
+      name: 'cr-discord-bot',
+      cwd: __dirname,
+      script: 'bot/index.mjs',
+      env: { NODE_ENV: 'production' },
+      instances: 1,
+      autorestart: true,
+      // Waits a little longer between restarts, so a bad token doesn't hammer Discord.
+      restart_delay: 10000,
+      max_memory_restart: '256M',
+    },
   ],
 };

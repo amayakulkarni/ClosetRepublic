@@ -109,6 +109,23 @@ Money is tracked in a SQLite ledger (`src/lib/funds.ts`). Every change is an ent
 
 `/admin` (not linked anywhere): sign in with `ADMIN_TOKEN`. Add credits or deductions to any fund, set the legal, welfare or infrastructure fund to an exact balance, change goals, the welfare split and where donations go, browse and delete ledger entries, and see past months.
 
+### Discord membership
+
+Buy Me a Coffee members get their class role (Alien, Citizen, Top 1%, Upper Middle Class, Middle Class) and lounges in the Discord server automatically.
+
+- **Webhook:** the existing `/api/webhooks/buymeacoffee` now also stores `membership.*` events in the `memberships` table, emails new members who haven't linked Discord yet (once), wakes the bot, and forwards every verified event to the forum bridge (`FORUM_BRIDGE_URL`, `FORUM_BRIDGE_SECRET`). Tick all `membership.*` events on the Buy Me a Coffee webhook, and leave Buy Me a Coffee's own Discord connection off.
+- **Linking:** `/discord/link` (also `/link` in Discord): sign in with Discord (scope `identify`), type the Buy Me a Coffee email, type the 6-digit code we email. Only the Discord ID and that email are stored (`discord_members`). Needs `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, SMTP, and the redirect `https://closetrepublic.com/discord/callback` added in the Discord developer portal under OAuth2.
+- **Bot:** `bot/index.mjs`, a second pm2 app (`cr-discord-bot`). It compares each linked member's membership with their roles and fixes the difference: on every webhook, link, server join, and every 15 minutes. Class role plus the access role of that class and every cheaper one. Cancelled or paused memberships keep their class until the paid period ends, then a 7-day grace period (DMs on day 0 and day 5), then the roles are removed. With `BMC_API_TOKEN` it also checks Buy Me a Coffee every hour. It never touches staff, pronoun or other roles. Commands: `/link`, `/membership status`, `/membership grant` and `/membership revoke` (Founders), `/discreet on|off`, `/thanks on|off`, `/unlink`, `/forget-me`, `/tiers` (Founders).
+- **Config:** copy `discord-tiers.json` from the Discord setup script to `config/discord-tiers.json` (see `config/discord-tiers.example.json`). Levels are matched by name until you add each level's `bmcLevelIds`.
+- **Tests:** `npm run test:bot` (rules, database and a fake Discord server).
+
+Start it on the server, after `npm install` and the site restart:
+
+```
+pm2 start ecosystem.config.cjs --only cr-discord-bot && pm2 save
+pm2 logs cr-discord-bot
+```
+
 ### About and legal pages
 
 `/about`, `/terms`, `/privacy` and `/guidelines` (Community Guidelines and Moderation Charter) are Markdown files in `content/pages/`. Edit them like any Markdown; `{{EMAIL}}`, `{{OPERATOR}}`, `{{COUNTRY}}`, `{{SERVER_COUNTRY}}`, `{{UPDATED}}` and the postal tokens are filled in from `LEGAL_EMAIL`, `LEGAL_OPERATOR`, `LEGAL_COUNTRY`, `LEGAL_SERVER_COUNTRY`, `LEGAL_UPDATED` and `LEGAL_POSTAL_ADDRESS`. When you change the legal text, update `LAST_UPDATED` in `src/lib/pages.ts`.

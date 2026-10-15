@@ -38,11 +38,13 @@ If you browse with a VPN or Tor, the Site works normally.
 
 ### Cookies
 
-We use only two cookies, and neither tracks you. Because both are needed for things you ask for, they don't require a consent banner under UK and EU law.
+We use only these cookies, and none of them tracks you. Because each is needed for something you ask for, they don't require a consent banner under UK and EU law.
 
 | Cookie | What it does | How long |
 | --- | --- | --- |
 | `cr_nature` | Remembers whether you turned Nature mode on or off | 1 year, or until you clear it |
+| `cr_discord` | Remembers which Discord account you signed in with while you link it on the Discord link page | 30 minutes |
+| `cr_discord_state` | Protects the Discord sign-in from forgery | 10 minutes |
 | `cr_admin` | Keeps site administrators signed in to the admin page. Never set for visitors | Until the admin session ends |
 
 ### The passport generator
@@ -66,6 +68,19 @@ Because the Lifeline exists for when our server is unavailable, the founders kee
 
 We never ask for or accept uploads, photos, or copies of your work.
 
+### Discord membership roles
+
+If you are a Buy Me a Coffee member and want your class role in our Discord server, you can link the two on the Discord link page or with `/link` in Discord.
+
+| What | Why | How long |
+| --- | --- | --- |
+| Your Discord user ID, and the email you use on Buy Me a Coffee once you have confirmed it with a code | To give your Discord account the class role your membership pays for | Until you type `/unlink` or `/forget-me` in Discord, or ask us to delete it |
+| From Buy Me a Coffee: your membership's level, status, dates and subscription ID, and your email | To know which class you have and when it ends | While the membership is active, then deleted 90 days after it ends |
+| Your settings (discreet mode, being thanked by name), the class we last gave you, and the membership messages the bot sent you | To apply your choices and avoid repeating messages | Messages: 90 days. The rest: until `/forget-me` |
+| A 6-digit code we email you, stored only in scrambled (hashed) form | To check the email is yours | 15 minutes, or until used |
+
+Signing in with Discord only tells us your Discord ID and display name; we show the name on the page during sign-in and never store it, and we hand Discord's access back straight away. Our Discord bot reads your roles in our server and changes only class and lounge roles. If you join our forum with Discord, the forum uses the same Discord ID. Discord's own handling of your data is covered by Discord's privacy policy.
+
 ### Emails we send
 
 We send emails through an email delivery service. We keep a short log of each email (recipient, subject, date, and whether it was delivered) so we can tell if messages are failing. The log is deleted after 12 months. If an email fails, the recipient's address may also appear in our server's error log, which follows the 14-day limit above.
@@ -76,7 +91,7 @@ We never receive or store card numbers, bank details or billing addresses. The p
 
 | Provider | What it tells us | What we keep |
 | --- | --- | --- |
-| Buy Me a Coffee | The name you entered, the amount, currency and a transaction ID. It may also send your email address, which we discard | Name (as you entered it), amount, currency, date and transaction ID in our treasury ledger |
+| Buy Me a Coffee | The name you entered, the amount, currency and a transaction ID. For one-off donations it may also send your email address, which we discard. For memberships, see "Discord membership roles" above | Name (as you entered it), amount, currency, date and transaction ID in our treasury ledger |
 | GitHub Sponsors | Your GitHub username, your tier and amount, whether your sponsorship is public or private, and when it started or ended | The same. Public sponsors are thanked by username on the funding page; private sponsors are recorded as "Private sponsor" and never named |
 | UPI | Whatever your bank shows on our bank statement, usually your name or UPI ID | Only the amount and date are entered in the ledger, unless you ask to be thanked by name |
 
@@ -92,11 +107,12 @@ Our GitHub repository, Reddit community and forum are run on other platforms. Wh
 
 ## 3. Sensitive information
 
-Being on our Lifeline or contributor list could suggest something about your sexual orientation, gender identity or beliefs. The law treats this as special category or sensitive information. We only collect it **with your explicit consent**, which you give by ticking the box on each form, and you can withdraw that consent at any time by unsubscribing or asking us to delete your data. We never ask you to state your sexuality or gender identity, and pronouns are optional.
+Being on our Lifeline or contributor list, or linking a Closet Republic membership to your Discord account, could suggest something about your sexual orientation, gender identity or beliefs. The law treats this as special category or sensitive information. We only collect it **with your explicit consent**, which you give by ticking the box on each form or by choosing to link your accounts, and you can withdraw that consent at any time by unsubscribing or asking us to delete your data. We never ask you to state your sexuality or gender identity, and pronouns are optional.
 
 ## 4. Our legal bases (UK and EU)
 
-- **Consent:** the Lifeline and contributor sign-ups, including the sensitive information described above.
+- **Consent:** the Lifeline, contributor sign-ups and Discord linking, including the sensitive information described above.
+- **Contract:** keeping track of your Buy Me a Coffee membership so you get the Discord class it pays for.
 - **Legitimate interests:** keeping the Site secure (server logs, rate limiting), verifying contributors' work, and keeping a record of emails sent. We have balanced these against your interests and kept them to the minimum.
 - **Legal obligation:** keeping accounting records of donations.
 
@@ -107,6 +123,7 @@ You can withdraw consent at any time. This doesn't affect anything we did lawful
 We share personal data only with:
 
 - **the company that hosts our server**, which stores the database on our behalf;
+- **Discord**, only if you link your membership: our bot tells Discord which class role your account should have, which other server members can see unless you turn on discreet mode;
 - **our email delivery service**, which sends emails on our behalf;
 - **the founders and a small number of trusted volunteers** who need access to run a feature, each bound to keep it confidential;
 - **authorities**, only where the law genuinely requires it. We will challenge requests that seem unlawful or that would endanger our community, and tell you about any request unless we are legally prevented.
