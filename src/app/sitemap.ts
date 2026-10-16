@@ -12,6 +12,7 @@ const STATIC_PAGES: { path: string; priority: number; changeFrequency: MetadataR
   { path: '/gazette', priority: 0.9, changeFrequency: 'daily' },
   { path: '/constitution', priority: 0.9, changeFrequency: 'weekly' },
   { path: '/funding', priority: 0.7, changeFrequency: 'weekly' },
+  { path: '/funding/ledger', priority: 0.5, changeFrequency: 'weekly' },
   { path: '/lawmakers', priority: 0.6, changeFrequency: 'weekly' },
   { path: '/timeline', priority: 0.6, changeFrequency: 'weekly' },
   { path: '/passport', priority: 0.8, changeFrequency: 'monthly' },

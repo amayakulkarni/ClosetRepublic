@@ -6,7 +6,9 @@ import { getEntry, getNatureEdition, safely } from '@/lib/ghost';
 import { AuthorLink } from '@/components/AuthorLink';
 import { FeatureImage } from '@/components/FeatureImage';
 import { GhostContent } from '@/components/GhostContent';
+import { NewsletterWidget } from '@/components/NewsletterWidget';
 import { Notice } from '@/components/Notice';
+import { SupportWidget } from '@/components/SupportWidget';
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -59,6 +61,10 @@ export default async function GazettePost({ params }: Props) {
       )}
       <FeatureImage post={shown} nature={on} />
       <GhostContent html={shown.html} />
+      <div className="post__end">
+        <NewsletterWidget />
+        <SupportWidget showThanks />
+      </div>
     </article>
   );
 }

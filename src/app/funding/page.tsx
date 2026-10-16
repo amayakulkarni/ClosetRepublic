@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { getNature } from '@/lib/nature';
 import { getAuthors, getEntry, getNatureEdition, safely } from '@/lib/ghost';
 import { Art } from '@/components/Art';
@@ -8,29 +9,23 @@ import { Notice } from '@/components/Notice';
 import { FundWidget } from '@/components/FundWidget';
 import { CURRENCY, getSummary } from '@/lib/funds';
 import { recordSponsorRenewals, sponsorSummary } from '@/lib/github-sponsors';
-import { btcpayConfigured } from '@/lib/btcpay';
+import { DONATION_MAX_USD, DONATION_MIN_USD, btcpayConfigured } from '@/lib/btcpay';
+import { CryptoDonate } from '@/components/CryptoDonate';
+import { COMMUNITY_APPEAL, DONATE_LABEL, DONATE_URL, MEMBERSHIP_URL, SPONSORS_URL, UPI_ID, upiLink } from '@/lib/donate';
+import { newsletterSettings } from '@/lib/newsletter';
 
 export const metadata: Metadata = { title: 'Ministry of Finance' };
 export const dynamic = 'force-dynamic';
 
 // Donations go through Buy Me a Coffee and GitHub Sponsors (their webhooks keep the treasury
-// up to date), plus an optional UPI ID.
-// The older NEXT_PUBLIC_GOFUNDME_URL is still read so existing .env files keep working.
-const env = (name: string, legacy?: string) => process.env[name] || (legacy ? process.env[legacy] : '') || '';
-const DONATE_URL = env('NEXT_PUBLIC_DONATE_URL', 'NEXT_PUBLIC_GOFUNDME_URL');
-const DONATE_LABEL = env('NEXT_PUBLIC_DONATE_LABEL') || 'Buy me a compute';
-const UPI_ID = env('NEXT_PUBLIC_UPI_ID');
-const SPONSORS_URL = env('NEXT_PUBLIC_GITHUB_SPONSORS_URL');
-const UPI_NAME = env('NEXT_PUBLIC_UPI_NAME') || 'Closet Republic';
+// up to date), plus an optional UPI ID. The channels are read in src/lib/donate.ts.
 
 const money = (n: number) =>
   new Intl.NumberFormat(CURRENCY === 'INR' ? 'en-IN' : 'en', { style: 'currency', currency: CURRENCY, maximumFractionDigits: 0 }).format(n);
 
-/** Opens the visitor's UPI app (GPay, PhonePe, Paytm, BHIM…) with the payee filled in. */
-const upiLink = (id: string) => `upi://pay?pa=${encodeURIComponent(id)}&pn=${encodeURIComponent(UPI_NAME)}&cu=INR`;
-
-export default async function FundingPage() {
+export default async function FundingPage({ searchParams }: { searchParams: Promise<{ thanks?: string }> }) {
   const { on } = await getNature();
+  const thanks = (await searchParams).thanks === 'crypto';
   const { data, problem } = await safely(
     async () => {
       const [budget, natureBudget, authors] = await Promise.all([getEntry('finance'), getNatureEdition('finance'), getAuthors()]);
@@ -39,6 +34,7 @@ export default async function FundingPage() {
     { budget: null, natureBudget: null, authors: [] },
   );
   const budget = on && data.natureBudget ? data.natureBudget : data.budget;
+  const { promoPrice } = newsletterSettings();
   recordSponsorRenewals();
   const funds = getSummary();
   const sponsors = sponsorSummary();
@@ -48,6 +44,7 @@ export default async function FundingPage() {
       <header className="page-head">
         <div>
           <h1>{on ? 'Ministry of Finance' : 'Funding Closet Republic'}</h1>
+          <p className="lede">{COMMUNITY_APPEAL}</p>
           <p className="lede">
             {on
               ? 'The proposed budget for the governance and management of the Republic. Citizens are kindly reminded that the tax is unfair and entirely optional.'
@@ -68,8 +65,8 @@ export default async function FundingPage() {
                 </a>
               )}
               {btcpayConfigured() && (
-                <a className={DONATE_URL || SPONSORS_URL ? 'button button--ghost' : 'button'} href="/discord/link#crypto">
-                  {on ? 'Pay tax in crypto' : 'Pay with crypto'}
+                <a className={DONATE_URL || SPONSORS_URL ? 'button button--ghost' : 'button'} href="#crypto-donate">
+                  {on ? 'Pay tax in crypto' : 'Donate with crypto'}
                 </a>
               )}
               {UPI_ID && (
@@ -89,6 +86,7 @@ export default async function FundingPage() {
         <Art name="consumer" nature={on} className="page-head__art" />
       </header>
 
+      {thanks && <Notice>Thank you. Your crypto donation will appear in the treasury as soon as the network confirms it.</Notice>}
       {problem && <Notice tone="warn">{problem}</Notice>}
 
       <section aria-labelledby="collection-heading" className="section">
@@ -165,6 +163,36 @@ export default async function FundingPage() {
             .
           </p>
         )}
+      </section>
+
+      <p className="hint ledger-link">
+        <Link href="/funding/ledger">{on ? 'Inspect every expense of the Republic' : 'See every expense in the public ledger'}</Link>
+      </p>
+
+      {btcpayConfigured() && (
+        <section aria-labelledby="crypto-heading" className="section" id="crypto-donate">
+          <h2 id="crypto-heading">{on ? 'Pay your tax in crypto' : 'Donate with crypto'}</h2>
+          <CryptoDonate min={DONATION_MIN_USD} max={DONATION_MAX_USD} />
+        </section>
+      )}
+
+      <section aria-labelledby="membership-heading" className="section" id="membership">
+        <h2 id="membership-heading">{on ? 'Take a seat in the role-playing Republic' : 'Join the Discord server'}</h2>
+        <p>
+          Closet Republic has a role-playing Discord server where members take a class, from Alien to Middle Class, and play out life in the
+          Republic. Memberships start at {promoPrice}. A class unlocks lounges and cosmetics and never buys votes or moderator powers.
+        </p>
+        <p className="hero__actions">
+          {MEMBERSHIP_URL && (
+            <a className="button" href={MEMBERSHIP_URL} target="_blank" rel="noopener noreferrer">
+              Choose a class
+              <span className="sr-only"> (opens in a new tab)</span>
+            </a>
+          )}
+          <Link className={MEMBERSHIP_URL ? 'button button--ghost' : 'button'} href="/discord/link">
+            Link your membership
+          </Link>
+        </p>
       </section>
 
       <section aria-labelledby="budget-heading" className="section">

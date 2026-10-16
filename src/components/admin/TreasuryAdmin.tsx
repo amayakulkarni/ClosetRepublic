@@ -180,6 +180,7 @@ export function TreasuryAdmin() {
           <div className="field">
             <label htmlFor="e-note">Note</label>
             <input id="e-note" name="note" placeholder="e.g. Court filing fee" />
+            <p className="hint">Notes on money spent and refunded are shown publicly on the expense ledger. Leave out personal details.</p>
           </div>
           <button className="button">Add entry</button>
         </form>

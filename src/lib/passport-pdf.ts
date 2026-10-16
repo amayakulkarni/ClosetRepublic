@@ -262,7 +262,7 @@ function secondaryPage(b: Box, ctx: Ctx) {
   text(b, 'ADDRESS', 7, y, 4.6, ctx.fonts.regular, GREY);
   y = paragraph(b, d.address || '-', 7, y - 3, PAGE.w - 14, 7, ctx.fonts.bold, INK, 1.25) - 2.2;
   text(b, 'OBSERVATIONS', 7, y, 4.6, ctx.fonts.regular, GREY);
-  paragraph(b, 'The bearer is a citizen of Closet Republic in good standing and has agreed to uphold its Constitution.', 7, y - 3, PAGE.w - 14, 6, ctx.fonts.italic, INK);
+  paragraph(b, 'The bearer is a citizen of Closet Republic in good standing and has agreed to uphold its Constitution. Commemorative keepsake of a parody community: not an identity or travel document.', 7, y - 3, PAGE.w - 14, 6, ctx.fonts.italic, INK);
   pageNumber(b, TOTAL_PAGES - 3, ctx);
 }
 

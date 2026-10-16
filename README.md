@@ -73,6 +73,14 @@ Nature editions are separate Ghost posts or pages whose slug is the original slu
 
 `/gazetee`, `/pass`, `/goals`, `/roadmap` and `/contribute` redirect to `/gazette`, `/passport`, `/timeline` and `/development`.
 
+## Newsletter (Ghost)
+
+The box at the top of `/gazette` and under every post posts the email address to `POST /api/newsletter`, which asks Ghost to send its confirmation email (the call Ghost's own sign-up form makes). Ghost subscribes the address only after the link is clicked, so the site never stores subscribers and no Ghost key is used. After a successful sign-up the box turns into an offer for the paid Discord server (`/funding#membership`).
+
+- **Ghost settings:** Settings > Membership > Access = "Anyone can sign up". Email delivery (Mailgun or SMTP) must work. Settings > Newsletters: switch off "Track email opens" and "Track link clicks", because the Privacy Policy promises no tracking.
+- **Environment:** `NEWSLETTER_FREQUENCY` (word in the headline, default `weekly`), `GHOST_NEWSLETTER_NAME` (optional), `DISCORD_PROMO_PRICE` (default `INR 100 per year`), `NEWSLETTER_DISABLED=true` to hide the boxes. Limit: 5 sign-ups per visitor per hour.
+- The landing page has a "Subscribe to the newsletter" button that jumps to the box on `/gazette`.
+
 ## Search engines
 
 - `/robots.txt` (`src/app/robots.ts`) allows everything except `/admin` and `/api/`, and points to the sitemap.
@@ -110,6 +118,10 @@ Money is tracked in a SQLite ledger (`src/lib/funds.ts`). Every change is an ent
 
 `/admin` (not linked anywhere): sign in with `ADMIN_TOKEN`. Add credits or deductions to any fund, set the legal, welfare or infrastructure fund to an exact balance, change goals, the welfare split and where donations go, browse and delete ledger entries, and see past months.
 
+### Public expense ledger
+
+`/funding/ledger` lists every deduction and refund (date, fund, amount and the entry's note), newest first and grouped by month. Donors, sources and income are never shown. Notes entered on `/admin` are public, so personal details stay out of them. Balance corrections and money received are not listed individually.
+
 ### Crypto memberships (BTCPay Server)
 
 A self-hosted BTCPay Server (`deploy/btcpay`) takes Monero, Bitcoin and Lightning. The button on `/funding` and the "Pay with crypto" section on `/discord/link` appear once `BTCPAY_URL`, `BTCPAY_STORE_ID`, `BTCPAY_API_KEY` and `BTCPAY_WEBHOOK_SECRET` are set.
@@ -117,6 +129,7 @@ A self-hosted BTCPay Server (`deploy/btcpay`) takes Monero, Bitcoin and Lightnin
 - **Order:** a signed-in Discord member picks a class and 1, 3 or 12 months. `POST /api/crypto/order` stores a `crypto_orders` row (random token, Discord ID, class, months) and creates a 30-minute BTCPay invoice that carries only the token. No name or email is collected.
 - **Webhook:** `/api/webhooks/btcpay` checks the `BTCPay-Sig` HMAC, then re-reads the invoice from BTCPay. A settled invoice adds a `discord_grants` row (`granted_by = 'crypto'`, extending the current crypto grant for the same class), a treasury entry (source `crypto`, USD converted with `EXCHANGE_RATES`), deletes the order and wakes the bot. Each invoice grants once (`crypto_payments`).
 - **BTCPay setup:** Store > Settings > Webhooks > Create. Payload URL `https://closetrepublic.com/api/webhooks/btcpay`, events "An invoice has been settled" and "A payment has been settled", and the secret in `BTCPAY_WEBHOOK_SECRET`. Create an API key (Account > Manage account > API keys) limited to the store with "Can create invoice" and "Can view invoices".
+- **Free-amount donations:** the "Donate with crypto" section on `/funding` (and the Bitcoin button of the support widget) posts a USD amount ($1 to $10,000) to `POST /api/crypto/donate`, which creates a BTCPay invoice marked `kind: donation` with no donor details and no sign-in. When BTCPay reports it settled, the same webhook re-reads the invoice and adds one treasury entry (source `crypto`, note "Crypto donation", fund chosen on `/admin`, USD converted with `EXCHANGE_RATES`). Each invoice counts once.
 - **Not granted automatically:** underpaid, late (expired) and unmatched payments. They are logged (`[btcpay] settled invoice without a matching order`) and refunded by hand.
 - Prices are fixed in `src/lib/btcpay.ts` (`CRYPTO_TIERS`).
 

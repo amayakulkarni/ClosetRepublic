@@ -4,6 +4,7 @@ import { getNature } from '@/lib/nature';
 import { getGazette } from '@/lib/gazette';
 import { safely } from '@/lib/ghost';
 import { Art } from '@/components/Art';
+import { NewsletterWidget } from '@/components/NewsletterWidget';
 import { Notice } from '@/components/Notice';
 import { PostCard } from '@/components/PostCard';
 
@@ -20,6 +21,7 @@ export default async function GazettePage({ searchParams }: { searchParams: Prom
 
   return (
     <>
+      <NewsletterWidget />
       <header className="page-head">
         <div>
           <h1>{on ? 'Gazette of Closet Republic' : 'Blog'}</h1>

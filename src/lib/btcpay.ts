@@ -29,9 +29,12 @@ export const CRYPTO_TIERS = [
   { slug: 'middle-class', name: 'Middle Class', usd: 8 },
 ] as const;
 export const CRYPTO_MONTHS = [1, 3, 12] as const;
+/** Free-amount crypto donations, in USD (BTCPay prices USD reliably). */
+export const DONATION_MIN_USD = 1;
+export const DONATION_MAX_USD = 10_000;
 
 
-type Invoice = { id: string; status: string; amount: string; currency: string; metadata?: { orderId?: string } };
+type Invoice = { id: string; status: string; amount: string; currency: string; metadata?: { orderId?: string; kind?: string } };
 
 async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   const res = await fetch(`${URL_BASE}/api/v1/stores/${STORE_ID}${path}`, {
@@ -73,6 +76,24 @@ export async function createCryptoOrder(discordId: string, tierSlug: string, mon
   }
 }
 
+/**
+ * Creates a donation invoice for any amount. Nothing about the donor is asked for or stored: the invoice
+ * carries only a "donation" marker, and the webhook adds the settled amount to the treasury.
+ */
+export async function createCryptoDonation(amountUsd: number) {
+  if (!Number.isFinite(amountUsd) || amountUsd < DONATION_MIN_USD || amountUsd > DONATION_MAX_USD) throw new Error('Amount out of range');
+  const invoice = await api<{ id: string; checkoutLink: string }>('/invoices', {
+    method: 'POST',
+    body: JSON.stringify({
+      amount: (Math.round(amountUsd * 100) / 100).toFixed(2),
+      currency: 'USD',
+      metadata: { kind: 'donation', itemDesc: 'Donation to Closet Republic' },
+      checkout: { redirectURL: `${SITE_URL}/funding?thanks=crypto`, redirectAutomatically: false, expirationMinutes: 30 },
+    }),
+  });
+  return invoice.checkoutLink;
+}
+
 /** True when `signature` ("sha256=<hex>") matches the HMAC-SHA256 of the raw body. */
 export function validSignature(raw: string, signature: string | null) {
   if (!WEBHOOK_SECRET || !signature) return false;
@@ -81,13 +102,14 @@ export function validSignature(raw: string, signature: string | null) {
   return given.length === expected.length && crypto.timingSafeEqual(given, expected);
 }
 
-export type Fulfilment = { result: 'granted' | 'duplicate' | 'not-settled' | 'no-order'; discordId?: string };
+export type Fulfilment = { result: 'granted' | 'donated' | 'duplicate' | 'not-settled' | 'no-order'; discordId?: string };
 
 /** Re-reads the invoice from BTCPay (never trusts the webhook body) and grants the class once. */
 export async function fulfilInvoice(invoiceId: string): Promise<Fulfilment> {
   const invoice = await api<Invoice>(`/invoices/${encodeURIComponent(invoiceId)}`);
   if (invoice.status !== 'Settled') return { result: 'not-settled' };
   const conn = db();
+  if (invoice.metadata?.kind === 'donation') return recordDonation(invoice);
   const order = conn.prepare('SELECT * FROM crypto_orders WHERE invoice_id = ?').get(invoice.id) as
     | { token: string; discord_id: string; tier: string; months: number; amount_usd: number }
     | undefined;
@@ -122,3 +144,26 @@ export async function fulfilInvoice(invoiceId: string): Promise<Fulfilment> {
   return run();
 }
 
+
+/** A settled donation invoice: one treasury entry, once, with no donor details. */
+function recordDonation(invoice: Invoice): Fulfilment {
+  const conn = db();
+  return conn.transaction((): Fulfilment => {
+    if (conn.prepare('SELECT 1 FROM crypto_payments WHERE invoice_id = ?').get(invoice.id)) return { result: 'duplicate' };
+    const amount = Number(invoice.amount);
+    if (!Number.isFinite(amount) || amount <= 0) return { result: 'no-order' };
+    conn.prepare('INSERT INTO crypto_payments (invoice_id, created_at) VALUES (?, ?)').run(invoice.id, new Date().toISOString());
+    const rate = rateFor(invoice.currency);
+    addEntry({
+      fund: getSettings().donationFund,
+      kind: 'donation',
+      amountMinor: toMinor(amount * (rate ?? 1)),
+      source: 'crypto',
+      externalId: `btcpay:${invoice.id}`,
+      originalAmount: amount,
+      originalCurrency: invoice.currency,
+      note: rate === null ? `not converted: add ${invoice.currency} to EXCHANGE_RATES (funding currency ${CURRENCY})` : 'Crypto donation',
+    });
+    return { result: 'donated' };
+  })();
+}

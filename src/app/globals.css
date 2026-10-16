@@ -36,6 +36,8 @@
   --prism-blur: 48px;
   --prism-period: 1100px;
   --prism-strength: 0.9;
+  /* The Nature switch uses the same pastel colours, blended edge to edge, so it never shows hard stripes. */
+  --toggle-spectrum: var(--soft-red), var(--soft-orange), var(--soft-yellow), var(--soft-green), var(--soft-blue), var(--soft-indigo), var(--soft-violet);
 }
 
 *,
@@ -233,7 +235,7 @@ code {
   transition: transform 0.2s;
 }
 .nature-toggle[aria-checked='true'] .nature-toggle__track {
-  background: linear-gradient(90deg, var(--spectrum));
+  background: linear-gradient(90deg, var(--toggle-spectrum));
 }
 .nature-toggle[aria-checked='true'] .nature-toggle__thumb {
   transform: translateX(20px);
@@ -1527,4 +1529,92 @@ html[data-nature='on'] .closet-mark {
 }
 .steps-list li + li {
   margin-top: 0.4em;
+}
+
+/* Forced-theme notice (ThemeGuard): non-blocking banner, bottom of the viewport. */
+.theme-guard {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 1000;
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.theme-guard p {
+  margin: 0;
+  flex: 1;
+}
+.theme-guard__close {
+  flex: none;
+}
+
+.newsletter,
+.support-widget {
+  border: var(--stroke) solid var(--fg);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin: 0 0 32px;
+}
+.newsletter h2,
+.support-widget h2 {
+  margin-top: 0;
+}
+.newsletter__form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+.newsletter__form input[type='email'] {
+  flex: 1 1 260px;
+  min-width: 0;
+  background: var(--panel);
+  color: var(--fg);
+  border: 2px solid var(--fg);
+  border-radius: 10px;
+  padding: 10px 14px;
+  min-height: 46px;
+  font: inherit;
+}
+.newsletter__legal {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.newsletter__thanks {
+  font-weight: 700;
+}
+.newsletter__actions,
+.support-widget__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 16px 0 0;
+}
+.post__end {
+  margin-top: 48px;
+}
+.ledger-link {
+  margin-top: 24px;
+}
+.ledger-total {
+  font-size: 1.15rem;
+}
+
+.crypto-donate {
+  display: grid;
+  gap: 16px;
+  max-width: 520px;
+}
+.crypto-donate__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  border: 0;
+  padding: 0;
+  margin: 0;
 }

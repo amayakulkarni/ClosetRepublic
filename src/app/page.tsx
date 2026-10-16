@@ -9,6 +9,7 @@ import { FeatureImage } from '@/components/FeatureImage';
 import { Notice } from '@/components/Notice';
 import { PostCard } from '@/components/PostCard';
 import { StageWidget } from '@/components/StageWidget';
+import { SupportWidget } from '@/components/SupportWidget';
 
 export default async function Home() {
   const { on } = await getNature();
@@ -35,6 +36,9 @@ export default async function Home() {
             </Link>
             <Link className="button button--ghost" href="/constitution">
               Read the constitution
+            </Link>
+            <Link className="button button--ghost" href="/gazette#newsletter">
+              Subscribe to the newsletter
             </Link>
           </p>
         </div>
@@ -92,6 +96,8 @@ export default async function Home() {
           {on ? 'Register' : 'Join the Lifeline'}
         </Link>
       </section>
+
+      <SupportWidget />
     </>
   );
 }

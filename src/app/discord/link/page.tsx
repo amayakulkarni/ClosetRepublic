@@ -68,6 +68,9 @@ export default async function DiscordLinkPage({ searchParams }: { searchParams: 
                 Continue with Discord
               </a>
             </p>
+            <p className="hint">
+              The button opens Discord&rsquo;s own sign-in page on discord.com. Closet Republic never asks for a Discord password.
+            </p>
           </>
         ) : (
           <DiscordLinkForm

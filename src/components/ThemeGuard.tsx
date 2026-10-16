@@ -1,20 +1,24 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export const THEME_ALERT =
   'CR looks best as is and developers have made huge efforts to make their artwork accessible to everyone. Please disable forced theme (light/dark) to taste the art as it was meant to.';
 
 // Closet Republic is dark only. If the browser or an extension forces its own theme
 // (forced colours / high contrast, Dark Reader and similar, or injected styles that
-// repaint the page), the visitor is asked to turn it off.
+// repaint the page), a small dismissible banner asks the visitor to turn it off.
+// It is an in-page notice, never a browser alert(): blocking pop-ups that ask people
+// to change browser settings are a pattern Google Safe Browsing treats as social engineering.
 export function ThemeGuard() {
+  const [show, setShow] = useState(false);
+
   useEffect(() => {
     let warned = false;
     const warn = () => {
       if (warned) return;
       warned = true;
-      window.alert(THEME_ALERT);
+      setShow(true);
     };
 
     const probe = document.createElement('div');
@@ -61,5 +65,13 @@ export function ThemeGuard() {
     };
   }, []);
 
-  return null;
+  if (!show) return null;
+  return (
+    <div className="notice notice--warn theme-guard" role="status">
+      <p>{THEME_ALERT}</p>
+      <button type="button" className="theme-guard__close" onClick={() => setShow(false)} aria-label="Dismiss this notice">
+        Dismiss
+      </button>
+    </div>
+  );
 }

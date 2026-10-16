@@ -193,6 +193,38 @@ export function listEntries(opts: { fund?: Fund; month?: string; limit?: number 
   return (db().prepare(sql).all(params) as Row[]).map(toEntry);
 }
 
+export type PublicExpense = {
+  id: number;
+  fund: Fund;
+  pot: WelfarePot | null;
+  kind: 'deduction' | 'refund';
+  /** Money that left the fund, as a positive number in minor units. */
+  spentMinor: number;
+  note: string | null;
+  month: string;
+  createdAt: string;
+};
+
+/**
+ * Money that went out of the treasury, for the public ledger page: spending (deductions) and refunds.
+ * Supporter names, sources and external ids are never included, and incoming money is not listed.
+ */
+export function listPublicExpenses(limit = 2000): PublicExpense[] {
+  const rows = db()
+    .prepare("SELECT * FROM ledger WHERE kind IN ('deduction', 'refund') AND amount_minor < 0 ORDER BY created_at DESC, id DESC LIMIT ?")
+    .all(Math.min(limit, 5000)) as Row[];
+  return rows.map((r) => ({
+    id: r.id,
+    fund: r.fund,
+    pot: r.pot,
+    kind: r.kind as 'deduction' | 'refund',
+    spentMinor: -r.amount_minor,
+    note: r.note,
+    month: r.month,
+    createdAt: r.created_at,
+  }));
+}
+
 const sum = (sql: string, ...args: unknown[]) => (db().prepare(sql).get(...args) as { total: number | null }).total ?? 0;
 
 /** Running balance of a fund, in minor units. */

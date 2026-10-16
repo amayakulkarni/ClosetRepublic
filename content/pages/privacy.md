@@ -59,6 +59,16 @@ Everything you put into the passport form, including any photo, is turned into a
 
 Because the Lifeline exists for when our server is unavailable, the founders keep an **encrypted copy of the subscriber list off the server**. It contains the same details, is refreshed regularly, and anyone who has unsubscribed is removed from it at the next refresh.
 
+### The newsletter
+
+If you subscribe to the Closet Republic newsletter, the Site passes your email address to Ghost, the publishing system we write the newsletter in. Ghost emails you a link and subscribes you only after you click it, so nobody can sign up an address they do not own.
+
+| What | Why | How long |
+| --- | --- | --- |
+| Your email address, the date you confirmed, and whether you are subscribed | To send you the newsletter and to make sure it stops when you unsubscribe | Until you unsubscribe. After that we keep only your address, marked as unsubscribed, so you are not added again by mistake, until you ask us to delete it |
+
+Every issue has a working unsubscribe link. We switch off Ghost's open and click tracking, so we do not know whether you opened an issue or clicked a link in it. The Site sets no cookie for the newsletter.
+
 ### Contributor sign-ups (Public Works)
 
 | What | Why | How long |
@@ -99,7 +109,7 @@ We never receive or store card numbers, bank details or billing addresses. The p
 
 Crypto payments to Bitcoin addresses and most other blockchains are public and permanent: anyone can see the amount and the addresses involved. Monero and Lightning hide most of this. Choose the network that matches how private you need to be.
 
-Treasury records are kept for as long as accounting and tax laws require (usually between 6 and 8 years). To avoid being named, use a nickname with Buy Me a Coffee or choose a private sponsorship on GitHub.
+Treasury records are kept for as long as accounting and tax laws require (usually between 6 and 8 years). Money we spend, and refunds, are published on the public expense ledger with the date, the fund, the amount and a short description. The ledger never names donors. To avoid being named, use a nickname with Buy Me a Coffee or choose a private sponsorship on GitHub.
 
 ### Messages you send us
 
@@ -111,11 +121,11 @@ Our GitHub repository, Reddit community and forum are run on other platforms. Wh
 
 ## 3. Sensitive information
 
-Being on our Lifeline or contributor list, or linking a Closet Republic membership to your Discord account, could suggest something about your sexual orientation, gender identity or beliefs. The law treats this as special category or sensitive information. We only collect it **with your explicit consent**, which you give by ticking the box on each form or by choosing to link your accounts, and you can withdraw that consent at any time by unsubscribing or asking us to delete your data. We never ask you to state your sexuality or gender identity, and pronouns are optional.
+Being on our Lifeline, newsletter or contributor list, or linking a Closet Republic membership to your Discord account, could suggest something about your sexual orientation, gender identity or beliefs. The law treats this as special category or sensitive information. We only collect it **with your explicit consent**, which you give by ticking the box on each form or by choosing to link your accounts, and you can withdraw that consent at any time by unsubscribing or asking us to delete your data. We never ask you to state your sexuality or gender identity, and pronouns are optional.
 
 ## 4. Our legal bases (UK and EU)
 
-- **Consent:** the Lifeline, contributor sign-ups and Discord linking, including the sensitive information described above.
+- **Consent:** the Lifeline, the newsletter, contributor sign-ups and Discord linking, including the sensitive information described above.
 - **Contract:** keeping track of your Buy Me a Coffee membership so you get the Discord class it pays for.
 - **Legitimate interests:** keeping the Site secure (server logs, rate limiting), verifying contributors' work, and keeping a record of emails sent. We have balanced these against your interests and kept them to the minimum.
 - **Legal obligation:** keeping accounting records of donations.
@@ -127,6 +137,7 @@ You can withdraw consent at any time. This doesn't affect anything we did lawful
 We share personal data only with:
 
 - **the company that hosts our server**, which stores the database on our behalf;
+- **Ghost and its email delivery service**, which store newsletter subscribers and send the newsletter on our behalf;
 - **Discord**, only if you link your membership: our bot tells Discord which class role your account should have, which other server members can see unless you turn on discreet mode;
 - **our email delivery service**, which sends emails on our behalf;
 - **the founders and a small number of trusted volunteers** who need access to run a feature, each bound to keep it confidential;
@@ -176,7 +187,7 @@ We handle personal information in line with the Australian Privacy Principles in
 
 ## 9. Emails and anti-spam laws
 
-We only email people who have asked us to. Every Lifeline email identifies Closet Republic and includes a working unsubscribe link, and you can also unsubscribe by replying "unsubscribe". This meets the UK Privacy and Electronic Communications Regulations, the EU ePrivacy rules, the US CAN-SPAM Act, Canada's Anti-Spam Legislation (CASL) and the Australian Spam Act 2003.
+We only email people who have asked us to. Every Lifeline and newsletter email identifies Closet Republic and includes a working unsubscribe link, and you can also unsubscribe by replying "unsubscribe". This meets the UK Privacy and Electronic Communications Regulations, the EU ePrivacy rules, the US CAN-SPAM Act, Canada's Anti-Spam Legislation (CASL) and the Australian Spam Act 2003.
 
 ## 10. Children
 
