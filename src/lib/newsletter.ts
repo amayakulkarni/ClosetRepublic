@@ -164,6 +164,8 @@ function loadTemplate() {
   });
   // Everything after </html> was only item definitions.
   src = src.slice(0, src.lastIndexOf('</html>') + 7);
+  // The documentation comment in <head> must never be mistaken for a section marker.
+  src = src.replace(/<head>([\s\S]*?)<\/head>/, (_m, head: string) => `<head>${head.replace(/<!--[\s\S]*?-->/g, '')}</head>`);
   return { page: src, items };
 }
 

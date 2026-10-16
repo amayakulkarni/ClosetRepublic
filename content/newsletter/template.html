@@ -10,12 +10,14 @@
   (PNG or JPEG, never SVG), no JavaScript, no web fonts, no tracking pixels.
 
   Placeholders ({{name}}, filled in by src/lib/newsletter.ts):
-    {{subject}} {{preheader}} {{intro}} (HTML paragraphs) {{site_url}} {{logo_url}} {{year}}
+    {{subject}} {{preheader}} {{intro}} (HTML paragraphs) {{site_url}} {{logo_url}}
     {{privacy_url}} {{unsubscribe_url}} {{address_html}} (may be empty)
-  Sections are removed when they have no posts:
-    <!--section:featured-->...<!--/section:featured-->     {{featured}} goes inside
-    <!--section:recommended-->...<!--/section:recommended--> {{recommended}} goes inside
-  Item blocks are repeated once per selected post. Item placeholders:
+  Sections are removed when they have no posts. The body has two section blocks, "featured" and
+  "recommended", each wrapped in a start marker and an end marker written as an HTML comment
+  (section:NAME opens, /section:NAME closes). The matching {{featured}} or {{recommended}}
+  placeholder sits inside the block. Marker syntax is not spelled out here, because a comment
+  cannot contain another comment. Copy it from the blocks below.
+  Item blocks (after the closing html tag) are repeated once per selected post. Item placeholders:
     {{title}} {{url}} {{excerpt}} {{date}} {{image_html}} (an <img>, or empty without a picture)
 -->
 </head>
