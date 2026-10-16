@@ -73,13 +73,21 @@ Nature editions are separate Ghost posts or pages whose slug is the original slu
 
 `/gazetee`, `/pass`, `/goals`, `/roadmap` and `/contribute` redirect to `/gazette`, `/passport`, `/timeline` and `/development`.
 
-## Newsletter (Ghost)
+## Newsletter
 
-The box at the top of `/gazette` and under every post posts the email address to `POST /api/newsletter`, which asks Ghost to send its confirmation email (the call Ghost's own sign-up form makes). Ghost subscribes the address only after the link is clicked, so the site never stores subscribers and no Ghost key is used. After a successful sign-up the box turns into an offer for the paid Discord server (`/funding#membership`).
+The site runs its own newsletter (`src/lib/newsletter.ts`). Ghost is used only as the source of posts.
 
-- **Ghost settings:** Settings > Membership > Access = "Anyone can sign up". Email delivery (Mailgun or SMTP) must work. Settings > Newsletters: switch off "Track email opens" and "Track link clicks", because the Privacy Policy promises no tracking.
-- **Environment:** `NEWSLETTER_FREQUENCY` (word in the headline, default `weekly`), `GHOST_NEWSLETTER_NAME` (optional), `DISCORD_PROMO_PRICE` (default `INR 100 per year`), `NEWSLETTER_DISABLED=true` to hide the boxes. Limit: 5 sign-ups per visitor per hour.
+- **Sign-up:** the box at the top of `/gazette` and under every post posts the address to `POST /api/newsletter`. The address is stored as `pending` in SQLite and a confirmation link (`/newsletter/confirm?c=…`) is emailed. The link opens a page with a button, so link scanners cannot subscribe anyone. Unconfirmed sign-ups are deleted after 7 days. After a successful sign-up the box turns into an offer for the paid Discord server (`/funding#membership`).
+- **Unsubscribe:** every issue carries `/newsletter/unsubscribe?c=…` and `List-Unsubscribe` / `List-Unsubscribe-Post` headers (one-click). Unsubscribed addresses are deleted after 30 days.
+- **Sending:** Mailgun HTTP API, one message per subscriber, open and click tracking off (`src/lib/mailgun.ts`). Set `MAILGUN_API_KEY`, `MAILGUN_DOMAIN`, `NEWSLETTER_FROM` and, for EU domains, `MAILGUN_REGION=eu`. Verify the sending domain in Mailgun (SPF and DKIM) before the first issue.
+- **Composing:** `/admin` > Newsletter. Pick posts with the checkboxes (Feature: picture, excerpt and button. Recommend: a short link list), narrow the list with the search box and the "Published in the last N days" filter, preview, send a test, then send. Posts are re-read from Ghost on the server by slug. The page shows subscribers (search, delete, CSV) and sent issues.
+- **Template:** `content/newsletter/template.html` is static email HTML (tables, inline styles, PNG/JPEG images only, no SVG, no JavaScript). Placeholders and the repeatable item blocks are documented in the comment at the top of the file. Replace the file to change the design; no code changes are needed.
+- **Environment:** `NEWSLETTER_FREQUENCY` (word in the headline, default `weekly`), `DISCORD_PROMO_PRICE` (default `INR 100 per year`), `NEWSLETTER_DISABLED=true` to hide the boxes. Limit: 5 sign-ups per visitor per hour.
 - The landing page has a "Subscribe to the newsletter" button that jumps to the box on `/gazette`.
+
+### Admin sign-in code (two-step)
+
+Set `ADMIN_2FA_EMAIL` to require a second step: after the admin token is accepted, an 8-character one-time code is emailed to that address (Mailgun, or SMTP when Mailgun is not set) and the session starts only when the code is entered. Codes work once, expire after 10 minutes, are stored only as a salted hash, and are burned after 5 wrong guesses. With two-step sign-in on, the bearer token no longer works for `/api/admin/*` scripts unless `ADMIN_ALLOW_BEARER=true`.
 
 ## Search engines
 

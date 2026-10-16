@@ -179,6 +179,41 @@ const SCHEMA = `
     PRIMARY KEY (discord_id, notice_key)
   );
 
+  -- Newsletter. A subscriber is "pending" until the emailed link is clicked (double opt-in).
+  -- Issues keep their HTML for the admin history; no per-recipient delivery data is stored.
+  CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    status TEXT NOT NULL CHECK (status IN ('pending', 'subscribed', 'unsubscribed')),
+    confirm_code TEXT NOT NULL,
+    unsub_code TEXT NOT NULL UNIQUE,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    confirmed_at TEXT,
+    last_mail_at TEXT
+  );
+  CREATE TABLE IF NOT EXISTS newsletter_issues (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    subject TEXT NOT NULL,
+    html TEXT NOT NULL,
+    total INTEGER NOT NULL,
+    sent INTEGER NOT NULL DEFAULT 0,
+    failed INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL CHECK (status IN ('sending', 'done')),
+    created_at TEXT NOT NULL,
+    finished_at TEXT
+  );
+
+  -- Admin sign-in codes (second factor). Only a salted hash of the emailed code is stored.
+  CREATE TABLE IF NOT EXISTS admin_challenges (
+    id TEXT PRIMARY KEY,
+    code_hash TEXT NOT NULL,
+    salt TEXT NOT NULL,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    expires_at TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
+
   CREATE TABLE IF NOT EXISTS broadcasts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     subject TEXT NOT NULL,
@@ -213,7 +248,7 @@ let lastPurge = 0;
 
 /**
  * Deletes data past the retention periods promised in the Privacy Policy (content/pages/privacy.md):
- * unsubscribed Lifeline addresses after 30 days, declined contributors after 90 days,
+ * unsubscribed Lifeline and newsletter addresses after 30 days, unconfirmed newsletter sign-ups after 7 days, declined contributors after 90 days,
  * the email log after 12 months, ended memberships after 90 days, expired link codes, unpaid crypto orders after 7 days and expired grants after 90 days.
  * Runs at most once a day.
  */
@@ -231,6 +266,10 @@ function purgeExpired(conn: Database.Database) {
   // Crypto orders never paid (the invoice lasts 30 minutes; a week allows late payments), and grants long expired.
   conn.prepare('DELETE FROM crypto_orders WHERE created_at < ?').run(before(7));
   conn.prepare('DELETE FROM discord_grants WHERE expires_at < ?').run(before(90));
+  // Newsletter: sign-ups never confirmed after a week, and unsubscribed addresses after 30 days.
+  conn.prepare("DELETE FROM newsletter_subscribers WHERE status = 'pending' AND updated_at < ?").run(before(7));
+  conn.prepare("DELETE FROM newsletter_subscribers WHERE status = 'unsubscribed' AND updated_at < ?").run(before(30));
+  conn.prepare('DELETE FROM admin_challenges WHERE expires_at < ?').run(new Date().toISOString());
 }
 
 export function db() {

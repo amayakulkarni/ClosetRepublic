@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>{{subject}}</title>
+<!--
+  Closet Republic newsletter template. Static HTML for email: table layout, inline styles, images only
+  (PNG or JPEG, never SVG), no JavaScript, no web fonts, no tracking pixels.
+
+  Placeholders ({{name}}, filled in by src/lib/newsletter.ts):
+    {{subject}} {{preheader}} {{intro}} (HTML paragraphs) {{site_url}} {{logo_url}} {{year}}
+    {{privacy_url}} {{unsubscribe_url}} {{address_html}} (may be empty)
+  Sections are removed when they have no posts:
+    <!--section:featured-->...<!--/section:featured-->     {{featured}} goes inside
+    <!--section:recommended-->...<!--/section:recommended--> {{recommended}} goes inside
+  Item blocks are repeated once per selected post. Item placeholders:
+    {{title}} {{url}} {{excerpt}} {{date}} {{image_html}} (an <img>, or empty without a picture)
+-->
+</head>
+<body style="margin:0;padding:0;background:#f4f4f5;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#f4f4f5;font-size:1px;line-height:1px;">{{preheader}}</div>
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f4f4f5;">
+<tr><td align="center" style="padding:24px 12px;">
+
+<table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:600px;background:#ffffff;border:3px solid #000000;border-radius:14px;">
+  <tr><td style="padding:0;border-radius:11px 11px 0 0;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr>
+      <td height="8" style="height:8px;font-size:0;line-height:0;background:#ff978f;">&nbsp;</td>
+      <td height="8" style="height:8px;font-size:0;line-height:0;background:#ffb47f;">&nbsp;</td>
+      <td height="8" style="height:8px;font-size:0;line-height:0;background:#ffe680;">&nbsp;</td>
+      <td height="8" style="height:8px;font-size:0;line-height:0;background:#94e3b0;">&nbsp;</td>
+      <td height="8" style="height:8px;font-size:0;line-height:0;background:#8cc2ff;">&nbsp;</td>
+      <td height="8" style="height:8px;font-size:0;line-height:0;background:#aa9fff;">&nbsp;</td>
+      <td height="8" style="height:8px;font-size:0;line-height:0;background:#e09fff;">&nbsp;</td>
+    </tr></table>
+  </td></tr>
+
+  <tr><td style="padding:24px 28px 8px 28px;">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr>
+      <td valign="middle" style="padding-right:12px;"><a href="{{site_url}}"><img src="{{logo_url}}" width="48" height="48" alt="Closet Republic" style="display:block;border:0;width:48px;height:48px;"></a></td>
+      <td valign="middle" style="font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:bold;color:#000000;">Closet Republic<br><span style="font-size:13px;font-weight:normal;color:#52525b;">The Gazette newsletter</span></td>
+    </tr></table>
+  </td></tr>
+
+  <tr><td style="padding:16px 28px 8px 28px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#111111;">
+    <h1 style="margin:0 0 12px 0;font-size:26px;line-height:1.25;color:#000000;">{{subject}}</h1>
+    {{intro}}
+  </td></tr>
+
+  <!--section:featured-->
+  <tr><td style="padding:12px 28px 0 28px;font-family:Arial,Helvetica,sans-serif;">
+    <p style="margin:0 0 4px 0;font-size:12px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#52525b;">In this issue</p>
+    {{featured}}
+  </td></tr>
+  <!--/section:featured-->
+
+  <!--section:recommended-->
+  <tr><td style="padding:20px 28px 0 28px;font-family:Arial,Helvetica,sans-serif;">
+    <p style="margin:0 0 8px 0;font-size:12px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#52525b;">Also worth reading</p>
+    {{recommended}}
+  </td></tr>
+  <!--/section:recommended-->
+
+  <tr><td style="padding:28px 28px 8px 28px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#111111;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-top:2px solid #000000;"><tr><td style="padding-top:16px;">
+      Closet Republic is run by volunteers and funded by donations. If this newsletter is useful, you can <a href="{{site_url}}/funding" style="color:#000000;font-weight:bold;">support it here</a>.
+    </td></tr></table>
+  </td></tr>
+
+  <tr><td style="padding:12px 28px 28px 28px;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#52525b;">
+    You get this email because you subscribed on closetrepublic.com. It contains no tracking pixels and no tracked links.<br>
+    <a href="{{unsubscribe_url}}" style="color:#000000;">Unsubscribe</a> &middot; <a href="{{privacy_url}}" style="color:#000000;">Privacy Policy</a>{{address_html}}
+  </td></tr>
+</table>
+
+</td></tr>
+</table>
+</body>
+</html>
+<!--featured-item-->
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 20px 0;">
+  <tr><td style="padding:0 0 10px 0;">{{image_html}}</td></tr>
+  <tr><td style="font-family:Arial,Helvetica,sans-serif;">
+    <p style="margin:0 0 4px 0;font-size:13px;color:#52525b;">{{date}}</p>
+    <h2 style="margin:0 0 8px 0;font-size:21px;line-height:1.3;"><a href="{{url}}" style="color:#000000;text-decoration:none;">{{title}}</a></h2>
+    <p style="margin:0 0 12px 0;font-size:15px;line-height:1.6;color:#111111;">{{excerpt}}</p>
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td bgcolor="#000000" style="background:#000000;border-radius:999px;"><a href="{{url}}" style="display:inline-block;padding:10px 22px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none;">Read the post</a></td></tr></table>
+  </td></tr>
+</table>
+<!--/featured-item-->
+<!--recommended-item-->
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 12px 0;border-left:4px solid #aa9fff;">
+  <tr><td style="padding:2px 0 2px 12px;font-family:Arial,Helvetica,sans-serif;">
+    <p style="margin:0;font-size:16px;line-height:1.4;font-weight:bold;"><a href="{{url}}" style="color:#000000;">{{title}}</a></p>
+    <p style="margin:2px 0 0 0;font-size:14px;line-height:1.5;color:#3f3f46;">{{excerpt}}</p>
+  </td></tr>
+</table>
+<!--/recommended-item-->

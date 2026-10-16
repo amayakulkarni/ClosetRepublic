@@ -61,13 +61,13 @@ Because the Lifeline exists for when our server is unavailable, the founders kee
 
 ### The newsletter
 
-If you subscribe to the Closet Republic newsletter, the Site passes your email address to Ghost, the publishing system we write the newsletter in. Ghost emails you a link and subscribes you only after you click it, so nobody can sign up an address they do not own.
+If you subscribe to the Closet Republic newsletter, the Site stores your email address and emails you a link. You are subscribed only after you click it, so nobody can sign up an address they do not own.
 
 | What | Why | How long |
 | --- | --- | --- |
-| Your email address, the date you confirmed, and whether you are subscribed | To send you the newsletter and to make sure it stops when you unsubscribe | Until you unsubscribe. After that we keep only your address, marked as unsubscribed, so you are not added again by mistake, until you ask us to delete it |
+| Your email address, the date you signed up and confirmed, and whether you are subscribed, plus random codes that make your confirmation and unsubscribe links work | To send you the newsletter and to make sure it stops when you unsubscribe | Until you unsubscribe. Sign-ups never confirmed are deleted after 7 days, and unsubscribed addresses 30 days after you leave (the delay lets you undo a mistaken click) |
 
-Every issue has a working unsubscribe link. We switch off Ghost's open and click tracking, so we do not know whether you opened an issue or clicked a link in it. The Site sets no cookie for the newsletter.
+Newsletters are sent through Mailgun, an email delivery service, which receives your address to deliver each message. Every issue has a working unsubscribe link. We switch off Mailgun's open and click tracking, so we do not know whether you opened an issue or clicked a link in it, and the emails contain no tracking pixels. The Site sets no cookie for the newsletter.
 
 ### Contributor sign-ups (Public Works)
 
@@ -137,9 +137,9 @@ You can withdraw consent at any time. This doesn't affect anything we did lawful
 We share personal data only with:
 
 - **the company that hosts our server**, which stores the database on our behalf;
-- **Ghost and its email delivery service**, which store newsletter subscribers and send the newsletter on our behalf;
+- **Mailgun**, our email delivery service for the newsletter and sign-in emails, which sends them on our behalf;
 - **Discord**, only if you link your membership: our bot tells Discord which class role your account should have, which other server members can see unless you turn on discreet mode;
-- **our email delivery service**, which sends emails on our behalf;
+- **our other email delivery service**, which sends contributor and Lifeline emails on our behalf;
 - **the founders and a small number of trusted volunteers** who need access to run a feature, each bound to keep it confidential;
 - **authorities**, only where the law genuinely requires it. We will challenge requests that seem unlawful or that would endanger our community, and tell you about any request unless we are legally prevented.
 

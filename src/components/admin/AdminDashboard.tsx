@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { ContributorsAdmin } from './ContributorsAdmin';
 import { LifelineAdmin } from './LifelineAdmin';
+import { NewsletterAdmin } from './NewsletterAdmin';
 import { RoadmapAdmin } from './RoadmapAdmin';
 import { TreasuryAdmin } from './TreasuryAdmin';
 
@@ -12,6 +13,7 @@ const TABS = [
   { id: 'timeline', label: 'Timeline and goals' },
   { id: 'contributors', label: 'Contributors' },
   { id: 'lifeline', label: 'Lifeline' },
+  { id: 'newsletter', label: 'Newsletter' },
 ] as const;
 type Tab = (typeof TABS)[number]['id'];
 
@@ -71,7 +73,7 @@ export function AdminDashboard() {
       </div>
 
       <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
-        {tab === 'treasury' ? <TreasuryAdmin /> : tab === 'timeline' ? <RoadmapAdmin /> : tab === 'contributors' ? <ContributorsAdmin /> : <LifelineAdmin />}
+        {tab === 'treasury' ? <TreasuryAdmin /> : tab === 'timeline' ? <RoadmapAdmin /> : tab === 'contributors' ? <ContributorsAdmin /> : tab === 'newsletter' ? <NewsletterAdmin /> : <LifelineAdmin />}
       </div>
     </div>
   );

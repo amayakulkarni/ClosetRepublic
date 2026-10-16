@@ -6,12 +6,17 @@ import { NextResponse } from 'next/server';
 // The admin page and the write APIs are protected by one secret, ADMIN_TOKEN.
 //  - Scripts send it as "Authorization: Bearer <ADMIN_TOKEN>".
 //  - The admin page exchanges it for a signed, http-only session cookie (12 hours).
+//  - With ADMIN_2FA_EMAIL set, the cookie is issued only after an emailed one-time code is entered
+//    (src/lib/admin-2fa.ts), and the bearer token stops working for the API unless ADMIN_ALLOW_BEARER=true.
 
 export const SESSION_COOKIE = 'cr_admin';
 const SESSION_HOURS = 12;
 const TOKEN = process.env.ADMIN_TOKEN || '';
 
 export const adminConfigured = () => TOKEN.length >= 16;
+
+/** Bearer-token access to the admin API. Off when two-step sign-in is on, because the token alone would skip the code. */
+const bearerAllowed = () => !process.env.ADMIN_2FA_EMAIL || process.env.ADMIN_ALLOW_BEARER === 'true';
 
 const sign = (value: string) => crypto.createHmac('sha256', TOKEN).update(`cr-admin:${value}`).digest('hex');
 
@@ -39,7 +44,7 @@ function validSession(value: string | undefined) {
 /** True when the request carries a valid bearer token or admin session cookie. */
 export async function isAdmin(request?: Request) {
   const auth = request?.headers.get('authorization');
-  if (auth?.startsWith('Bearer ')) return checkToken(auth.slice(7).trim());
+  if (auth?.startsWith('Bearer ')) return bearerAllowed() && checkToken(auth.slice(7).trim());
   return validSession((await cookies()).get(SESSION_COOKIE)?.value);
 }
 
