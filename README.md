@@ -87,7 +87,7 @@ The site runs its own newsletter (`src/lib/newsletter.ts`). Ghost is used only a
 
 ### Admin sign-in code (two-step)
 
-Set `ADMIN_2FA_EMAIL` to require a second step: after the admin token is accepted, an 8-character one-time code is emailed to that address (Mailgun, or SMTP when Mailgun is not set) and the session starts only when the code is entered. Codes work once, expire after 10 minutes, are stored only as a salted hash, and are burned after 5 wrong guesses. With two-step sign-in on, the bearer token no longer works for `/api/admin/*` scripts unless `ADMIN_ALLOW_BEARER=true`.
+Set `ADMIN_2FA_EMAIL` to require a second step: after the admin token is accepted, an 8-character one-time code is emailed to that address (through the SMTP settings, with Mailgun only as a fallback when SMTP is not set or fails) and the session starts only when the code is entered. Codes work once, expire after 10 minutes, are stored only as a salted hash, and are burned after 5 wrong guesses. With two-step sign-in on, the bearer token no longer works for `/api/admin/*` scripts unless `ADMIN_ALLOW_BEARER=true`.
 
 ## Search engines
 

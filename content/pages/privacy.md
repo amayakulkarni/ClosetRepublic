@@ -137,7 +137,7 @@ You can withdraw consent at any time. This doesn't affect anything we did lawful
 We share personal data only with:
 
 - **the company that hosts our server**, which stores the database on our behalf;
-- **Mailgun**, our email delivery service for the newsletter and sign-in emails, which sends them on our behalf;
+- **Mailgun**, our email delivery service for the newsletter, which sends it on our behalf;
 - **Discord**, only if you link your membership: our bot tells Discord which class role your account should have, which other server members can see unless you turn on discreet mode;
 - **our other email delivery service**, which sends contributor and Lifeline emails on our behalf;
 - **the founders and a small number of trusted volunteers** who need access to run a feature, each bound to keep it confidential;
