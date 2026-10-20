@@ -11,6 +11,19 @@ export function openStore(dbPath) {
   const missing = REQUIRED.filter((t) => !have.has(t));
   if (missing.length) throw new Error(`The site's database at ${dbPath} has no ${missing.join(', ')} table. Start (or update) the site first, then the bot.`);
   const nowIso = () => new Date().toISOString();
+  // Embassy tickets. The bot owns this table. No message text is stored here: the transcript
+  // in #ticket-transcripts is the only copy. AUTOINCREMENT means a number is never reused.
+  db.exec(`CREATE TABLE IF NOT EXISTS tickets (
+    number INTEGER PRIMARY KEY AUTOINCREMENT,
+    opener_id TEXT NOT NULL,
+    channel_id TEXT,
+    status TEXT NOT NULL DEFAULT 'open',
+    opened_at TEXT NOT NULL,
+    closed_at TEXT,
+    closed_by TEXT,
+    archived_at TEXT,
+    archived_by TEXT
+  )`);
 
   return {
     db,
@@ -42,9 +55,27 @@ export function openStore(dbPath) {
         .run(until ? m.applied_tier : null, until, nowIso(), id);
       return true;
     },
+    /** Mod /unlink: drop the link and any grace carry-over, so the class goes at once. The Buy Me a Coffee record and any /membership grant stay. */
+    adminUnlink: (id) => {
+      const m = db.prepare('SELECT email FROM discord_members WHERE discord_id = ? AND email IS NOT NULL').get(id);
+      if (!m) return false;
+      db.prepare('UPDATE discord_members SET email = NULL, linked_at = NULL, carry_tier = NULL, carry_until = NULL, updated_at = ? WHERE discord_id = ?').run(nowIso(), id);
+      return true;
+    },
+    ticketCreate: (openerId, at) => Number(db.prepare("INSERT INTO tickets (opener_id, status, opened_at) VALUES (?, 'open', ?)").run(openerId, at).lastInsertRowid),
+    ticketSetChannel: (number, channelId) => db.prepare('UPDATE tickets SET channel_id = ? WHERE number = ?').run(channelId, number),
+    ticketDelete: (number) => db.prepare('DELETE FROM tickets WHERE number = ?').run(number),
+    ticketByChannel: (channelId) => db.prepare('SELECT * FROM tickets WHERE channel_id = ?').get(channelId) ?? null,
+    openTicketFor: (openerId) => db.prepare("SELECT * FROM tickets WHERE opener_id = ? AND status = 'open' AND channel_id IS NOT NULL ORDER BY number DESC").get(openerId) ?? null,
+    ticketClose: (number, by, at) => db.prepare("UPDATE tickets SET status = 'closed', closed_at = ?, closed_by = ? WHERE number = ?").run(at, by, number),
+    ticketReopen: (number) => db.prepare("UPDATE tickets SET status = 'open', closed_at = NULL, closed_by = NULL WHERE number = ?").run(number),
+    ticketArchive: (number, by, at) => db.prepare("UPDATE tickets SET status = 'archived', archived_at = ?, archived_by = ? WHERE number = ?").run(at, by, number),
+    ticketsOpenOrClosed: () => db.prepare("SELECT * FROM tickets WHERE status IN ('open', 'closed') AND channel_id IS NOT NULL ORDER BY number").all(),
     /** /forget-me: delete everything the bot and the link page hold about this Discord account. */
     forget: (id) =>
       db.transaction(() => {
+        // An archived ticket keeps its number and dates but loses the link to the person.
+        db.prepare("UPDATE tickets SET opener_id = 'deleted' WHERE opener_id = ? AND status = 'archived'").run(id);
         for (const table of ['discord_members', 'discord_grants', 'discord_notices', 'discord_link_codes']) {
           db.prepare(`DELETE FROM ${table} WHERE discord_id = ?`).run(id);
         }

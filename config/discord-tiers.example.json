@@ -10,6 +10,9 @@
   ],
   "staffRoleIds": ["", "", ""],
   "grace": { "lapseDays": 7, "remindDaysBeforeEnd": [3], "remindDuringGrace": [0, 5] },
-  "channels": { "thankYou": "", "modLog": "", "botLog": "" },
+  "channels": { "thankYou": "", "modLog": "", "botLog": "",
+  "ticketCategory": "",
+  "ticketDesk": "",
+  "ticketTranscripts": "" },
   "unknownLevelTier": "alien"
 }

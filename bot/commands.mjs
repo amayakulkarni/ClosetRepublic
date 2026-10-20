@@ -33,7 +33,24 @@ export const COMMANDS = [
     name: 'thanks', description: 'Be welcomed by name on #thank-you-wall when you join a class',
     options: [{ type: 3, name: 'mode', description: 'on or off', required: true, choices: [{ name: 'on', value: 'on' }, { name: 'off', value: 'off' }] }],
   },
-  { name: 'unlink', description: 'Remove the link between your Discord and your Buy Me a Coffee email' },
+  {
+    name: 'unlink', description: 'Remove the link between your Discord and your Buy Me a Coffee email (mods: any account)',
+    options: [
+      { type: 6, name: 'member', description: 'Mods only: the member to unlink', required: false },
+      { type: 3, name: 'user_id', description: 'Mods only: a Discord user ID, for someone who left the server', required: false },
+      { type: 3, name: 'reason', description: 'Mods only: why (goes in #mod-log)', required: false },
+    ],
+  },
+  {
+    name: 'ticket', description: 'Support tickets in the Embassy (only you and the mods see a ticket)',
+    options: [
+      { type: 1, name: 'open', description: 'Open a private ticket' },
+      { type: 1, name: 'close', description: 'Close this ticket', options: [{ type: 3, name: 'reason', description: 'Why', required: false }] },
+      { type: 1, name: 'reopen', description: 'Mods: reopen this ticket' },
+      { type: 1, name: 'archive', description: 'Mods: save the transcript and delete this closed ticket' },
+      { type: 1, name: 'list', description: 'Mods: open and closed tickets' },
+    ],
+  },
   { name: 'forget-me', description: 'Delete everything the Republic bot keeps about you' },
   { name: 'tiers', description: 'Founders: check which Buy Me a Coffee levels are not mapped to a class' },
 ];

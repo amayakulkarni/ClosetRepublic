@@ -92,6 +92,10 @@ If you are a Buy Me a Coffee member and want your class role in our Discord serv
 
 Signing in with Discord only tells us your Discord ID and display name; we show the name on the page during sign-in and never store it, and we hand Discord's access back straight away. Our Discord bot reads your roles in our server and changes only class and lounge roles. If you join our forum with Discord, the forum uses the same Discord ID. Discord's own handling of your data is covered by Discord's privacy policy.
 
+### Support tickets in the Embassy
+
+If you open a ticket in our Discord server (the button in #open-a-ticket, or `/ticket open`), the bot creates a private channel that only you, our moderators (the Founder and Minister of Order roles) and the bot can see. What you write there stays in Discord. When a moderator archives the ticket, the bot saves the messages as a text file in a moderator-only channel and deletes the ticket channel. Our own database keeps only the ticket number, your Discord user ID, the status and the dates, never the messages. Moderators can also unlink a Buy Me a Coffee email from a Discord account, for example if you ask them to. To have a transcript deleted, ask a moderator in the server or write to us; if you use `/forget-me`, an archived ticket is detached from your Discord ID.
+
 ### Emails we send
 
 We send emails through an email delivery service. We keep a short log of each email (recipient, subject, date, and whether it was delivered) so we can tell if messages are failing. The log is deleted after 12 months. If an email fails, the recipient's address may also appear in our server's error log, which follows the 14-day limit above.
