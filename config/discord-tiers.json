@@ -44,13 +44,8 @@
   ],
   "grace": {
     "lapseDays": 7,
-    "remindDaysBeforeEnd": [
-      3
-    ],
-    "remindDuringGrace": [
-      0,
-      5
-    ]
+    "remindDaysBeforeEnd": [3],
+    "remindDuringGrace": [0, 5]
   },
   "channels": {
     "emergency": "1560210946549358602",
@@ -58,6 +53,10 @@
     "treasury": "1560211005672259674",
     "thankYou": "1560211007991971900",
     "modLog": "1560210117780316272",
-    "botLog": "1560211058843713546"
+    "botLog": "1560211058843713546",
+    "emergencyMembers": "1561689888225763419",
+    "ticketCategory": "1562028999411109888",
+    "ticketDesk": "1562029001915240558",
+    "ticketTranscripts": "1562029004146475028"
   }
 }
