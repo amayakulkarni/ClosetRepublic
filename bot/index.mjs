@@ -12,6 +12,9 @@ import { openStore } from './store.mjs';
 import { createSync } from './sync.mjs';
 import { commandDefinitions, handleCommand, withPendingNotices } from './commands.mjs';
 import { reconcileWithBmc } from './bmc-api.mjs';
+import { createTickets } from './tickets.mjs';
+import { createUnlink } from './unlink.mjs';
+import { createTicketAdapter, ensureDeskMessage, handleTicketInteraction } from './discord-tickets.mjs';
 
 const problems = [];
 if (!env.token) problems.push('DISCORD_BOT_TOKEN is not set');
@@ -31,7 +34,11 @@ if (problems.length) {
 }
 
 const store = openStore(env.dbPath);
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers], partials: [Partials.Channel] });
+// Ticket transcripts need message text, which is the Message Content Intent (a switch in the Discord
+// Developer Portal > Bot). If it is off, the bot logs a warning and runs without it; transcripts then
+// list who wrote what and when but not the text. Set BOT_MESSAGE_CONTENT=false to skip the attempt.
+let contentIntent = process.env.BOT_MESSAGE_CONTENT !== 'false';
+let client = null;
 let guild = null;
 
 // ---------- Discord adapter (everything sync.mjs needs) ----------
@@ -76,12 +83,17 @@ const queue = (name, task) => {
 };
 
 const sync = createSync({ cfg, store, discord, env });
+const ticketAdapter = createTicketAdapter({ getClient: () => client, getGuild: () => guild, cfg, contentIntent: () => contentIntent });
+const tickets = createTickets({ cfg, store, tk: ticketAdapter });
+const unlink = createUnlink({ cfg, store, sync, discord });
 
 // ---------- Discord events ----------
 
+function attach(client) {
 client.once(Events.ClientReady, async () => {
   guild = await client.guilds.fetch(cfg.guildId);
   await guild.commands.set(commandDefinitions(cfg));
+  ensureDeskMessage({ client, cfg }).catch((err) => console.error('[bot] could not set up the ticket button:', err.message));
   console.log(`[bot] connected to ${guild.name} as ${client.user.tag}`);
   discord.post(cfg.channels.botLog, 'Republic Bot is online.').catch(() => {});
   queue('startup sweep', () => sync.syncAll('startup'));
@@ -101,7 +113,9 @@ client.on(Events.GuildMemberAdd, (member) => {
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
-  if (!interaction.isChatInputCommand() || interaction.guildId !== cfg.guildId) return;
+  if (interaction.guildId !== cfg.guildId) return;
+  if (await handleTicketInteraction(interaction, { tickets, unlink, queue, cfg }).catch((err) => (console.error('[bot] ticket interaction failed:', err.message), true))) return;
+  if (!interaction.isChatInputCommand()) return;
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   const ctx = {
     command: interaction.commandName,
@@ -117,6 +131,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
   const text = typeof reply === 'string' ? reply : 'Something went wrong. Please try again, or ask a Minister.';
   await interaction.editReply({ content: withPendingNotices(store, ctx.userId, text), allowedMentions: { parse: [] } }).catch(() => {});
 });
+}
 
 // ---------- the site's poke: POST /sync ----------
 
@@ -153,7 +168,20 @@ http
   })
   .listen(env.port, env.host, () => console.log(`[bot] listening on http://${env.host}:${env.port}`));
 
-client.login(env.token).catch((err) => {
-  console.error('[bot] Discord login failed:', err.message);
-  process.exit(1);
-});
+function connect() {
+  const intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers];
+  if (contentIntent) intents.push(GatewayIntentBits.MessageContent);
+  client = new Client({ intents, partials: [Partials.Channel] });
+  attach(client);
+  return client.login(env.token).catch((err) => {
+    if (contentIntent && /disallowed intents/i.test(err.message)) {
+      console.warn('[bot] The Message Content Intent is off in the Discord Developer Portal (Bot > Privileged Gateway Intents). Starting without it: ticket transcripts will not include message text until it is switched on.');
+      contentIntent = false;
+      client.destroy();
+      return connect();
+    }
+    console.error('[bot] Discord login failed:', err.message);
+    process.exit(1);
+  });
+}
+connect();

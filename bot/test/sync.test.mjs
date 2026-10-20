@@ -1,5 +1,5 @@
 // The bot against a real SQLite database (the site's schema) and a fake Discord server.
-import { test } from 'node:test';
+import { mock, test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -9,6 +9,9 @@ import { openStore } from '../store.mjs';
 import { createSync } from '../sync.mjs';
 import { handleCommand, withPendingNotices } from '../commands.mjs';
 import { reconcileWithBmc } from '../bmc-api.mjs';
+
+// The store and commands read Date.now(); freeze it at the fake clock's start so the dates below stay valid on any day.
+mock.timers.enable({ apis: ['Date'], now: Date.parse('2026-10-15T12:00:00Z') });
 
 const DAY = 86_400_000;
 const schema = fs.readFileSync(new URL('../../src/lib/db.ts', import.meta.url), 'utf8').match(/const SCHEMA = `([\s\S]*?)`;/)[1];
