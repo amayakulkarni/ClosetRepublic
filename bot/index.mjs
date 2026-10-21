@@ -208,6 +208,7 @@ function connect() {
   const intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildVoiceStates];
   if (contentIntent) intents.push(GatewayIntentBits.MessageContent);
   client = new Client({ intents, partials: [Partials.Channel] });
+  client.on('error', (e) => console.error('[bot] Discord client error:', e.message));
   attach(client);
   return client.login(env.token).catch((err) => {
     if (contentIntent && /disallowed intents/i.test(err.message)) {
@@ -221,6 +222,12 @@ function connect() {
   });
 }
 connect();
+
+// One failed picture, voice join or similar must never take the whole bot down, because every restart
+// drops all rooms and re-runs the startup sweep. Log it and carry on.
+process.on('unhandledRejection', (err) => console.error('[bot] unhandled rejection (kept running):', err?.stack || err));
+process.on('uncaughtException', (err) => console.error('[bot] uncaught exception (kept running):', err?.stack || err));
+process.on('exit', (code) => console.log(`[bot] exiting with code ${code}`));
 
 const shutdown = () => ambience?.stopAll().finally(() => process.exit(0));
 process.once('SIGINT', shutdown);

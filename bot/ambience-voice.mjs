@@ -3,7 +3,8 @@
 // @discordjs/voice and ffmpeg-static are loaded on demand, so a missing library only turns ambience off
 // and never stops the membership bot.
 import { spawn } from 'node:child_process';
-import { ChannelType, Client, Events, GatewayIntentBits } from 'discord.js';
+import fs from 'node:fs';
+import { AttachmentBuilder, ChannelType, Client, Events, GatewayIntentBits } from 'discord.js';
 
 /** One loop of the file, forever, as Ogg Opus (so Discord needs no extra encoder in Node). */
 export function ffmpegArgs(file, gainDb = 0, trimDb = 0) {
@@ -40,6 +41,7 @@ export async function startHelperClients(env, log = console.log) {
   const out = [];
   for (const [n, token] of tokens.entries()) {
     const c = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates] });
+    c.on('error', (e) => log(`[ambience] helper ${n + 1} client error: ${e.message}`));
     try {
       await c.login(token);
       await new Promise((res) => (c.isReady() ? res() : c.once(Events.ClientReady, res)));
@@ -77,6 +79,9 @@ export function createVoiceEntry({ name, getClient, guildId, env = process.env, 
         ff = spawn(ffmpeg, ffmpegArgs(assets.track.path, room.gainDb, env.AMBIENCE_TRIM_DB), { stdio: ['ignore', 'pipe', 'pipe'] });
         let err = '';
         ff.stderr.on('data', (d) => (err = (err + d).slice(-400)));
+        // Stopping ffmpeg closes its pipes; without these listeners that "error" event would crash the whole bot.
+        ff.stdout.on('error', () => {});
+        ff.stderr.on('error', () => {});
         ff.on('error', (e) => log(`[ambience] ffmpeg could not start (${e.message}). Install ffmpeg or run npm install.`));
         ff.on('close', (code) => {
           if (!stopped && code) log(`[ambience] ffmpeg stopped (${code}): ${err.trim()}`);
@@ -131,7 +136,7 @@ export function createVoiceEntry({ name, getClient, guildId, env = process.env, 
 
       // The picture and the channel status are extras: a missing permission only skips them.
       if (assets.visual && ch.isTextBased?.()) {
-        post = await ch.send({ content: room.caption, files: [assets.visual], allowedMentions: { parse: [] } }).catch((e) => (log(`[ambience] could not post the picture in ${ch.name}: ${e.message}`), null));
+        post = await ch.send({ content: room.caption, files: [new AttachmentBuilder(fs.readFileSync(assets.visual), { name: 'ambience.gif' })], allowedMentions: { parse: [] } }).catch((e) => (log(`[ambience] could not post the picture in ${ch.name}: ${e.message}`), null));
       }
       if (room.status) statusSet = await setStatus(client, ch.id, room.status).then(() => true).catch((e) => (log(`[ambience] could not set the channel status (${e.message}); the bot needs Set Voice Channel Status`), false));
 
