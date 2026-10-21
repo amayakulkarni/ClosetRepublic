@@ -23,7 +23,9 @@ module.exports = {
       autorestart: true,
       // Waits a little longer between restarts, so a bad token doesn't hammer Discord.
       restart_delay: 10000,
-      max_memory_restart: '256M',
+      // Ambient sound (voice libraries, up to seven Discord connections) needs more room than the
+      // membership bot alone; at 256M pm2 stopped the bot every few minutes (exit code 0).
+      max_memory_restart: '768M',
     },
   ],
 };

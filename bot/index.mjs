@@ -229,6 +229,9 @@ process.on('unhandledRejection', (err) => console.error('[bot] unhandled rejecti
 process.on('uncaughtException', (err) => console.error('[bot] uncaught exception (kept running):', err?.stack || err));
 process.on('exit', (code) => console.log(`[bot] exiting with code ${code}`));
 
-const shutdown = () => ambience?.stopAll().finally(() => process.exit(0));
+const shutdown = () => {
+  console.log('[bot] stop signal received (pm2 restart or stop, or its memory limit)');
+  Promise.resolve(ambience?.stopAll()).finally(() => process.exit(0));
+};
 process.once('SIGINT', shutdown);
 process.once('SIGTERM', shutdown);
