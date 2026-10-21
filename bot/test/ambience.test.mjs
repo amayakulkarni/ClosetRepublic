@@ -160,6 +160,8 @@ test('ffmpeg loops the file forever and applies room gain', () => {
   assert.ok(a.join(' ').includes('-stream_loop -1 -i /x/a.ogg'));
   assert.ok(a.join(' ').includes('volume=6dB'));
   assert.ok(!ffmpegArgs('/x/a.ogg', 0).join(' ').includes('volume='));
+  assert.ok(ffmpegArgs('/x/a.ogg', 6, -10).join(' ').includes('volume=-4dB'));
+  assert.ok(ffmpegArgs('/x/a.ogg').join(' ').includes('alimiter=limit=0.79'));
 });
 
 test('describe lists every room', () => {

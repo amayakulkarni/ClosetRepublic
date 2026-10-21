@@ -6,12 +6,12 @@ import { spawn } from 'node:child_process';
 import { ChannelType, Client, Events, GatewayIntentBits } from 'discord.js';
 
 /** One loop of the file, forever, as Ogg Opus (so Discord needs no extra encoder in Node). */
-export function ffmpegArgs(file, gainDb = 0) {
-  const gain = Number(gainDb) || 0;
+export function ffmpegArgs(file, gainDb = 0, trimDb = 0) {
+  const gain = (Number(gainDb) || 0) + (Number(trimDb) || 0);
   return [
     '-hide_banner', '-loglevel', 'error',
     '-stream_loop', '-1', '-i', file,
-    '-vn', '-af', `loudnorm=I=-24:TP=-2:LRA=11${gain ? `,volume=${gain}dB` : ''}`,
+    '-vn', '-af', `loudnorm=I=-24:TP=-2:LRA=11${gain ? `,volume=${gain}dB` : ''},alimiter=limit=0.79:level=disabled`,
     '-ar', '48000', '-ac', '2', '-c:a', 'libopus', '-b:a', '64k', '-f', 'ogg', 'pipe:1',
   ];
 }
@@ -70,7 +70,7 @@ export function createVoiceEntry({ name, getClient, guildId, env = process.env, 
 
       const playOnce = () => {
         if (stopped) return;
-        ff = spawn(ffmpeg, ffmpegArgs(assets.track.path, room.gainDb), { stdio: ['ignore', 'pipe', 'pipe'] });
+        ff = spawn(ffmpeg, ffmpegArgs(assets.track.path, room.gainDb, env.AMBIENCE_TRIM_DB), { stdio: ['ignore', 'pipe', 'pipe'] });
         let err = '';
         ff.stderr.on('data', (d) => (err = (err + d).slice(-400)));
         ff.on('error', (e) => log(`[ambience] ffmpeg could not start (${e.message}). Install ffmpeg or run npm install.`));
