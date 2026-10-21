@@ -1,0 +1,8 @@
+{
+  "enabled": true,
+  "leaveDelaySeconds": 20,
+  "rooms": [
+    { "key": "campfire", "channelId": "PUT_THE_CHANNEL_ID_HERE" },
+    { "key": "jantar-mantar", "gainDb": 8 }
+  ]
+}
