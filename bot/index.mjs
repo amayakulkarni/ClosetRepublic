@@ -103,7 +103,7 @@ async function startAmbience() {
   ambience = createAmbience({
     config,
     pool,
-    humansIn: (id) => humansInChannel(guild, id),
+    humansIn: (id) => humansInChannel(guild, id, new Set([client.user.id, ...helpers.map((h) => h.client.user.id)])),
     channels: () => voiceChannels(guild),
     log: (t) => console.log(`[ambience] ${t}`),
   });

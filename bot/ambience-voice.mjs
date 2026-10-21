@@ -32,7 +32,11 @@ async function loadLibs(env) {
 
 /** Builds the helper clients from AMBIENCE_HELPER_TOKENS (comma separated) and logs them in. */
 export async function startHelperClients(env, log = console.log) {
-  const tokens = String(env.AMBIENCE_HELPER_TOKENS || '').split(',').map((t) => t.trim()).filter(Boolean);
+  const raw = String(env.AMBIENCE_HELPER_TOKENS || '').split(',').map((t) => t.trim()).filter(Boolean);
+  // The same token twice (or Snitch's own token) would make two connections fight over one voice slot
+  // and the bot would join and leave in a loop.
+  const tokens = [...new Set(raw)].filter((t) => t !== env.DISCORD_BOT_TOKEN);
+  if (tokens.length !== raw.length) log(`[ambience] ignored ${raw.length - tokens.length} duplicate helper token(s), or Snitch's own token, in AMBIENCE_HELPER_TOKENS`);
   const out = [];
   for (const [n, token] of tokens.entries()) {
     const c = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates] });
@@ -105,6 +109,12 @@ export function createVoiceEntry({ name, getClient, guildId, env = process.env, 
         throw new Error(/ready/i.test(e.message) || e.name === 'AbortError' ? 'could not join the voice channel in time (check Connect and Speak permissions)' : e.message);
       }
 
+      conn.on('stateChange', (from, to) => {
+        if (stopped || from.status === to.status) return;
+        const why = to.closeCode ? ` (close code ${to.closeCode}${to.reason !== undefined ? `, reason ${to.reason}` : ''})` : '';
+        log(`[ambience] ${name} in ${ch.name}: ${from.status} -> ${to.status}${why}`);
+      });
+      conn.on('error', (e) => log(`[ambience] ${name} connection error in ${ch.name}: ${e.message}`));
       conn.on(voice.VoiceConnectionStatus.Disconnected, async () => {
         try {
           await Promise.race([
@@ -143,7 +153,16 @@ export function voiceChannels(guild) {
     .map((c) => ({ id: c.id, name: c.name, kind: c.type === ChannelType.GuildStageVoice ? 'stage' : 'voice' }));
 }
 
-export function humansInChannel(guild, channelId) {
-  const ch = guild.channels.cache.get(channelId);
-  return ch ? [...ch.members.values()].filter((m) => !m.user.bot).length : 0;
+/**
+ * People in a channel, counted from voice states so a member missing from the cache still counts.
+ * botIds: ids of Snitch and the helpers. Other bots are skipped when Discord says they are bots.
+ */
+export function humansInChannel(guild, channelId, botIds = new Set()) {
+  let n = 0;
+  for (const st of guild.voiceStates.cache.values()) {
+    if (st.channelId !== channelId || botIds.has(st.id)) continue;
+    if ((st.member?.user ?? guild.client.users.cache.get(st.id))?.bot) continue;
+    n++;
+  }
+  return n;
 }

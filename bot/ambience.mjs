@@ -105,6 +105,7 @@ export function createAmbience({ config, pool, humansIn, channels, log = () => {
   const sessions = new Map(); // channelId → { entry, handle, timer, state }
   const waiting = new Set();
   const failedAt = new Map();
+  const lostCount = new Map();
   const matches = () => matchRooms(config.rooms, channels());
   const assetsFor = (room) => ({ track: resolveTrack(room, { dir: config.dir, defaultsDir: config.defaultsDir, random, fsApi }), visual: resolveVisual(room, { visualsDir: config.visualsDir, fsApi }) });
 
@@ -162,11 +163,17 @@ export function createAmbience({ config, pool, humansIn, channels, log = () => {
           // the connection dropped (moved out, kicked, network): start over if people are still there
           if (sessions.get(channelId) !== session) return;
           cleanup(channelId);
-          setTimer(() => evaluate(channelId), 3000);
+          // Back off 3 s, 6 s, 12 s ... up to 60 s, so a bad connection never turns into a join/leave loop.
+          const lost = (lostCount.get(channelId) ?? 0) + 1;
+          lostCount.set(channelId, lost);
+          const wait = Math.min(60_000, 3000 * 2 ** (lost - 1));
+          log(`${room.channel.name}: connection lost (${lost}), trying again in ${wait / 1000} s`);
+          setTimer(() => evaluate(channelId), wait);
         })
         .then((handle) => {
           session.handle = handle;
           session.state = 'playing';
+          setTimer(() => { if (sessions.get(channelId) === session) lostCount.delete(channelId); }, 120_000);
           log(`${room.channel.name}: ${entry.name} is playing ${assets.track.source === 'yours' ? 'your' : 'the built-in'} ${room.key} loop`);
           if (humansIn(channelId) === 0) evaluate(channelId);
         })

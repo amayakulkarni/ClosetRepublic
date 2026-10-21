@@ -170,3 +170,43 @@ test('describe lists every room', () => {
   assert.match(text, /campfire/i);
   assert.match(text, /jantar-mantar: no voice channel matches/);
 });
+
+test('a dropped connection retries with growing pauses, never in a tight loop', async () => {
+  const s = setup({ people: { 2: 1 } });
+  const lost = [];
+  s.pool[0].start = async (room, ch, assets, onLost) => { lost.push(onLost); return { stop: async () => {} }; };
+  s.amb.evaluate('2');
+  await s.settle();
+  const waits = [];
+  for (let n = 0; n < 3; n++) {
+    lost.at(-1)();
+    waits.push(s.timers.at(-1).ms);
+    await s.fire();
+    await s.settle();
+  }
+  assert.deepEqual(waits, [3000, 6000, 12000]);
+});
+
+test('duplicate helper tokens and the main token are ignored', async () => {
+  const { startHelperClients } = await import('../ambience-voice.mjs');
+  const log = [];
+  const out = await startHelperClients({ AMBIENCE_HELPER_TOKENS: 'a,a, main', DISCORD_BOT_TOKEN: 'main' }, (t) => log.push(t));
+  assert.ok(log.some((l) => /ignored 2 duplicate/.test(l)));
+  out.forEach((o) => o.client.destroy());
+});
+
+test('people are counted from voice states, including members missing from the cache', async () => {
+  const { humansInChannel } = await import('../ambience-voice.mjs');
+  const users = new Map([['bot9', { bot: true }]]);
+  const guild = {
+    client: { users: { cache: users } },
+    voiceStates: { cache: new Map([
+      ['u1', { id: 'u1', channelId: '2', member: null }],
+      ['u2', { id: 'u2', channelId: '2', member: { user: { bot: false } } }],
+      ['snitch', { id: 'snitch', channelId: '2', member: { user: { bot: true } } }],
+      ['bot9', { id: 'bot9', channelId: '2', member: null }],
+      ['u3', { id: 'u3', channelId: '3', member: null }],
+    ]) },
+  };
+  assert.equal(humansInChannel(guild, '2', new Set(['snitch'])), 2);
+});
