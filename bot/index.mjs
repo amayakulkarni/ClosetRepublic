@@ -6,13 +6,15 @@
 // The bot's role must sit above every class and access role (it does after the setup script).
 import crypto from 'node:crypto';
 import http from 'node:http';
-import { Client, Events, GatewayIntentBits, MessageFlags, Partials } from 'discord.js';
+import { Client, Events, GatewayIntentBits, MessageFlags, Partials, SlashCommandBuilder } from 'discord.js';
 import { env, loadTiers } from './config.mjs';
 import { openStore } from './store.mjs';
 import { createSync } from './sync.mjs';
 import { commandDefinitions, handleCommand, withPendingNotices } from './commands.mjs';
 import { reconcileWithBmc } from './bmc-api.mjs';
-import { createTickets } from './tickets.mjs';
+import { createTickets, modRoleIds } from './tickets.mjs';
+import { createAmbience, loadAmbienceConfig } from './ambience.mjs';
+import { createVoiceEntry, humansInChannel, startHelperClients, voiceChannels } from './ambience-voice.mjs';
 import { createUnlink } from './unlink.mjs';
 import { createTicketAdapter, ensureDeskMessage, handleTicketInteraction } from './discord-tickets.mjs';
 
@@ -87,15 +89,38 @@ const ticketAdapter = createTicketAdapter({ getClient: () => client, getGuild: (
 const tickets = createTickets({ cfg, store, tk: ticketAdapter });
 const unlink = createUnlink({ cfg, store, sync, discord });
 
+// Ambient sound in the voice rooms (ambience.mjs). Off with AMBIENCE=off.
+let ambience = null;
+const ambienceCommand = new SlashCommandBuilder().setName('ambience').setDescription('Mods: show which rooms have ambient sound and which bot is playing where.');
+async function startAmbience() {
+  const config = loadAmbienceConfig();
+  if (!config.enabled) return;
+  const helpers = await startHelperClients(process.env, (t) => console.warn(t));
+  const pool = [
+    createVoiceEntry({ name: 'Snitch', getClient: () => client, guildId: cfg.guildId }),
+    ...helpers.map((h) => createVoiceEntry({ name: h.name, getClient: () => h.client, guildId: cfg.guildId })),
+  ];
+  ambience = createAmbience({
+    config,
+    pool,
+    humansIn: (id) => humansInChannel(guild, id),
+    channels: () => voiceChannels(guild),
+    log: (t) => console.log(`[ambience] ${t}`),
+  });
+  ambience.scan();
+  console.log(`[ambience] ready with ${pool.length} bot(s)`);
+}
+
 // ---------- Discord events ----------
 
 function attach(client) {
 client.once(Events.ClientReady, async () => {
   guild = await client.guilds.fetch(cfg.guildId);
-  await guild.commands.set(commandDefinitions(cfg));
+  await guild.commands.set([...commandDefinitions(cfg), ambienceCommand.toJSON()]);
   ensureDeskMessage({ client, cfg }).catch((err) => console.error('[bot] could not set up the ticket button:', err.message));
   console.log(`[bot] connected to ${guild.name} as ${client.user.tag}`);
   discord.post(cfg.channels.botLog, 'Republic Bot is online.').catch(() => {});
+  startAmbience().catch((err) => console.error('[bot] ambience is off:', err.message));
   queue('startup sweep', () => sync.syncAll('startup'));
   setInterval(() => queue('sweep', () => sync.syncAll('sweep')), 15 * 60_000);
   const bmc = () =>
@@ -112,8 +137,19 @@ client.on(Events.GuildMemberAdd, (member) => {
   if (member.guild.id === cfg.guildId) queue('join', () => sync.syncMember(member.id, 'rejoined the server'));
 });
 
+client.on(Events.VoiceStateUpdate, (before, after) => {
+  if (!ambience || after.guild.id !== cfg.guildId) return;
+  for (const id of new Set([before.channelId, after.channelId])) if (id) ambience.evaluate(id);
+});
+
 client.on(Events.InteractionCreate, async (interaction) => {
   if (interaction.guildId !== cfg.guildId) return;
+  if (interaction.isChatInputCommand() && interaction.commandName === 'ambience') {
+    const roles = new Set(interaction.member?.roles?.cache?.keys?.() ?? []);
+    const allowed = modRoleIds(cfg).some((id) => roles.has(id));
+    await interaction.reply({ content: allowed ? (ambience ? ambience.describe() : 'Ambient sound is off (AMBIENCE=off, or the voice libraries failed to load; see the bot log).') : 'Only mods can use this.', flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
+    return;
+  }
   if (await handleTicketInteraction(interaction, { tickets, unlink, queue, cfg }).catch((err) => (console.error('[bot] ticket interaction failed:', err.message), true))) return;
   if (!interaction.isChatInputCommand()) return;
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -169,7 +205,7 @@ http
   .listen(env.port, env.host, () => console.log(`[bot] listening on http://${env.host}:${env.port}`));
 
 function connect() {
-  const intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers];
+  const intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildVoiceStates];
   if (contentIntent) intents.push(GatewayIntentBits.MessageContent);
   client = new Client({ intents, partials: [Partials.Channel] });
   attach(client);
@@ -185,3 +221,7 @@ function connect() {
   });
 }
 connect();
+
+const shutdown = () => ambience?.stopAll().finally(() => process.exit(0));
+process.once('SIGINT', shutdown);
+process.once('SIGTERM', shutdown);
