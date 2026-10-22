@@ -13,8 +13,12 @@ import { createSync } from './sync.mjs';
 import { commandDefinitions, handleCommand, withPendingNotices } from './commands.mjs';
 import { reconcileWithBmc } from './bmc-api.mjs';
 import { createTickets, modRoleIds } from './tickets.mjs';
-import { createAmbience, loadAmbienceConfig } from './ambience.mjs';
+import { createAmbience, loadAmbienceConfig, matchRooms } from './ambience.mjs';
 import { createVoiceEntry, humansInChannel, startHelperClients, voiceChannels } from './ambience-voice.mjs';
+import { VOICE_NOTICE, ensureStaticNotices } from './voice-notice.mjs';
+import { createElderRooms } from './elder-rooms.mjs';
+import { createElderAdapter } from './discord-elder.mjs';
+import { ensureCollegeMessage, handleHobbyInteraction } from './hobbies.mjs';
 import { createUnlink } from './unlink.mjs';
 import { createTicketAdapter, ensureDeskMessage, handleTicketInteraction } from './discord-tickets.mjs';
 
@@ -89,9 +93,24 @@ const ticketAdapter = createTicketAdapter({ getClient: () => client, getGuild: (
 const tickets = createTickets({ cfg, store, tk: ticketAdapter });
 const unlink = createUnlink({ cfg, store, sync, discord });
 
+// Private voice rooms for Elders (elder-rooms.mjs): joining the Elder lobby channel creates one.
+const elderRooms = createElderRooms({
+  cfg,
+  store,
+  dc: createElderAdapter({ getClient: () => client, getGuild: () => guild, cfg }),
+  log: (t) => console.log(`[elder] ${t}`),
+});
+const rolesOfInteraction = (i) => new Set(i.member?.roles?.cache?.keys?.() ?? i.member?.roles ?? []);
+
 // Ambient sound in the voice rooms (ambience.mjs). Off with AMBIENCE=off.
 let ambience = null;
 const ambienceCommand = new SlashCommandBuilder().setName('ambience').setDescription('Mods: show which rooms have ambient sound and which bot is playing where.');
+// Channel ids that an ambience room already covers (they get the notice from the ambience session).
+const ambienceRoomIds = (config) => {
+  const ids = new Set();
+  for (const r of matchRooms(config.rooms, voiceChannels(guild).filter((c) => c.id !== cfg.elder.lobbyChannelId)).values()) ids.add(r.channel.id);
+  return ids;
+};
 async function startAmbience() {
   const config = loadAmbienceConfig();
   if (!config.enabled) return;
@@ -104,7 +123,10 @@ async function startAmbience() {
     config,
     pool,
     humansIn: (id) => humansInChannel(guild, id, new Set([client.user.id, ...helpers.map((h) => h.client.user.id)])),
-    channels: () => voiceChannels(guild),
+    // The Elder lobby and the private rooms made from it get no ambient sound.
+    channels: () => voiceChannels(guild).map((c) => ({ ...c, ignore: c.id === cfg.elder.lobbyChannelId || Boolean(store.elderRoomByChannel(c.id)) })),
+    // Every public room gets the "voices here are public" notice after its picture. The Elder category is for verified elders only.
+    notice: (channel) => (cfg.elder.categoryId && channel.parentId === cfg.elder.categoryId ? null : VOICE_NOTICE),
     log: (t) => console.log(`[ambience] ${t}`),
   });
   ambience.scan();
@@ -120,6 +142,14 @@ client.once(Events.ClientReady, async () => {
   ensureDeskMessage({ client, cfg }).catch((err) => console.error('[bot] could not set up the ticket button:', err.message));
   console.log(`[bot] connected to ${guild.name} as ${client.user.tag}`);
   discord.post(cfg.channels.botLog, 'Republic Bot is online.').catch(() => {});
+  ensureCollegeMessage({ client, cfg }).catch((err) => console.error('[bot] could not set up the hobby picker:', err.message));
+  elderRooms.cleanup().catch((err) => console.error('[elder] cleanup failed:', err.message));
+  try {
+    const ac = loadAmbienceConfig();
+    ensureStaticNotices({ client, guild, categoryIds: cfg.voiceNotice.categoryIds, skipIds: ac.enabled ? ambienceRoomIds(ac) : new Set(), log: (t) => console.warn(`[bot] ${t}`) }).catch(() => {});
+  } catch (err) {
+    console.error('[bot] voice notices skipped:', err.message);
+  }
   startAmbience().catch((err) => console.error('[bot] ambience is off:', err.message));
   queue('startup sweep', () => sync.syncAll('startup'));
   setInterval(() => queue('sweep', () => sync.syncAll('sweep')), 15 * 60_000);
@@ -138,12 +168,37 @@ client.on(Events.GuildMemberAdd, (member) => {
 });
 
 client.on(Events.VoiceStateUpdate, (before, after) => {
-  if (!ambience || after.guild.id !== cfg.guildId) return;
+  if (after.guild.id !== cfg.guildId) return;
+  for (const id of new Set([before.channelId, after.channelId])) if (id) elderRooms.roomChanged(id);
+  const lobby = cfg.elder.lobbyChannelId;
+  if (lobby && after.channelId === lobby && before.channelId !== lobby && !after.member?.user?.bot) {
+    queue('elder room', () =>
+      elderRooms.lobbyJoin({ userId: after.id, displayName: after.member?.displayName, roleIds: new Set(after.member?.roles?.cache?.keys?.() ?? []) }),
+    ).then((r) => r?.moved === false && console.log(`[elder] ${after.id} joined the lobby: ${r.reason}`));
+  }
+  if (!ambience) return;
   for (const id of new Set([before.channelId, after.channelId])) if (id) ambience.evaluate(id);
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
   if (interaction.guildId !== cfg.guildId) return;
+  if (await handleHobbyInteraction(interaction, { cfg, queue }).catch((err) => (console.error('[bot] hobby picker failed:', err.message), true))) return;
+  if (interaction.isChatInputCommand() && interaction.commandName === 'room') {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    const sub = interaction.options.getSubcommand(false);
+    const text = await queue('/room', () =>
+      elderRooms.command({
+        sub,
+        userId: interaction.user.id,
+        roleIds: rolesOfInteraction(interaction),
+        target: interaction.options.get('member')?.user?.id ?? null,
+        name: interaction.options.getString('name'),
+        limit: interaction.options.getInteger('people'),
+      }),
+    );
+    await interaction.editReply({ content: typeof text === 'string' ? text : 'Something went wrong. Please try again, or ask a Minister.', allowedMentions: { parse: [] } }).catch(() => {});
+    return;
+  }
   if (interaction.isChatInputCommand() && interaction.commandName === 'ambience') {
     const roles = new Set(interaction.member?.roles?.cache?.keys?.() ?? []);
     const allowed = modRoleIds(cfg).some((id) => roles.has(id));

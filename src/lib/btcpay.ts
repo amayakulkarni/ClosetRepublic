@@ -20,14 +20,20 @@ const WEBHOOK_SECRET = process.env.BTCPAY_WEBHOOK_SECRET || '';
 
 export const btcpayConfigured = () => Boolean(URL_BASE && STORE_ID && API_KEY && WEBHOOK_SECRET);
 
-/** Classes sold for crypto, priced in USD per month. Slugs match config/discord-tiers.json. */
+/**
+ * Classes sold for crypto, priced in USD per month. Slugs match config/discord-tiers.json.
+ * yearUsd: a flat price for 12 months. Alien is the $1 entry class on every payment rail, so it costs
+ * $1 for a month and $1 for a year, the same as its two Buy Me a Coffee levels.
+ */
 export const CRYPTO_TIERS = [
-  { slug: 'alien', name: 'Alien', usd: 1 },
-  { slug: 'citizen', name: 'Citizen', usd: 3 },
-  { slug: 'top-1', name: 'Top 1%', usd: 5 },
-  { slug: 'upper-middle-class', name: 'Upper Middle Class', usd: 6 },
-  { slug: 'middle-class', name: 'Middle Class', usd: 8 },
+  { slug: 'alien', name: 'Alien', usd: 1, yearUsd: 1 },
+  { slug: 'citizen', name: 'Citizen', usd: 3, yearUsd: null },
+  { slug: 'top-1', name: 'Top 1%', usd: 5, yearUsd: null },
+  { slug: 'upper-middle-class', name: 'Upper Middle Class', usd: 6, yearUsd: null },
+  { slug: 'middle-class', name: 'Middle Class', usd: 8, yearUsd: null },
 ] as const;
+/** What a class costs for a number of months. */
+export const cryptoPrice = (tier: { usd: number; yearUsd: number | null }, months: number) => (months === 12 && tier.yearUsd != null ? tier.yearUsd : tier.usd * months);
 export const CRYPTO_MONTHS = [1, 3, 12] as const;
 /** Free-amount crypto donations, in USD (BTCPay prices USD reliably). */
 export const DONATION_MIN_USD = 1;
@@ -50,7 +56,7 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 export async function createCryptoOrder(discordId: string, tierSlug: string, months: number) {
   const tier = CRYPTO_TIERS.find((t) => t.slug === tierSlug);
   if (!tier || !(CRYPTO_MONTHS as readonly number[]).includes(months)) throw new Error('Unknown class or length');
-  const amount = tier.usd * months;
+  const amount = cryptoPrice(tier, months);
   const token = crypto.randomBytes(16).toString('hex');
   const conn = db();
   // One open order per member keeps the table small.

@@ -52,21 +52,22 @@ export function loadAmbienceConfig(file = process.env.AMBIENCE_CONFIG || 'config
 }
 
 /**
- * Pairs rooms with voice or stage channels. A room with channelId uses that channel; otherwise the first
- * channel whose name contains one of the room's `match` words (exact name wins over "contains").
- * channels: [{ id, name, kind: 'voice' | 'stage' }]
+ * Pairs rooms with voice or stage channels. Every channel whose name matches a room counts, so a cloned
+ * category (for example the Elder rooms) sounds the same as the original. A room with channelId or
+ * channelIds uses exactly those channels. A channel belongs to one room only.
+ * channels: [{ id, name, kind: 'voice' | 'stage', parentId?, ignore? }]
  */
 export function matchRooms(rooms, channels) {
   const out = new Map();
   for (const room of rooms) {
-    let channel = room.channelId ? channels.find((c) => c.id === String(room.channelId)) : null;
-    if (!channel && !room.channelId) {
+    const ids = [room.channelId, ...(room.channelIds || [])].filter(Boolean).map(String);
+    let found;
+    if (ids.length) found = channels.filter((c) => ids.includes(c.id));
+    else {
       const words = (room.match?.length ? room.match : [room.key]).map(normalizeName).filter(Boolean);
-      channel =
-        channels.find((c) => words.includes(normalizeName(c.name))) ||
-        channels.find((c) => words.some((w) => normalizeName(c.name).includes(w)));
+      found = channels.filter((c) => !c.ignore && words.some((w) => normalizeName(c.name).includes(w)));
     }
-    if (channel && !out.has(channel.id)) out.set(channel.id, { ...room, channel });
+    for (const channel of found) if (!out.has(channel.id)) out.set(channel.id, { ...room, channel });
   }
   return out;
 }
@@ -101,13 +102,13 @@ export function resolveVisual(room, { visualsDir, fsApi = fs }) {
  * humansIn(channelId) → number of people (not bots) in the channel
  * channels() → [{ id, name, kind }]
  */
-export function createAmbience({ config, pool, humansIn, channels, log = () => {}, setTimer = setTimeout, clearTimer = clearTimeout, random = Math.random, fsApi = fs, retryMs = 60_000, now = () => Date.now() }) {
+export function createAmbience({ config, notice = () => null, pool, humansIn, channels, log = () => {}, setTimer = setTimeout, clearTimer = clearTimeout, random = Math.random, fsApi = fs, retryMs = 60_000, now = () => Date.now() }) {
   const sessions = new Map(); // channelId → { entry, handle, timer, state }
   const waiting = new Set();
   const failedAt = new Map();
   const lostCount = new Map();
   const matches = () => matchRooms(config.rooms, channels());
-  const assetsFor = (room) => ({ track: resolveTrack(room, { dir: config.dir, defaultsDir: config.defaultsDir, random, fsApi }), visual: resolveVisual(room, { visualsDir: config.visualsDir, fsApi }) });
+  const assetsFor = (room) => ({ notice: notice(room.channel), track: resolveTrack(room, { dir: config.dir, defaultsDir: config.defaultsDir, random, fsApi }), visual: resolveVisual(room, { visualsDir: config.visualsDir, fsApi }) });
 
   function cleanup(channelId) {
     const s = sessions.get(channelId);
@@ -173,7 +174,7 @@ export function createAmbience({ config, pool, humansIn, channels, log = () => {
         .then((handle) => {
           session.handle = handle;
           session.state = 'playing';
-          setTimer(() => { if (sessions.get(channelId) === session) lostCount.delete(channelId); }, 120_000);
+          setTimer(() => { if (sessions.get(channelId) === session) lostCount.delete(channelId); }, 120_000)?.unref?.();
           log(`${room.channel.name}: ${entry.name} is playing ${assets.track.source === 'yours' ? 'your' : 'the built-in'} ${room.key} loop`);
           if (humansIn(channelId) === 0) evaluate(channelId);
         })
@@ -205,15 +206,19 @@ export function createAmbience({ config, pool, humansIn, channels, log = () => {
     const found = matches();
     const lines = [`Bots available for ambience: ${pool.length} (${pool.filter((e) => !e.busy).length} free). One bot plays in one room at a time.`];
     for (const room of config.rooms) {
-      const hit = [...found.values()].find((r) => r.key === room.key);
-      if (!hit) {
+      const hits = [...found.values()].filter((r) => r.key === room.key);
+      if (!hits.length) {
         lines.push(`• ${room.key}: no voice channel matches (${(room.match || []).join(', ')}). Set channelId in config/ambience.json.`);
         continue;
       }
-      const t = assetsFor(room).track;
-      const s = sessions.get(hit.channel.id);
-      lines.push(`• ${hit.channel.name} (${hit.channel.kind}): ${t ? `${t.source} track ${path.basename(t.path)}` : 'NO audio file'}${s ? `, playing via ${s.entry.name}` : waiting.has(hit.channel.id) ? ', waiting for a free bot' : ''}`);
+      const t = assetsFor(hits[0]).track;
+      for (const hit of hits) {
+        const s = sessions.get(hit.channel.id);
+        lines.push(`• ${hit.channel.name} (${hit.channel.kind}): ${t ? `${t.source} track ${path.basename(t.path)}` : 'NO audio file'}${s ? `, playing via ${s.entry.name}` : waiting.has(hit.channel.id) ? ', waiting for a free bot' : ''}`);
+      }
     }
+    const rooms = found.size;
+    lines.push(`${rooms} room(s) matched. For every room to sound at once, ${Math.max(0, rooms - 1)} helper bot(s) are needed (plus Snitch).`);
     return lines.join('\n').slice(0, 1900);
   }
 

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { getNature } from '@/lib/nature';
 import { Art } from '@/components/Art';
 import { Notice } from '@/components/Notice';
+import { DiscordGuide } from '@/components/discord/DiscordGuide';
 import { DiscordLinkForm } from '@/components/discord/DiscordLinkForm';
 import { CryptoPay } from '@/components/discord/CryptoPay';
 import { CRYPTO_MONTHS, CRYPTO_TIERS, btcpayConfigured } from '@/lib/btcpay';
@@ -28,9 +29,11 @@ const ERRORS: Record<string, string> = {
   discord: 'Discord did not let us sign you in. Please try again in a moment.',
 };
 
-export default async function DiscordLinkPage({ searchParams }: { searchParams: Promise<{ error?: string; paid?: string }> }) {
+export default async function DiscordLinkPage({ searchParams }: { searchParams: Promise<{ error?: string; paid?: string; guide?: string }> }) {
   const { on } = await getNature();
-  const { error, paid } = await searchParams;
+  const { error, paid, guide } = await searchParams;
+  // ?guide=true opens the beginner guide, ?guide=false hides it, and without the option it is folded away.
+  const guideMode = guide === 'true' ? 'open' : guide === 'false' ? 'hidden' : 'folded';
   const session = await discordSession();
   const status = session ? linkStatus(session.id) : null;
   const donateUrl = process.env.NEXT_PUBLIC_DONATE_URL || '';
@@ -49,6 +52,8 @@ export default async function DiscordLinkPage({ searchParams }: { searchParams: 
         <Art name="looking-ahead" nature={on} className="page-head__art" />
       </header>
 
+      {guideMode === 'open' && <DiscordGuide open />}
+
       {error && ERRORS[error] && <Notice tone="warn">{ERRORS[error]}</Notice>}
       {paid && <Notice>Thank you. Once the payment is confirmed on the blockchain, your class appears in Discord. Monero takes about 20 minutes and Bitcoin 10 to 60 minutes; Lightning is instant. Reload this page to check.</Notice>}
 
@@ -59,9 +64,9 @@ export default async function DiscordLinkPage({ searchParams }: { searchParams: 
         ) : !session ? (
           <>
             <ol className="steps-list">
-              <li>Sign in with Discord, so we know which account gets the role. We only see your Discord ID and name.</li>
-              <li>Type the email you use on Buy Me a Coffee. We email you a 6-digit code.</li>
-              <li>Type the code. Your class appears in Discord within a minute.</li>
+              <li>Step one: sign in with Discord, so we know which account gets the role. We only see your Discord ID and name.</li>
+              <li>Step two: type the email you use on Buy Me a Coffee (or will use for crypto). We email you a 6-digit code; typing it proves the email is yours.</li>
+              <li>Your class appears in Discord within a minute. Alien is the $1 entry class, per month or per year.</li>
             </ol>
             <p>
               <a className="button" href="/discord/login">
@@ -100,11 +105,14 @@ export default async function DiscordLinkPage({ searchParams }: { searchParams: 
         </section>
       )}
 
+      {guideMode === 'folded' && <DiscordGuide open={false} />}
+
       <section className="section" aria-labelledby="faq-heading">
         <h2 id="faq-heading">Good to know</h2>
         <ul className="plain-list">
           <li>Not a member yet? Choose a class on {donateUrl ? <a href={donateUrl}>Buy Me a Coffee</a> : 'Buy Me a Coffee'}, then come back here.</li>
           <li>Your class comes from your membership. Paying never buys votes in Parliament or moderator powers.</li>
+          <li>Members verified for 90 days or more become Elders automatically. Elders can enter the Elder rooms and start private voice rooms.</li>
           <li>If your membership ends, you keep your class until the end of the period you paid for, then for a 7-day grace period.</li>
           <li>Prefer not to show your class? Type <code>/discreet on</code> in Discord: your colour is hidden and your lounges stay.</li>
           <li>

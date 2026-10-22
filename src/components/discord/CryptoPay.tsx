@@ -2,7 +2,8 @@
 
 import { useId, useState } from 'react';
 
-type Tier = { slug: string; name: string; usd: number };
+type Tier = { slug: string; name: string; usd: number; yearUsd: number | null };
+const priceFor = (t: Tier | undefined, months: number) => (!t ? 0 : months === 12 && t.yearUsd != null ? t.yearUsd : t.usd * months);
 
 /** Pay for a class with crypto: pick the class and length, then continue to the BTCPay checkout page. */
 export function CryptoPay({ tiers, months }: { tiers: Tier[]; months: number[] }) {
@@ -11,7 +12,7 @@ export function CryptoPay({ tiers, months }: { tiers: Tier[]; months: number[] }
   const [length, setLength] = useState(months[0]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const price = (tiers.find((t) => t.slug === tier)?.usd ?? 0) * length;
+  const price = priceFor(tiers.find((t) => t.slug === tier), length);
 
   return (
     <form
@@ -33,7 +34,7 @@ export function CryptoPay({ tiers, months }: { tiers: Tier[]; months: number[] }
         <select id={`${id}-tier`} value={tier} onChange={(e) => setTier(e.target.value)}>
           {tiers.map((t) => (
             <option key={t.slug} value={t.slug}>
-              {t.name}, ${t.usd} a month
+              {t.name}, ${t.usd} a month{t.yearUsd != null ? ` or $${t.yearUsd} a year` : ''}
             </option>
           ))}
         </select>

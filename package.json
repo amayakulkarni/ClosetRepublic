@@ -8,7 +8,8 @@
     "start": "next start -p 40001",
     "typecheck": "tsc --noEmit",
     "bot": "node bot/index.mjs",
-    "test:bot": "node --test bot/test/*.test.mjs"
+    "test:bot": "node --test bot/test/*.test.mjs",
+    "ambience:helpers": "node bot/helpers-setup.mjs"
   },
   "dependencies": {
     "@discordjs/voice": "^0.19.2",

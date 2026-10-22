@@ -1,18 +1,108 @@
 {
-  "_readme": "Copy discord-tiers.json from the Discord setup script (discord/setup) to config/discord-tiers.json. Fill bmcLevelIds with each Buy Me a Coffee membership_level_id once known (/tiers in Discord lists unmatched levels); until then levels are matched by name. unknownLevelTier: the class for a level the file does not know.",
+  "_readme": "Copy discord-tiers.json from the Discord setup script (discord/setup) to config/discord-tiers.json. Fill bmcLevelIds with each Buy Me a Coffee membership_level_id once known (/tiers in Discord lists unmatched levels); until then levels are matched by name. unknownLevelTier: the class for a level the file does not know. elder: the Elder role (given after afterDays of verified membership), the lobby voice channel that makes private rooms, and the Elder category. hobbies: one entry per hobby role for the #college picker. voiceNotice.categoryIds: extra categories whose voice channels get the public-voice notice even without ambient sound.",
   "guildId": "1496380917223133264",
   "tiers": [
-    { "slug": "alien", "rank": 1, "roleId": "", "accessRoleId": "", "bmcLevelIds": [] },
-    { "slug": "citizen", "rank": 2, "roleId": "", "accessRoleId": "", "bmcLevelIds": [] },
-    { "slug": "top-1", "rank": 3, "roleId": "", "accessRoleId": "", "bmcLevelIds": [] },
-    { "slug": "upper-middle-class", "rank": 4, "roleId": "", "accessRoleId": "", "bmcLevelIds": [] },
-    { "slug": "middle-class", "rank": 5, "roleId": "", "accessRoleId": "", "bmcLevelIds": [] }
+    {
+      "slug": "alien",
+      "rank": 1,
+      "roleId": "",
+      "accessRoleId": "",
+      "bmcLevelIds": []
+    },
+    {
+      "slug": "citizen",
+      "rank": 2,
+      "roleId": "",
+      "accessRoleId": "",
+      "bmcLevelIds": []
+    },
+    {
+      "slug": "top-1",
+      "rank": 3,
+      "roleId": "",
+      "accessRoleId": "",
+      "bmcLevelIds": []
+    },
+    {
+      "slug": "upper-middle-class",
+      "rank": 4,
+      "roleId": "",
+      "accessRoleId": "",
+      "bmcLevelIds": []
+    },
+    {
+      "slug": "middle-class",
+      "rank": 5,
+      "roleId": "",
+      "accessRoleId": "",
+      "bmcLevelIds": []
+    }
   ],
-  "staffRoleIds": ["", "", ""],
-  "grace": { "lapseDays": 7, "remindDaysBeforeEnd": [3], "remindDuringGrace": [0, 5] },
-  "channels": { "thankYou": "", "modLog": "", "botLog": "",
-  "ticketCategory": "",
-  "ticketDesk": "",
-  "ticketTranscripts": "" },
-  "unknownLevelTier": "alien"
+  "staffRoleIds": [
+    "",
+    "",
+    ""
+  ],
+  "grace": {
+    "lapseDays": 7,
+    "remindDaysBeforeEnd": [
+      3
+    ],
+    "remindDuringGrace": [
+      0,
+      5
+    ]
+  },
+  "channels": {
+    "thankYou": "",
+    "modLog": "",
+    "botLog": "",
+    "ticketCategory": "",
+    "ticketDesk": "",
+    "ticketTranscripts": "",
+    "college": ""
+  },
+  "unknownLevelTier": "alien",
+  "elder": {
+    "roleId": "",
+    "afterDays": 90,
+    "lobbyChannelId": "",
+    "categoryId": "",
+    "maxRoomsPerElder": 1
+  },
+  "hobbies": [
+    {
+      "slug": "gaming",
+      "label": "Gaming",
+      "emoji": "🎮",
+      "roleId": ""
+    },
+    {
+      "slug": "movies",
+      "label": "Movies",
+      "emoji": "🎬",
+      "roleId": ""
+    },
+    {
+      "slug": "books",
+      "label": "Books",
+      "emoji": "📚",
+      "roleId": ""
+    },
+    {
+      "slug": "art",
+      "label": "Art",
+      "emoji": "🎨",
+      "roleId": ""
+    },
+    {
+      "slug": "voice-chat",
+      "label": "Voice chat",
+      "emoji": "🎙️",
+      "roleId": ""
+    }
+  ],
+  "voiceNotice": {
+    "categoryIds": []
+  }
 }

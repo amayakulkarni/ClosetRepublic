@@ -72,6 +72,7 @@ export function createVoiceEntry({ name, getClient, guildId, env = process.env, 
       let ff = null;
       let stopped = false;
       let post = null;
+      let noticePost = null;
       let statusSet = false;
 
       const playOnce = () => {
@@ -94,6 +95,7 @@ export function createVoiceEntry({ name, getClient, guildId, env = process.env, 
         stopped = true;
         try { ff?.kill('SIGKILL'); } catch {}
         try { player.stop(true); } catch {}
+        if (noticePost) await noticePost.delete().catch(() => {});
         if (post) await post.delete().catch(() => {});
         if (statusSet) await setStatus(client, ch.id, '').catch(() => {});
         try { conn.destroy(); } catch {}
@@ -138,6 +140,10 @@ export function createVoiceEntry({ name, getClient, guildId, env = process.env, 
       if (assets.visual && ch.isTextBased?.()) {
         post = await ch.send({ content: room.caption, files: [new AttachmentBuilder(fs.readFileSync(assets.visual), { name: 'ambience.gif' })], allowedMentions: { parse: [] } }).catch((e) => (log(`[ambience] could not post the picture in ${ch.name}: ${e.message}`), null));
       }
+      // The public-voice notice goes right after the picture (or alone, for rooms without one).
+      if (assets.notice && ch.isTextBased?.()) {
+        noticePost = await ch.send({ content: assets.notice, allowedMentions: { parse: [] } }).catch((e) => (log(`[ambience] could not post the voice notice in ${ch.name}: ${e.message}`), null));
+      }
       if (room.status) statusSet = await setStatus(client, ch.id, room.status).then(() => true).catch((e) => (log(`[ambience] could not set the channel status (${e.message}); the bot needs Set Voice Channel Status`), false));
 
       return { stop };
@@ -155,7 +161,7 @@ export function setStatus(client, channelId, text) {
 export function voiceChannels(guild) {
   return [...guild.channels.cache.values()]
     .filter((c) => c.type === ChannelType.GuildVoice || c.type === ChannelType.GuildStageVoice)
-    .map((c) => ({ id: c.id, name: c.name, kind: c.type === ChannelType.GuildStageVoice ? 'stage' : 'voice' }));
+    .map((c) => ({ id: c.id, name: c.name, kind: c.type === ChannelType.GuildStageVoice ? 'stage' : 'voice', parentId: c.parentId ?? null }));
 }
 
 /**

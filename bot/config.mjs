@@ -40,6 +40,18 @@ export function loadTiers(file = process.env.DISCORD_TIERS_FILE || 'config/disco
     grace: { lapseDays: 7, remindDaysBeforeEnd: [3], remindDuringGrace: [0, 5], ...(raw.grace || {}) },
     channels: raw.channels || {},
     unknownLevelTier: raw.unknownLevelTier ?? 'alien',
+    // Elder role after afterDays of verified membership, and the lobby voice channel that creates private rooms.
+    elder: {
+      roleId: String(raw.elder?.roleId || ''),
+      afterDays: Number(raw.elder?.afterDays) || 90,
+      lobbyChannelId: String(raw.elder?.lobbyChannelId || ''),
+      categoryId: String(raw.elder?.categoryId || ''),
+      maxRoomsPerElder: Number(raw.elder?.maxRoomsPerElder) || 1,
+    },
+    // Hobby picker in #college: [{ slug, label, emoji, roleId }]
+    hobbies: (raw.hobbies || []).filter((h) => h?.slug && h?.roleId).map((h) => ({ slug: String(h.slug), label: String(h.label || h.slug), emoji: h.emoji ? String(h.emoji) : null, roleId: String(h.roleId) })),
+    // Categories whose voice channels get the "voices here are public" notice even without ambient sound.
+    voiceNotice: { categoryIds: (raw.voiceNotice?.categoryIds || []).map(String) },
   };
 }
 

@@ -1636,3 +1636,30 @@ html[data-nature='on'] .closet-mark {
   border-radius: var(--radius);
   background: #fff;
 }
+
+/* Beginner's guide to Discord on the link page */
+.discord-guide__steps {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 1.5rem;
+}
+.discord-guide__step h3 {
+  margin: 0 0 0.4rem;
+}
+.discord-guide__shot {
+  display: block;
+  max-width: min(360px, 100%);
+  height: auto;
+  border-radius: 12px;
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.2));
+}
+.discord-guide__shot--empty {
+  display: grid;
+  place-items: center;
+  min-height: 160px;
+  padding: 1rem;
+  text-align: center;
+  border-style: dashed;
+  opacity: 0.8;
+}

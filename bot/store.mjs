@@ -25,8 +25,20 @@ export function openStore(dbPath) {
     archived_by TEXT
   )`);
 
+  // Private voice rooms made for Elders (deleted when empty). Only the owner and a channel id.
+  db.exec(`CREATE TABLE IF NOT EXISTS elder_rooms (
+    channel_id TEXT PRIMARY KEY,
+    owner_id TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  )`);
+
   return {
     db,
+    elderRoomCreate: (channelId, ownerId) => db.prepare('INSERT OR REPLACE INTO elder_rooms (channel_id, owner_id, created_at) VALUES (?, ?, ?)').run(channelId, ownerId, nowIso()),
+    elderRoomDelete: (channelId) => db.prepare('DELETE FROM elder_rooms WHERE channel_id = ?').run(channelId),
+    elderRoomByChannel: (channelId) => db.prepare('SELECT * FROM elder_rooms WHERE channel_id = ?').get(channelId) ?? null,
+    elderRoomsByOwner: (ownerId) => db.prepare('SELECT * FROM elder_rooms WHERE owner_id = ?').all(ownerId),
+    elderRoomsAll: () => db.prepare('SELECT * FROM elder_rooms').all(),
     member: (id) => db.prepare('SELECT * FROM discord_members WHERE discord_id = ?').get(id) ?? null,
     memberByEmail: (email) => db.prepare('SELECT * FROM discord_members WHERE email = ?').get(email) ?? null,
     membershipsFor: (email) => (email ? db.prepare('SELECT * FROM memberships WHERE email = ?').all(email) : []),
@@ -76,8 +88,8 @@ export function openStore(dbPath) {
       db.transaction(() => {
         // An archived ticket keeps its number and dates but loses the link to the person.
         db.prepare("UPDATE tickets SET opener_id = 'deleted' WHERE opener_id = ? AND status = 'archived'").run(id);
-        for (const table of ['discord_members', 'discord_grants', 'discord_notices', 'discord_link_codes']) {
-          db.prepare(`DELETE FROM ${table} WHERE discord_id = ?`).run(id);
+        for (const table of ['discord_members', 'discord_grants', 'discord_notices', 'discord_link_codes', 'elder_rooms']) {
+          db.prepare(`DELETE FROM ${table} WHERE ${table === 'elder_rooms' ? 'owner_id' : 'discord_id'} = ?`).run(id);
         }
       })(),
     grant: (id, tier, days, by) => {

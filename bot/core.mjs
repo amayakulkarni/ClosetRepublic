@@ -8,6 +8,10 @@
 // and after any of those ends, a grace period (7 days) with the same class. /unlink also
 // leaves a grace period. The highest class wins; a class in grace only counts when there is
 // no current one. Revoked memberships count for nothing.
+//
+// No class is free: Alien is the $1 entry level (per month or per year) on Buy Me a Coffee and on crypto.
+// Verification is two steps on the link page (Discord sign-in, then a code sent to the email).
+// Elder: a verified member whose link is at least elder.afterDays old (90) also gets the Elder role.
 
 const DAY = 86_400_000;
 const ms = (iso) => (iso ? Date.parse(iso) : NaN);
@@ -66,14 +70,22 @@ export function entitlement(cfg, { memberships = [], grants = [], member = null 
   };
 }
 
-/** Every role id the bot is allowed to manage: class roles and lounge access roles. */
-export const managedRoles = (cfg) => new Set(cfg.tiers.flatMap((t) => [t.roleId, t.accessRoleId]).filter(Boolean));
+/** Every role id the bot is allowed to manage: class roles, lounge access roles and the Elder role. */
+export const managedRoles = (cfg) => new Set([...cfg.tiers.flatMap((t) => [t.roleId, t.accessRoleId]), cfg.elder?.roleId].filter(Boolean));
 
-/** The class role (unless discreet) plus the access role of that class and every cheaper one. */
-export function wantedRoles(cfg, tier, { discreet = false } = {}) {
+/** Verified for long enough (default 90 days) and still in a class (active or grace). */
+export function isElder(cfg, member, ent, now = Date.now()) {
+  if (!cfg.elder?.roleId || !member?.email || !member.linked_at || ent.state === 'none') return false;
+  const since = Date.parse(member.linked_at);
+  return Number.isFinite(since) && now - since >= (cfg.elder.afterDays ?? 90) * DAY;
+}
+
+/** The class role (unless discreet) plus the access role of that class and every cheaper one, plus Elder. */
+export function wantedRoles(cfg, tier, { discreet = false, elder = false } = {}) {
   if (!tier) return new Set();
   const roles = cfg.tiers.filter((t) => t.rank <= tier.rank).map((t) => t.accessRoleId);
   if (!discreet) roles.push(tier.roleId);
+  if (elder) roles.push(cfg.elder?.roleId);
   return new Set(roles.filter(Boolean));
 }
 

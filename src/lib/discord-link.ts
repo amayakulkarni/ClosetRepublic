@@ -5,10 +5,13 @@ import { db } from './db';
 import { MAIL_REPLY_TO, htmlFrom, sendMail } from './mail';
 import { SITE_URL } from './site-url';
 
-// Linking a Discord account to the email used on Buy Me a Coffee, at /discord/link:
+// Linking a Discord account to the email used on Buy Me a Coffee, at /discord/link. This is the
+// two-step check every member passes:
 //  1. "Continue with Discord" (OAuth, scope identify only) proves which Discord account it is.
-//  2. The member types their Buy Me a Coffee email and receives a 6-digit code there.
-//  3. The right code proves they own the email; the link is stored and the bot is woken.
+//  2. The member types their Buy Me a Coffee email and receives a 6-digit code there; the right code
+//     proves they own the email, the link is stored and the bot is woken.
+// linked_at is when the check was first passed. It is kept when the same Discord account links again
+// and cleared by /unlink, so the Elder role (90 days of verified membership) counts from it.
 // Only the Discord ID and that email are stored. The Discord username is shown on the page
 // from the sign-in cookie and never stored.
 
@@ -132,7 +135,7 @@ export function link(discordId: string, email: string) {
     db()
       .prepare(
         `INSERT INTO discord_members (discord_id, email, linked_at, updated_at) VALUES (?, ?, ?, ?)
-         ON CONFLICT(discord_id) DO UPDATE SET email = excluded.email, linked_at = excluded.linked_at, carry_tier = NULL, carry_until = NULL, updated_at = excluded.updated_at`,
+         ON CONFLICT(discord_id) DO UPDATE SET email = excluded.email, linked_at = COALESCE(discord_members.linked_at, excluded.linked_at), carry_tier = NULL, carry_until = NULL, updated_at = excluded.updated_at`,
       )
       .run(discordId, email, at, at);
     return previous?.discord_id ?? null;

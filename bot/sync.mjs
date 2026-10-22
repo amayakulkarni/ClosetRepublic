@@ -1,7 +1,7 @@
 // Compares what each member should have with what they have in Discord, and fixes the
 // difference. Webhooks, /link, joins and the 15-minute sweep all end up here, so the same
 // rules serve new members, renewals, expiries and manual fixes.
-import { entitlement, roleDiff, wantedRoles } from './core.mjs';
+import { entitlement, isElder, roleDiff, wantedRoles } from './core.mjs';
 
 const DAY = 86_400_000;
 const date = (ms) => new Date(ms).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
@@ -35,7 +35,7 @@ export function createSync({ cfg, store, discord, env, now = () => Date.now() })
     const gm = await discord.fetchMember(id);
     let changed = { add: [], remove: [] };
     if (gm) {
-      changed = roleDiff(cfg, gm.roles, wantedRoles(cfg, ent.tier, { discreet: Boolean(member?.discreet) }));
+      changed = roleDiff(cfg, gm.roles, wantedRoles(cfg, ent.tier, { discreet: Boolean(member?.discreet), elder: isElder(cfg, member, ent, at) }));
       const why = `Closet Republic membership: ${reason}`;
       for (const r of changed.add) await discord.addRole(id, r, why);
       for (const r of changed.remove) await discord.removeRole(id, r, why);
@@ -50,6 +50,10 @@ export function createSync({ cfg, store, discord, env, now = () => Date.now() })
       const from = prevTier ? `${cfg.tiers.find((t) => t.slug === prevTier)?.name ?? prevTier}${prevState === 'grace' ? ' (grace)' : ''}` : 'Visitor';
       const to = name ? `${name}${ent.state === 'grace' ? ' (grace)' : ''}` : 'Visitor';
       log(`<@${id}>: ${from} → ${to} (${reason})`);
+    }
+    if (cfg.elder?.roleId && changed.add.includes(cfg.elder.roleId)) {
+      await tell(id, 'elder', `You have been verified for ${cfg.elder.afterDays} days, so you are now an Elder of Closet Republic. The Elder rooms are open, and you can start a private voice room from the Elder lobby.`);
+      log(`<@${id}> became an Elder.`);
     }
     if (ent.state === 'active' && (prevState === 'none' || !prevTier)) {
       await tell(id, `welcome:${tierSlug}:${new Date(at).toISOString().slice(0, 10)}`, `Welcome to the ${name} class of Closet Republic! Your lounges are open. Type /discreet on if you'd rather not show your class colour.`);

@@ -51,6 +51,16 @@ export const COMMANDS = [
       { type: 1, name: 'list', description: 'Mods: open and closed tickets' },
     ],
   },
+  {
+    name: 'room', description: 'Elders: manage your private voice room',
+    options: [
+      { type: 1, name: 'invite', description: 'Let a member see and join your room', options: [{ type: 6, name: 'member', description: 'Who', required: true }] },
+      { type: 1, name: 'remove', description: 'Take a member out of your room', options: [{ type: 6, name: 'member', description: 'Who', required: true }] },
+      { type: 1, name: 'rename', description: 'Rename your room', options: [{ type: 3, name: 'name', description: 'New name', required: true, max_length: 60 }] },
+      { type: 1, name: 'limit', description: 'Limit how many people fit (0 = no limit)', options: [{ type: 4, name: 'people', description: 'Number of people', required: true, min_value: 0, max_value: 99 }] },
+      { type: 1, name: 'close', description: 'Close your room now' },
+    ],
+  },
   { name: 'forget-me', description: 'Delete everything the Republic bot keeps about you' },
   { name: 'tiers', description: 'Founders: check which Buy Me a Coffee levels are not mapped to a class' },
 ];
