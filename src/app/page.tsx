@@ -1,15 +1,15 @@
-import Link from 'next/link';
-import { getNature } from '@/lib/nature';
-import { getGazette } from '@/lib/gazette';
-import { excerptOf, safely } from '@/lib/ghost';
-import { Art } from '@/components/Art';
-import { AuthorLink } from '@/components/AuthorLink';
-import { ClosetMark } from '@/components/Logo';
-import { FeatureImage } from '@/components/FeatureImage';
-import { Notice } from '@/components/Notice';
-import { PostCard } from '@/components/PostCard';
-import { StageWidget } from '@/components/StageWidget';
-import { SupportWidget } from '@/components/SupportWidget';
+import Link from "next/link";
+import { getNature } from "@/lib/nature";
+import { getGazette } from "@/lib/gazette";
+import { excerptOf, safely } from "@/lib/ghost";
+import { Art } from "@/components/Art";
+import { AuthorLink } from "@/components/AuthorLink";
+import { ClosetMark } from "@/components/Logo";
+import { FeatureImage } from "@/components/FeatureImage";
+import { Notice } from "@/components/Notice";
+import { PostCard } from "@/components/PostCard";
+import { StageWidget } from "@/components/StageWidget";
+import { SupportWidget } from "@/components/SupportWidget";
 
 export default async function Home() {
   const { on } = await getNature();
@@ -22,69 +22,75 @@ export default async function Home() {
       <section className="hero">
         <div className="hero__text">
           <ClosetMark size={96} />
-          <h1>
-            {on ? 'Welcome to the Closet Republic' : 'Closet Republic'}
-          </h1>
+          <h1>{on ? "Welcome to the Closet Republic" : "Closet Republic"}</h1>
           <p className="lede">
             {on
-              ? 'A sovereign nation for harmonious people who once had to hide their true selves to fit in a box. No borders, no boxes, naturally exceptional.'
-              : 'An online home for people who once had to hide who they are to avoid discrimination and being cast out.'}
+              ? "A sovereign nation for harmonious people who once had to hide their true selves to fit in a box. No borders, no boxes, naturally exceptional."
+              : "An online home for people who once had to hide who they are to avoid discrimination and being cast out."}
           </p>
-          <p className="plain-note">
-            Closet Republic is an online community, not a shop. Reading and taking part on this website is free. Memberships to the Discord server start at $1 a month, and nothing physical is sold.
-          </p>
+
           <p className="hero__actions">
             <Link className="button" href="/constitution">
               Read the constitution
             </Link>
-            <Link className="button button--ghost" href="/discord/link">
-              Join the Discord
+            <Link className="button button--ghost" href="/passport">
+              {on ? "Apply for citizenship" : "Make your passport"}
+            </Link>
+            <Link className="button button--ghost" href="/gazette#newsletter">
+              Subscribe to the newsletter
             </Link>
           </p>
         </div>
         <Art name="mechanical-love" nature={on} className="hero__art" />
       </section>
 
-      <nav aria-label="Start here" className="start-here">
-        <Link href="/constitution">Constitution</Link>
-        <Link href="/passport">Make a passport</Link>
-        <Link href="/gazette">Read the blog</Link>
-        <Link href="/gazette#newsletter">Get the newsletter</Link>
-      </nav>
-
       {problem && <Notice tone="warn">{problem}</Notice>}
 
       {latest && (
         <section aria-labelledby="featured-heading" className="featured">
           <h2 id="featured-heading" className="eyebrow">
-            {on ? 'Latest Gazette notification' : 'Featured'}
+            {on ? "Latest Gazette notification" : "Featured"}
           </h2>
           <article className="featured__card">
             <FeatureImage post={latest.shown} nature={on} />
             <div>
               <h3 className="featured__title">
-                <Link href={`/gazette/${latest.base.slug}`}>{latest.shown.title}</Link>
+                <Link href={`/gazette/${latest.base.slug}`}>
+                  {latest.shown.title}
+                </Link>
               </h3>
               {excerptOf(latest.shown) && <p>{excerptOf(latest.shown)}</p>}
               <p className="post-card__meta">
                 <AuthorLink authors={latest.base.authors} nature={on} />
               </p>
               <Link className="button" href={`/gazette/${latest.base.slug}`}>
-                Read{on ? ' the notification' : ''}
+                Read{on ? " the notification" : ""}
               </Link>
             </div>
           </article>
         </section>
       )}
 
-      {!problem && !latest && <Notice>Nothing has been featured yet. Mark a post as featured in Ghost to show it here.</Notice>}
+      {!problem && !latest && (
+        <Notice>
+          Nothing has been featured yet. Mark a post as featured in Ghost to
+          show it here.
+        </Notice>
+      )}
 
       {earlier.length > 0 && (
         <section aria-labelledby="earlier-heading" className="section">
-          <h2 id="earlier-heading">{on ? 'From the archives of the Gazette' : 'Previously featured'}</h2>
+          <h2 id="earlier-heading">
+            {on ? "From the archives of the Gazette" : "Previously featured"}
+          </h2>
           <div className="card-grid">
             {earlier.map((g) => (
-              <PostCard key={g.base.id} post={g.shown} base={g.base} nature={on} />
+              <PostCard
+                key={g.base.id}
+                post={g.shown}
+                base={g.base}
+                nature={on}
+              />
             ))}
           </div>
         </section>
@@ -92,15 +98,22 @@ export default async function Home() {
 
       <StageWidget nature={on} />
 
-      <section aria-labelledby="lifeline-heading" className="section lifeline-callout">
-        <h2 id="lifeline-heading">{on ? 'Register for the Emergency Broadcast' : 'If this site ever disappears'}</h2>
+      <section
+        aria-labelledby="lifeline-heading"
+        className="section lifeline-callout"
+      >
+        <h2 id="lifeline-heading">
+          {on
+            ? "Register for the Emergency Broadcast"
+            : "If this site ever disappears"}
+        </h2>
         <p>
           {on
-            ? 'Should the Republic be forced into exile, every registered citizen will be told where its new seat is.'
-            : 'Join the Lifeline to get an email with the new address and payment links if closetrepublic.com is taken down. Nothing else.'}
+            ? "Should the Republic be forced into exile, every registered citizen will be told where its new seat is."
+            : "Join the Lifeline to get an email with the new address and payment links if closetrepublic.com is taken down. Nothing else."}
         </p>
         <Link className="button" href="/lifeline">
-          {on ? 'Register' : 'Join the Lifeline'}
+          {on ? "Register" : "Join the Lifeline"}
         </Link>
       </section>
 

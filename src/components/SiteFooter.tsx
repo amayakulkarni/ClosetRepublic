@@ -119,7 +119,7 @@ export function SiteFooter() {
           state or registered charity. No trackers, no ads.
         </p>
         <p className="site-footer__small">
-          Swipe sideways or use the Colours switch to change modes. Add{" "}
+          Swipe sideways or use the Nature switch to change modes. Add{" "}
           <code>?nature=true</code> or <code>?nature=false</code> to any link to
           share a mode. Illustrations: Open Peeps and Transhumans by Pablo
           Stanley (CC0).
