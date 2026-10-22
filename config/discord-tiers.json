@@ -57,6 +57,183 @@
     "emergencyMembers": "1561689888225763419",
     "ticketCategory": "1562028999411109888",
     "ticketDesk": "1562029001915240558",
-    "ticketTranscripts": "1562029004146475028"
+    "ticketTranscripts": "1562029004146475028",
+    "college": "1560210962567667797",
+    "elderCategory": "1562689954986074155",
+    "elderRoomHub": "1562689969259282583"
+  },
+  "roles": {
+    "verified": "1562689768301662228",
+    "elder": "1562689766280011878"
+  },
+  "elder": {
+    "minDaysInCommunity": 90,
+    "privateRoomPrefix": "Private: ",
+    "maxPrivateRoomsPerElder": 1,
+    "_note": "Read by the bot. Promotion to Elder needs the days in the community and the second verification step.",
+    "afterDays": 90,
+    "lobbyChannelId": "1562689969259282583",
+    "roleId": "1562689766280011878",
+    "categoryId": "1562689954986074155",
+    "hubChannelId": "1562689969259282583",
+    "channels": {
+      "elder-gaming-alley": "1562689957183758407",
+      "Elder Gaming Alley": "1562689959532695663",
+      "Elder Town Hall": "1562689961797623818",
+      "Elder Campfire": "1562689964389568554",
+      "Elder Lounge": "1562689967023718471",
+      "Create a Room": "1562689969259282583"
+    }
+  },
+  "hobbies": [
+    {
+      "key": "gaming",
+      "slug": "gaming",
+      "name": "Gaming",
+      "label": "Gaming",
+      "emoji": "🎮",
+      "roleId": "1562689771388796999",
+      "categoryId": "1562689971188404326",
+      "textChannelId": "1562689973814304768",
+      "voiceChannelId": "1562689976146071644"
+    },
+    {
+      "key": "movies",
+      "slug": "movies",
+      "name": "Movies",
+      "label": "Movies",
+      "emoji": "🎬",
+      "roleId": "1562689773393674240",
+      "categoryId": "1562689978398670868",
+      "textChannelId": "1562689980579586118",
+      "voiceChannelId": "1562689983087644722"
+    },
+    {
+      "key": "books",
+      "slug": "books",
+      "name": "Books",
+      "label": "Books",
+      "emoji": "📚",
+      "roleId": "1562689775637631066",
+      "categoryId": "1562689985830723604",
+      "textChannelId": "1562689987722608663",
+      "voiceChannelId": "1562689990205378640"
+    },
+    {
+      "key": "art",
+      "slug": "art",
+      "name": "Art",
+      "label": "Art",
+      "emoji": "🎨",
+      "roleId": "1562689777570938960",
+      "categoryId": "1562689991845351487",
+      "textChannelId": "1562689994928300062",
+      "voiceChannelId": "1562690005485486141"
+    },
+    {
+      "key": "music",
+      "slug": "music",
+      "name": "Music",
+      "label": "Music",
+      "emoji": "🎵",
+      "roleId": "1562689779261378641",
+      "categoryId": "1562690007104360501",
+      "textChannelId": "1562690009658822676",
+      "voiceChannelId": "1562690011806171346"
+    },
+    {
+      "key": "voice-chat",
+      "slug": "voice-chat",
+      "name": "Voice Chat",
+      "label": "Voice Chat",
+      "emoji": "🎙️",
+      "roleId": "1562689781165457438",
+      "categoryId": "1562690013731233822",
+      "textChannelId": "1562690016176504862",
+      "voiceChannelId": "1562690020417081386"
+    },
+    {
+      "key": "nature",
+      "slug": "nature",
+      "name": "Nature",
+      "label": "Nature",
+      "emoji": "🌿",
+      "roleId": "1562689783195639822",
+      "categoryId": "1562690022354980886",
+      "textChannelId": "1562690024548343882",
+      "voiceChannelId": "1562690026976837772"
+    },
+    {
+      "key": "tech",
+      "slug": "tech",
+      "name": "Tech",
+      "label": "Tech",
+      "emoji": "💻",
+      "roleId": "1562689785036800023",
+      "categoryId": "1562690028906352692",
+      "textChannelId": "1562690031255289938",
+      "voiceChannelId": "1562690033754968144"
+    }
+  ],
+  "pickerChannelId": "1560210962567667797",
+  "voiceDisclaimer": [
+    "1562028959254708264",
+    "1560211046231187486",
+    "1560211049083568198",
+    "1560211036001538079",
+    "1560211031312310374",
+    "1560211023812894800",
+    "1560211040636239968",
+    "1560211018586521640",
+    "1562689959532695663",
+    "1562689961797623818",
+    "1562689964389568554",
+    "1562689967023718471",
+    "1562689976146071644",
+    "1562689983087644722",
+    "1562689990205378640",
+    "1562690005485486141",
+    "1562690011806171346",
+    "1562690020417081386",
+    "1562690026976837772",
+    "1562690033754968144",
+    "1562029011784171620"
+  ],
+  "voiceNotice": {
+    "categoryIds": [
+      "1560211042863288413",
+      "1562689971188404326",
+      "1562689978398670868",
+      "1562689985830723604",
+      "1562689991845351487",
+      "1562690007104360501",
+      "1562690013731233822",
+      "1562690022354980886",
+      "1562690028906352692",
+      "1560210978870792272"
+    ]
+  },
+  "ambience": {
+    "roleId": "1562358349129850890",
+    "channels": {
+      "Town Hall": "1560211046231187486",
+      "Campfire": "1560211049083568198",
+      "Hammock": "1560211036001538079",
+      "Dictator's Bedroom": "1560211031312310374",
+      "Jantar Mantar": "1560211023812894800",
+      "Cafe": "1560211040636239968",
+      "Dark Alley": "1560211018586521640",
+      "Elder Town Hall": "1562689961797623818",
+      "Elder Campfire": "1562689964389568554",
+      "Elder Lounge": "1562689967023718471"
+    },
+    "helpers": {
+      "Snitch Helper 1": "1562351967286730834",
+      "Snitch Helper 2": "1562353247740760085",
+      "Snitch Helper 3": "1562354145392988210",
+      "Snitch Helper 4": "1562354720117620766",
+      "Snitch Helper 5": "1562355199761186857",
+      "Snitch Helper 6": "1562355714226389083"
+    }
   }
 }
