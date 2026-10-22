@@ -7,7 +7,7 @@ export function SiteFooter() {
       <div className="site-footer__inner">
         <div className="site-footer__brand">
           <ClosetMark size={28} />
-          <span>Closet Republic · Naturally exceptional</span>
+          <span>Closet Republic · an online community</span>
         </div>
         <nav aria-label="Footer">
           <ul>
@@ -15,13 +15,13 @@ export function SiteFooter() {
               <Link href="/about">About</Link>
             </li>
             <li>
-              <Link href="/gazette">Gazette</Link>
+              <Link href="/gazette">Blog</Link>
             </li>
             <li>
               <Link href="/constitution">Constitution</Link>
             </li>
             <li>
-              <Link href="/funding">Funding</Link>
+              <Link href="/funding">Keep it free</Link>
             </li>
             <li>
               <Link href="/lawmakers">Lawmakers</Link>
@@ -65,7 +65,7 @@ export function SiteFooter() {
         <nav aria-label="socials">
           <ul>
             <li>
-              <a href="https://reddit.com/r/ClosetRepublic">
+              <a href="https://reddit.com/r/ClosetRepublic" aria-label="Reddit">
                 <svg
                   viewBox="0 0 24 24"
                   width="20"
@@ -77,16 +77,16 @@ export function SiteFooter() {
               </a>
             </li>
             <li>
-              <a href="https://linkedin.com/company/closet-republic">
+              <a href="https://linkedin.com/company/closet-republic" aria-label="LinkedIn">
                 <svg
                   viewBox="0 0 24 24"
                   width="20"
                   height="20"
                   fill="none"
                   stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 >
                   <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
                   <rect x="2" y="9" width="4" height="12"></rect>
@@ -95,16 +95,16 @@ export function SiteFooter() {
               </a>
             </li>
             <li>
-              <a href="https://instagram.com/closet.republic">
+              <a href="https://instagram.com/closet.republic" aria-label="Instagram">
                 <svg
                   viewBox="0 0 24 24"
                   width="20"
                   height="20"
                   fill="none"
                   stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 >
                   <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
                   <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
@@ -119,9 +119,9 @@ export function SiteFooter() {
           state or registered charity. No trackers, no ads.
         </p>
         <p className="site-footer__small">
-          Swipe sideways or use the Nature switch to change modes. Add{" "}
+          Swipe sideways or use the Colours switch at the top to turn the colours on or off. Add{" "}
           <code>?nature=true</code> or <code>?nature=false</code> to any link to
-          share a mode. Illustrations: Open Peeps and Transhumans by Pablo
+          share a choice. Illustrations: Open Peeps and Transhumans by Pablo
           Stanley (CC0).
         </p>
         <p className="site-footer__small">

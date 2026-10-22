@@ -23,34 +23,39 @@ export default async function Home() {
         <div className="hero__text">
           <ClosetMark size={96} />
           <h1>
-            {on ? 'Welcome to the Closet Republic' : 'Closet Republic'}
+            Closet Republic
           </h1>
           <p className="lede">
-            {on
-              ? 'A sovereign nation for harmonious people who once had to hide their true selves to fit in a box. No borders, no boxes, naturally exceptional.'
-              : 'An online home for people who once had to hide who they are to avoid discrimination and being cast out.'}
+            An online home for people who once had to hide who they are to avoid discrimination and being cast out.
+          </p>
+          <p className="plain-note">
+            Closet Republic is an online community, not a shop. Reading and taking part on this website is free. Memberships to the Discord server start at $1 a month, and nothing physical is sold.
           </p>
           <p className="hero__actions">
-            <Link className="button" href="/passport">
-              {on ? 'Apply for citizenship' : 'Make your passport'}
-            </Link>
-            <Link className="button button--ghost" href="/constitution">
+            <Link className="button" href="/constitution">
               Read the constitution
             </Link>
-            <Link className="button button--ghost" href="/gazette#newsletter">
-              Subscribe to the newsletter
+            <Link className="button button--ghost" href="/discord/link">
+              Join the Discord
             </Link>
           </p>
         </div>
         <Art name="mechanical-love" nature={on} className="hero__art" />
       </section>
 
+      <nav aria-label="Start here" className="start-here">
+        <Link href="/constitution">Constitution</Link>
+        <Link href="/passport">Make a passport</Link>
+        <Link href="/gazette">Read the blog</Link>
+        <Link href="/gazette#newsletter">Get the newsletter</Link>
+      </nav>
+
       {problem && <Notice tone="warn">{problem}</Notice>}
 
       {latest && (
         <section aria-labelledby="featured-heading" className="featured">
           <h2 id="featured-heading" className="eyebrow">
-            {on ? 'Latest Gazette notification' : 'Featured'}
+            Featured
           </h2>
           <article className="featured__card">
             <FeatureImage post={latest.shown} nature={on} />
@@ -63,7 +68,7 @@ export default async function Home() {
                 <AuthorLink authors={latest.base.authors} nature={on} />
               </p>
               <Link className="button" href={`/gazette/${latest.base.slug}`}>
-                Read{on ? ' the notification' : ''}
+                Read
               </Link>
             </div>
           </article>
@@ -74,7 +79,7 @@ export default async function Home() {
 
       {earlier.length > 0 && (
         <section aria-labelledby="earlier-heading" className="section">
-          <h2 id="earlier-heading">{on ? 'From the archives of the Gazette' : 'Previously featured'}</h2>
+          <h2 id="earlier-heading">Previously featured</h2>
           <div className="card-grid">
             {earlier.map((g) => (
               <PostCard key={g.base.id} post={g.shown} base={g.base} nature={on} />
@@ -86,14 +91,12 @@ export default async function Home() {
       <StageWidget nature={on} />
 
       <section aria-labelledby="lifeline-heading" className="section lifeline-callout">
-        <h2 id="lifeline-heading">{on ? 'Register for the Emergency Broadcast' : 'If this site ever disappears'}</h2>
+        <h2 id="lifeline-heading">If this site ever disappears</h2>
         <p>
-          {on
-            ? 'Should the Republic be forced into exile, every registered citizen will be told where its new seat is.'
-            : 'Join the Lifeline and we will email you the new address, GitHub and donation links if closetrepublic.com is taken down. Nothing else.'}
+          Join the Lifeline to get an email with the new address and payment links if closetrepublic.com is taken down. Nothing else.
         </p>
         <Link className="button" href="/lifeline">
-          {on ? 'Register' : 'Join the Lifeline'}
+          Join the Lifeline
         </Link>
       </section>
 

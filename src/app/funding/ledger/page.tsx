@@ -36,9 +36,9 @@ export default async function LedgerPage() {
       <header className="page-head">
         <div>
           <p className="eyebrow">
-            <Link href="/funding">{on ? 'Ministry of Finance' : 'Funding'}</Link>
+            <Link href="/funding">Funding</Link>
           </p>
-          <h1>{on ? 'The Republic’s receipts' : 'Public expense ledger'}</h1>
+          <h1>Public expense ledger</h1>
           <p className="lede">
             Every expense paid out of the Closet Republic treasury, newest first. Donors are never named here, and money received is shown only as
             the totals on the funding page.
@@ -73,7 +73,7 @@ export default async function LedgerPage() {
                       <tr key={e.id}>
                         <td>{new Date(e.createdAt).toLocaleDateString('en-GB', { dateStyle: 'medium', timeZone: TIMEZONE })}</td>
                         <td>
-                          {on ? FUND_LABEL[e.fund].nature : FUND_LABEL[e.fund].plain}
+                          {FUND_LABEL[e.fund].plain}
                           {e.pot && <span className="hint"> ({POT_LABEL[e.pot]})</span>}
                         </td>
                         <td>

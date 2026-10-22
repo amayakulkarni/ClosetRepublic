@@ -22,7 +22,7 @@ export function ContributeTabs() {
         {TABS.map((t) => (
           <li key={t.href}>
             <Link href={t.href} aria-current={pathname === t.href ? 'page' : undefined}>
-              {on ? t.nature : t.plain}
+              {t.plain}
             </Link>
           </li>
         ))}

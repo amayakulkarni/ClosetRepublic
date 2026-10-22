@@ -15,7 +15,7 @@ Closet Republic exists for people who have had to hide who they are. Being linke
 - **Data minimisation.** We collect only what a feature needs to work, and most of the Site needs nothing at all.
 - **Pseudonyms welcome.** You never need to give your legal name. Any name, and an email address you control, is enough.
 - **Your passport stays on your device.** The passport generator runs entirely in your browser. We never receive what you type into it.
-- **No card or bank details.** Donations are handled by the payment provider you choose. We only learn what they tell us, listed below.
+- **No card or bank details.** Payments are handled by the payment provider you choose. We only learn what they tell us, listed below.
 - **We never sell or share your data** for advertising, and never give it to anyone except the service providers listed here or when the law forces us to.
 - **You're in control.** You can see, correct or delete your data at any time by emailing {{EMAIL}}.
 
@@ -55,7 +55,7 @@ Everything you put into the passport form, including any photo, is turned into a
 
 | What | Why | How long |
 | --- | --- | --- |
-| Your email address, an optional name, whether you are subscribed, the date you joined, and a random unsubscribe code | To email you if the Site is taken down or moves, with the new address, the code repository and donation links, plus one welcome email | Until you unsubscribe. Your details are permanently deleted 30 days after you unsubscribe (the delay lets you undo a mistaken click) |
+| Your email address, an optional name, whether you are subscribed, the date you joined, and a random unsubscribe code | To email you if the Site is taken down or moves, with the new address, the code repository and payment links, plus one welcome email | Until you unsubscribe. Your details are permanently deleted 30 days after you unsubscribe (the delay lets you undo a mistaken click) |
 
 Because the Lifeline exists for when our server is unavailable, the founders keep an **encrypted copy of the subscriber list off the server**. It contains the same details, is refreshed regularly, and anyone who has unsubscribed is removed from it at the next refresh.
 
@@ -104,13 +104,13 @@ When your Discord account has been verified (signed in with Discord and confirme
 
 We send emails through an email delivery service. We keep a short log of each email (recipient, subject, date, and whether it was delivered) so we can tell if messages are failing. The log is deleted after 12 months. If an email fails, the recipient's address may also appear in our server's error log, which follows the 14-day limit above.
 
-### Donations and sponsorships
+### Payments and sponsorships
 
 We never receive or store card numbers, bank details or billing addresses. The provider you choose handles your payment under its own privacy policy and shares a few details with us:
 
 | Provider | What it tells us | What we keep |
 | --- | --- | --- |
-| Buy Me a Coffee | The name you entered, the amount, currency and a transaction ID. For one-off donations it may also send your email address, which we discard. For memberships, see "Discord membership roles" above | Name (as you entered it), amount, currency, date and transaction ID in our treasury ledger |
+| Buy Me a Coffee | The name you entered, the amount, currency and a transaction ID. For one-off payments it may also send your email address, which we discard. For memberships, see "Discord membership roles" above | Name (as you entered it), amount, currency, date and transaction ID in our treasury ledger |
 | GitHub Sponsors | Your GitHub username, your tier and amount, whether your sponsorship is public or private, and when it started or ended | The same. Public sponsors are thanked by username on the funding page; private sponsors are recorded as "Private sponsor" and never named |
 | Crypto (BTCPay Server, run by us) | The invoice, the amount and, on a public blockchain, the transaction. We never ask for or receive your name or email, and we see no wallet identity beyond what the blockchain shows | Amount, currency and date in our treasury ledger, with no name. BTCPay keeps the invoice, which is archived monthly |
 | UPI | Whatever your bank shows on our bank statement, usually your name or UPI ID | Only the amount and date are entered in the ledger, unless you ask to be thanked by name |
@@ -136,7 +136,7 @@ Being on our Lifeline, newsletter or contributor list, or linking a Closet Repub
 - **Consent:** the Lifeline, the newsletter, contributor sign-ups and Discord linking, including the sensitive information described above.
 - **Contract:** keeping track of your Buy Me a Coffee membership so you get the Discord class it pays for.
 - **Legitimate interests:** keeping the Site secure (server logs, rate limiting), verifying contributors' work, and keeping a record of emails sent. We have balanced these against your interests and kept them to the minimum.
-- **Legal obligation:** keeping accounting records of donations.
+- **Legal obligation:** keeping accounting records of payments.
 
 You can withdraw consent at any time. This doesn't affect anything we did lawfully before you withdrew it.
 

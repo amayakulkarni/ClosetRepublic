@@ -6,7 +6,7 @@ import { CONTRIBUTIONS_EMAIL, MAIL_REPLY_TO, htmlFrom, sendMail } from './mail';
 import { SITE_URL } from './site-url';
 
 // The Lifeline: an email list kept for one job. If closetrepublic.com is ever taken down,
-// everyone on it gets the new address, the GitHub repository and the donation link.
+// everyone on it gets the new address, the GitHub repository and the payment link.
 // Because the server may be gone by then, the admin page makes it easy to download the
 // list and keep a copy somewhere else.
 
@@ -104,7 +104,7 @@ export function sendWelcome(s: Subscriber) {
 
 You are on the Closet Republic Lifeline.
 
-We will only use this address for one thing: if closetrepublic.com is ever taken down, we will email you where to find us, with the new address, the GitHub repository and the donation link.
+We will only use this address for one thing: if closetrepublic.com is ever taken down, we will email you where to find us, with the new address, the GitHub repository and the payment link.
 
 Tip: add this address to your contacts so that email does not end up in spam.
 
@@ -122,7 +122,7 @@ export function noticeText(n: Notice, s: Pick<Subscriber, 'name' | 'token'>) {
   const links = [
     n.siteUrl && `- New site: ${n.siteUrl}`,
     n.githubUrl && `- GitHub: ${n.githubUrl}`,
-    n.donateUrl && `- Donate: ${n.donateUrl}`,
+    n.donateUrl && `- Pay to keep it free: ${n.donateUrl}`,
     ...(n.resources || '')
       .split('\n')
       .map((l) => l.trim())

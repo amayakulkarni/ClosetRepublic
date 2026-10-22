@@ -21,7 +21,7 @@ Get the Content API key in Ghost Admin → Settings → Integrations → Add cus
 | `GHOST_CONTENT_API_KEY` | Ghost Content API key (required) |
 | `NEXT_PUBLIC_DONATE_URL`, `NEXT_PUBLIC_DONATE_LABEL` | The Buy Me a Coffee page and the button text (default "Buy me a compute") |
 | `NEXT_PUBLIC_UPI_ID`, `NEXT_PUBLIC_UPI_NAME` | Optional UPI ID: adds a "Pay by UPI" button that opens the visitor's UPI app |
-| `BMC_WEBHOOK_SECRET` | Secret of the Buy Me a Coffee webhook (required for tracking donations) |
+| `BMC_WEBHOOK_SECRET` | Secret of the Buy Me a Coffee webhook (required for tracking payments) |
 | `BMC_EXCHANGE_RATES` | Converts Buy Me a Coffee payments into `FUNDING_CURRENCY`, e.g. `USD=84,EUR=91` |
 | `BMC_ACCEPT_TEST_EVENTS` | `true` to record Buy Me a Coffee test events while setting up |
 | `NEXT_PUBLIC_GITHUB_SPONSORS_URL` | The GitHub Sponsors page, e.g. `https://github.com/sponsors/amayakulkarni`; shows a "Sponsor on GitHub" button on `/funding` and `/development` |
@@ -63,7 +63,7 @@ Nature editions are separate Ghost posts or pages whose slug is the original slu
 | `/constitution` | Post/page `constitution` as the introduction; lists sections 1…N where N is the number in `constitution-details` |
 | `/constitution/1`, `/constitution/1/2` | `constitution-1`, `constitution-1-2`; sub-sections counted by `constitution-1-details` |
 | `/constitution/details`, `/constitution/1/details` | `constitution-details`, `constitution-1-details` (the first number in the text is the section count) |
-| `/funding` | Budget text from the page/post `finance` (nature: `finance-nature`), donate and UPI buttons, this month's budget and the legal fund (from the treasury), every Ghost author as seeking funding |
+| `/funding` | Budget text from the page/post `finance` (nature: `finance-nature`), pay and UPI buttons, this month's budget and the legal fund (from the treasury), every Ghost author as seeking funding |
 | `/lawmakers`, `/lawmakers/<author-slug>` | Ghost authors: name, photo, bio, location, website and social links, and their posts |
 | `/passport` | Passport generator (no Ghost content) |
 | `/timeline` | Goals and a dated timeline (past and upcoming), managed on `/admin`; not from Ghost |
@@ -119,7 +119,7 @@ Money is tracked in a SQLite ledger (`src/lib/funds.ts`). Every change is an ent
 - **Legal fund:** a running balance that never resets.
 - **Welfare fund:** a running balance shared between two pots: developers, artists, writers and interns (80%) and need-based help for queer people (20%). Money received is split by that percentage (change it on `/admin`); for each payout, record a deduction and pick the pot it came from. `/funding` shows both pots.
 - **Infrastructure fund:** a running balance for computers, tablets, accessories, servers and other equipment.
-- **Buy Me a Coffee:** each payment (donation, membership, extra) adds to the fund chosen on `/admin` (monthly budget by default); refunds take it back out. Retries are ignored. Payments in other currencies are converted with `EXCHANGE_RATES`.
+- **Buy Me a Coffee:** each payment (payment, membership, extra) adds to the fund chosen on `/admin` (monthly budget by default); refunds take it back out. Retries are ignored. Payments in other currencies are converted with `EXCHANGE_RATES`.
 - **GitHub Sponsors:** a new sponsorship adds its first payment (in USD, converted with `EXCHANGE_RATES`) to the same fund. Monthly sponsors get one entry per month while they stay active, added the first time the treasury is read in a new month. Tier changes apply from the next month. Because GitHub doesn't send renewal events, a sponsor who cancels may get one extra month recorded if the cancellation arrives late; delete that entry on `/admin`. Private sponsors appear as "Private sponsor"; public ones are thanked by name on `/funding`. `.github/FUNDING.yml` adds the Sponsor button on the repository.
 
 ### Admin page
@@ -137,7 +137,7 @@ A self-hosted BTCPay Server (`deploy/btcpay`) takes Monero, Bitcoin and Lightnin
 - **Order:** a signed-in Discord member picks a class and 1, 3 or 12 months. `POST /api/crypto/order` stores a `crypto_orders` row (random token, Discord ID, class, months) and creates a 30-minute BTCPay invoice that carries only the token. No name or email is collected.
 - **Webhook:** `/api/webhooks/btcpay` checks the `BTCPay-Sig` HMAC, then re-reads the invoice from BTCPay. A settled invoice adds a `discord_grants` row (`granted_by = 'crypto'`, extending the current crypto grant for the same class), a treasury entry (source `crypto`, USD converted with `EXCHANGE_RATES`), deletes the order and wakes the bot. Each invoice grants once (`crypto_payments`).
 - **BTCPay setup:** Store > Settings > Webhooks > Create. Payload URL `https://closetrepublic.com/api/webhooks/btcpay`, events "An invoice has been settled" and "A payment has been settled", and the secret in `BTCPAY_WEBHOOK_SECRET`. Create an API key (Account > Manage account > API keys) limited to the store with "Can create invoice" and "Can view invoices".
-- **Free-amount donations:** the "Donate with crypto" section on `/funding` (and the Bitcoin button of the support widget) posts a USD amount ($1 to $10,000) to `POST /api/crypto/donate`, which creates a BTCPay invoice marked `kind: donation` with no donor details and no sign-in. When BTCPay reports it settled, the same webhook re-reads the invoice and adds one treasury entry (source `crypto`, note "Crypto donation", fund chosen on `/admin`, USD converted with `EXCHANGE_RATES`). Each invoice counts once.
+- **Free-amount payments:** the "Pay with crypto" section on `/funding` (and the Bitcoin button of the support widget) posts a USD amount ($1 to $10,000) to `POST /api/crypto/donate`, which creates a BTCPay invoice marked `kind: donation` with no donor details and no sign-in. When BTCPay reports it settled, the same webhook re-reads the invoice and adds one treasury entry (source `crypto`, note "Crypto donation", fund chosen on `/admin`, USD converted with `EXCHANGE_RATES`). Each invoice counts once.
 - **Not granted automatically:** underpaid, late (expired) and unmatched payments. They are logged (`[btcpay] settled invoice without a matching order`) and refunded by hand.
 - Prices are fixed in `src/lib/btcpay.ts` (`CRYPTO_TIERS`).
 
@@ -179,12 +179,12 @@ The Privacy Policy promises some retention periods, which the site enforces itse
 
 ### Lifeline
 
-The Lifeline is an email list kept for one job: if closetrepublic.com is taken down, everyone on it gets the new address, the GitHub repository and the donation link. People join on `/lifeline` (also linked from the home page and footer), get one welcome email, and every email has an unsubscribe link plus "reply unsubscribe".
+The Lifeline is an email list kept for one job: if closetrepublic.com is taken down, everyone on it gets the new address, the GitHub repository and the payment link. People join on `/lifeline` (also linked from the home page and footer), get one welcome email, and every email has an unsubscribe link plus "reply unsubscribe".
 
 The **Lifeline** tab on `/admin`:
 
 - **Download CSV** (subscribed people; or include those who left). **Keep a copy off the server**: if the site is taken down the server and its database may go too. The tab shows the date of the last download and nags after 30 days. Any mail tool can import the CSV; or use **Copy addresses for BCC** and paste them into BCC (never To or CC).
-- **Send an emergency notice**: subject, message, new site address, GitHub, donation link and other resources. **Send a test email** goes to `CONTRIBUTIONS_EMAIL`; the real send emails each subscriber one at a time with their own unsubscribe link, and shows progress.
+- **Send an emergency notice**: subject, message, new site address, GitHub, payment link and other resources. **Send a test email** goes to `CONTRIBUTIONS_EMAIL`; the real send emails each subscriber one at a time with their own unsubscribe link, and shows progress.
 
 ### Contributors
 

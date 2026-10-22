@@ -4,7 +4,7 @@ import { useId, useState } from 'react';
 
 const PRESETS = [5, 10, 25, 50];
 
-/** Free-amount crypto donation: pick or type a USD amount, then continue to the BTCPay checkout. */
+/** Free-amount crypto payment: pick or type a USD amount, then continue to the BTCPay checkout. */
 export function CryptoDonate({ min, max }: { min: number; max: number }) {
   const id = useId();
   const [amount, setAmount] = useState('10');
@@ -46,7 +46,7 @@ export function CryptoDonate({ min, max }: { min: number; max: number }) {
         <input id={`${id}-amount`} type="number" inputMode="decimal" min={min} max={max} step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} required />
       </div>
       <p className="hint">
-        Pay in Monero, Bitcoin or Lightning on the next page. No name, email or account is asked for, and the donation goes into the treasury with no donor details.
+        Pay in Monero, Bitcoin or Lightning on the next page. No name, email or account is asked for, and the payment goes into the treasury with no payer details.
       </p>
       {error && (
         <p className="form-error" role="alert">
@@ -54,7 +54,7 @@ export function CryptoDonate({ min, max }: { min: number; max: number }) {
         </p>
       )}
       <button className="button" disabled={busy}>
-        {busy ? 'Opening checkout…' : valid ? `Donate $${value} with crypto` : 'Donate with crypto'}
+        {busy ? 'Opening checkout…' : valid ? `Pay $${value} with crypto` : 'Pay with crypto'}
       </button>
     </form>
   );

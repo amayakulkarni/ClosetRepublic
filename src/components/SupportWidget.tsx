@@ -5,10 +5,10 @@ export function SupportWidget({ showThanks = false }: { showThanks?: boolean }) 
   const crypto = cryptoUrl();
   return (
     <section className="support-widget" aria-labelledby="support-title">
-      <h2 id="support-title">Help us keep going</h2>
+      <h2 id="support-title">Pay to keep Closet Republic free</h2>
       {showThanks && <p>Writers are thrilled to know that you have reached the end of their article.</p>}
       <p>{COMMUNITY_APPEAL}</p>
-      <p>Please donate using Buy Me a Coffee, Bitcoin or UPI.</p>
+      <p>Pay what you like with Buy Me a Coffee, crypto or UPI. Nothing is sold, and it is not a donation. See where it goes.</p>
       <p className="support-widget__actions">
         {DONATE_URL && (
           <a className="button" href={DONATE_URL} target="_blank" rel="noopener noreferrer">
@@ -27,7 +27,7 @@ export function SupportWidget({ showThanks = false }: { showThanks?: boolean }) 
           </a>
         )}
         <a className="button button--ghost" href="/funding">
-          All ways to donate
+          All ways to pay
         </a>
       </p>
     </section>

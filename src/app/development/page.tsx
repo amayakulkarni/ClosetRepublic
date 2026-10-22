@@ -33,11 +33,11 @@ export default async function DevelopmentPage() {
   return (
     <>
       <section aria-labelledby="ways-heading" className="section">
-        <h2 id="ways-heading">{on ? 'How citizens build the Republic' : 'Ways to contribute'}</h2>
+        <h2 id="ways-heading">Ways to contribute</h2>
         <ul className="contribute-grid">
           {WAYS.map((w) => (
             <li key={w.href + w.plain} className="contribute-card">
-              <h3>{on ? w.nature : w.plain}</h3>
+              <h3>{w.plain}</h3>
               <p>{w.text}</p>
               <a href={w.href} target="_blank" rel="noopener noreferrer">
                 {w.link}
@@ -53,10 +53,10 @@ export default async function DevelopmentPage() {
       </section>
 
       <section aria-labelledby="repos-heading" className="section">
-        <h2 id="repos-heading">{on ? 'Public works registry' : 'Repositories'}</h2>
+        <h2 id="repos-heading">Repositories</h2>
         <ul className="contribute-grid contribute-grid--wide">
           <li className="contribute-card">
-            <h3>{on ? 'The Republic' : 'Website'}</h3>
+            <h3>Website</h3>
             <p>This site: the Gazette, constitution, passport, treasury, Lifeline and the Discord membership bot.</p>
             <a href={REPO} target="_blank" rel="noopener noreferrer">
               amayakulkarni/ClosetRepublic
@@ -64,7 +64,7 @@ export default async function DevelopmentPage() {
             </a>
           </li>
           <li className="contribute-card">
-            <h3>{on ? 'The Stage' : 'Stage forum'}</h3>
+            <h3>Stage forum</h3>
             <p>
               The community forum at <a href={STAGE_URL} target="_blank" rel="noopener noreferrer">{STAGE_URL.replace(/^https?:\/\//, '')}<span className="sr-only"> (opens in a new tab)</span></a>: NodeBB setup, theme, plugins and the Reddit and membership bridge.
             </p>
@@ -77,7 +77,7 @@ export default async function DevelopmentPage() {
       </section>
 
       <section aria-labelledby="setup-heading" className="section">
-        <h2 id="setup-heading">{on ? 'Raising your own Republic' : 'Run it locally'}</h2>
+        <h2 id="setup-heading">Run it locally</h2>
         <p>The site is a Next.js app with Ghost as its content backend. You need Node 20.9 or newer.</p>
         <pre className="code-block">
           <code>{`git clone ${REPO}.git
@@ -92,7 +92,7 @@ npm run dev   # http://localhost:40001`}</code>
       </section>
 
       <section aria-labelledby="rules-heading" className="section">
-        <h2 id="rules-heading">{on ? 'Building codes' : 'A few house rules'}</h2>
+        <h2 id="rules-heading">A few house rules</h2>
         <ul className="plain-list">
           <li>The site is dark only, and nature mode is on by default. Check your change in both modes.</li>
           <li>Every image needs alt text, including a description of any visual effect it has.</li>

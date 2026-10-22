@@ -15,18 +15,16 @@ export default async function LifelinePage() {
     <>
       <header className="page-head">
         <div>
-          <h1>{on ? 'Emergency Broadcast System' : 'Lifeline'}</h1>
+          <h1>Lifeline</h1>
           <p className="lede">
-            {on
-              ? 'Should the Republic ever be forced into exile, the government will broadcast its new seat to every registered citizen. Register your address below.'
-              : 'Sites like this one can be taken down. Leave your email and, if that ever happens, we will tell you where to find us.'}
+            Sites like this one can be taken down. Leave your email and, if that ever happens, we will tell you where to find us.
           </p>
         </div>
         <Art name="reflecting" nature={on} className="page-head__art" />
       </header>
 
       <section aria-labelledby="what-heading" className="section">
-        <h2 id="what-heading">{on ? 'What the broadcast contains' : 'What you will get'}</h2>
+        <h2 id="what-heading">What you will get</h2>
         <ul className="plain-list">
           <li>The address of the new site.</li>
           <li>
@@ -36,7 +34,7 @@ export default async function LifelinePage() {
             </a>
             .
           </li>
-          <li>The donation link and any other resources we need to share.</li>
+          <li>The payment link and any other resources we need to share.</li>
         </ul>
         <p>
           That is all. One welcome email now, and nothing else unless the site goes down. No newsletters, and your address is never shared. Every email
@@ -45,7 +43,7 @@ export default async function LifelinePage() {
       </section>
 
       <section aria-labelledby="join-heading" className="section">
-        <h2 id="join-heading">{on ? 'Register for the broadcast' : 'Join the Lifeline'}</h2>
+        <h2 id="join-heading">Join the Lifeline</h2>
         <LifelineForm />
       </section>
     </>

@@ -8,7 +8,8 @@
   --faint: #2a2a2e;
   --panel: #0d0d0f;
   --radius: 14px;
-  --stroke: 3px;
+  --stroke: 2px;
+  --line: rgba(255, 255, 255, 0.2);
   --max: 1120px;
   --gutter: clamp(16px, 4vw, 40px);
   --font: ui-rounded, 'SF Pro Rounded', 'Nunito', 'Varela Round', 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -153,7 +154,7 @@ code {
   top: 0;
   z-index: 100;
   background: var(--bg);
-  border-bottom: var(--stroke) solid var(--fg);
+  border-bottom: 1px solid var(--line);
 }
 .site-header__inner {
   /* Wider than the page so all seven nav items fit beside the brand and the Nature switch. */
@@ -243,47 +244,14 @@ code {
   box-shadow: 0 0 0 2px var(--fg);
 }
 
-@media (max-width: 1279px) {
-  .site-header__inner {
-    flex-wrap: wrap;
-    gap: 10px 14px;
-  }
-  .nav-button {
-    display: inline-block;
-    order: 2;
-    background: none;
-    color: var(--fg);
-    border: var(--stroke) solid var(--fg);
-    border-radius: 999px;
-    padding: 6px 14px;
-    font: inherit;
-    font-weight: 700;
-  }
-  .nature-toggle {
-    order: 1;
-  }
-  .site-nav {
-    order: 3;
-    flex-basis: 100%;
-    display: none;
-  }
-  .site-nav[data-open='true'] {
-    display: block;
-  }
-  .site-nav ul {
-    flex-direction: column;
-    padding-bottom: 8px;
-  }
-}
-
-/* Stage (community forum) icon link in the header */
+/* Stage (community forum) and wiki icon links in the header */
 .stage-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 40px;
   height: 40px;
-  border: var(--stroke) solid var(--fg);
+  border: 2px solid var(--line);
   border-radius: 999px;
   color: var(--fg);
   flex: none;
@@ -291,9 +259,150 @@ code {
 .stage-link:hover {
   background: var(--faint);
 }
+
+.nature-wrap {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+}
+.nature-toggle__label {
+  font-size: 0.95rem;
+}
+/* A soft pulse invites a first tap; it stops once the hint is gone. */
+.nature-toggle[data-hint='true'] .nature-toggle__track {
+  animation: nature-nudge 1.6s ease-in-out infinite;
+}
+@keyframes nature-nudge {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(255, 255, 255, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nature-toggle[data-hint='true'] .nature-toggle__track {
+    animation: none;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.45);
+  }
+}
+.nature-hint {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 120;
+  width: max-content;
+  max-width: 220px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--fg);
+  color: var(--bg);
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.3;
+  pointer-events: none;
+}
+.nature-hint::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  right: 22px;
+  border: 6px solid transparent;
+  border-top: 0;
+  border-bottom-color: var(--fg);
+}
+
+/* Smaller screens: everything stays on ONE row; the menu opens as a panel under the bar. */
 @media (max-width: 1279px) {
+  .site-header__inner {
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+  .brand {
+    gap: 8px;
+    font-size: 0.9rem;
+    min-width: 0;
+  }
+  .brand .closet-mark {
+    width: 34px;
+    height: 34px;
+  }
+  .nav-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    order: 5;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: none;
+    color: var(--fg);
+    border: 2px solid var(--line);
+    border-radius: 999px;
+  }
   .stage-link {
-    order: 1;
+    order: 2;
+    width: 36px;
+    height: 36px;
+  }
+  .stage-link svg {
+    width: 19px;
+    height: 19px;
+  }
+  .nature-wrap {
+    order: 3;
+  }
+  .nature-toggle {
+    flex-direction: column;
+    gap: 1px;
+    padding: 2px;
+  }
+  .nature-toggle__track {
+    width: 40px;
+    height: 22px;
+  }
+  .nature-toggle__thumb {
+    width: 14px;
+    height: 14px;
+  }
+  .nature-toggle[aria-checked='true'] .nature-toggle__thumb {
+    transform: translateX(18px);
+  }
+  .nature-toggle__label {
+    font-size: 0.62rem;
+    line-height: 1;
+    letter-spacing: 0.02em;
+  }
+  .site-nav {
+    order: 6;
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+    padding: 6px var(--gutter) 14px;
+  }
+  .site-nav[data-open='true'] {
+    display: block;
+  }
+  .site-nav ul {
+    flex-direction: column;
+    gap: 2px;
+  }
+  .site-nav a {
+    padding: 11px 12px;
+    border-radius: 12px;
+  }
+}
+@media (max-width: 359px) {
+  .brand__name {
+    display: none;
   }
 }
 
@@ -1662,4 +1771,101 @@ html[data-nature='on'] .closet-mark {
   text-align: center;
   border-style: dashed;
   opacity: 0.8;
+}
+
+/* Logo-only social links (lawmakers) */
+.social-links {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+}
+.social-links a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--faint);
+  color: var(--fg);
+  text-decoration: none;
+}
+.social-links a:hover {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+/* ---------- calmer look: fewer heavy outlines, more air ---------- */
+/* Panels use a thin soft line instead of a thick white box; buttons, inputs and focus rings stay strong. */
+.author-card,
+.featured__card,
+.section-list a,
+.stat,
+.meter,
+.link-list a,
+.contribute-card,
+.fund-widget,
+.goal-card,
+.stage-widget,
+.lifeline-backup,
+.discord-link__card,
+.newsletter,
+.support-widget,
+.newsletter-preview,
+.passport-form fieldset,
+.passport-ready {
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+.community-note,
+.lifeline-callout {
+  border: 1px dashed var(--line);
+}
+.site-footer {
+  border-top: 1px solid var(--line);
+}
+.section {
+  margin-top: clamp(36px, 6vw, 64px);
+}
+.card-grid {
+  gap: 20px;
+}
+.button {
+  border-width: 2px;
+}
+/* The Start-here row on the home page */
+.start-here {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin: 28px 0 0;
+  padding: 0;
+}
+.start-here a {
+  display: block;
+  height: 100%;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  text-decoration: none;
+}
+.start-here a:hover {
+  background: var(--faint);
+}
+.start-here strong {
+  display: block;
+  font-size: 1.05rem;
+}
+.start-here span {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+.plain-note {
+  max-width: 62ch;
+  color: var(--muted);
 }

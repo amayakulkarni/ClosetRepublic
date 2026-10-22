@@ -10,6 +10,11 @@ export const STAGE_URL = (
 export const STAGE_REPO_URL =
   "https://github.com/amayakulkarni/BenchAtClosetRepublic";
 
+// The wiki (Wiki.js) is linked from the top bar next to the Stage forum.
+export const WIKI_URL = (
+  process.env.NEXT_PUBLIC_WIKI_URL || "https://wiki.closetrepublic.com"
+).replace(/\/$/, "");
+
 export type CommunityLink = { name: string; url: string | null; hint: string };
 
 export function communityLinks(): CommunityLink[] {

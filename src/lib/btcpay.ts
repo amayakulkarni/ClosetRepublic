@@ -93,7 +93,7 @@ export async function createCryptoDonation(amountUsd: number) {
     body: JSON.stringify({
       amount: (Math.round(amountUsd * 100) / 100).toFixed(2),
       currency: 'USD',
-      metadata: { kind: 'donation', itemDesc: 'Donation to Closet Republic' },
+      metadata: { kind: 'donation', itemDesc: 'Pay to keep Closet Republic free' },
       checkout: { redirectURL: `${SITE_URL}/funding?thanks=crypto`, redirectAutomatically: false, expirationMinutes: 30 },
     }),
   });
@@ -168,7 +168,7 @@ function recordDonation(invoice: Invoice): Fulfilment {
       externalId: `btcpay:${invoice.id}`,
       originalAmount: amount,
       originalCurrency: invoice.currency,
-      note: rate === null ? `not converted: add ${invoice.currency} to EXCHANGE_RATES (funding currency ${CURRENCY})` : 'Crypto donation',
+      note: rate === null ? `not converted: add ${invoice.currency} to EXCHANGE_RATES (funding currency ${CURRENCY})` : 'Crypto payment',
     });
     return { result: 'donated' };
   })();

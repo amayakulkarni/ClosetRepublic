@@ -3,25 +3,24 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { STAGE_URL } from '@/lib/community';
+import { STAGE_URL, WIKI_URL } from '@/lib/community';
 import { ClosetMark } from './Logo';
 import { StageIcon } from './StageIcon';
+import { WikiIcon } from './WikiIcon';
 import { NatureToggle } from './NatureToggle';
-import { useNature } from './NatureProvider';
 
-// Nature mode names things like a government; monochrome mode uses plain words.
+// Short, plain words in both modes. The long name shows as a tooltip.
 const NAV = [
-  { href: '/gazette', nature: 'Gazette', plain: 'Blog', full: 'Gazette of Closet Republic' },
-  { href: '/constitution', nature: 'Constitution', plain: 'Constitution', full: 'Constitution of CR' },
-  { href: '/funding', nature: 'Ministry of Finance', plain: 'Funding', full: 'Ministry of Finance' },
-  { href: '/lawmakers', nature: 'Lawmakers', plain: 'Writers', full: 'Members of GCR' },
-  { href: '/timeline', nature: 'Five-Year Plan', plain: 'Timeline', full: 'Timeline and goals' },
-  { href: '/passport', nature: 'Passport', plain: 'Passport', full: 'Passport of CR' },
-  { href: '/development', nature: 'Public Works', plain: 'Contribute', full: 'Development and contributing' },
+  { href: '/constitution', label: 'Constitution', full: 'The Closet Republic constitution' },
+  { href: '/gazette', label: 'Blog', full: 'Stories and news from Closet Republic' },
+  { href: '/funding', label: 'Keep it free', full: 'Pay to keep Closet Republic free' },
+  { href: '/lawmakers', label: 'Writers', full: 'The people who write for Closet Republic' },
+  { href: '/timeline', label: 'Plans', full: 'Goals and timeline' },
+  { href: '/passport', label: 'Passport', full: 'Make a keepsake passport' },
+  { href: '/development', label: 'Join in', full: 'Ways to contribute' },
 ];
 
 export function SiteHeader() {
-  const { on } = useNature();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [pathname]);
@@ -45,9 +44,12 @@ export function SiteHeader() {
           className="nav-button"
           aria-expanded={open}
           aria-controls="site-nav"
+          aria-label="Menu"
           onClick={() => setOpen((o) => !o)}
         >
-          Menu
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true" focusable="false">
+            {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
+          </svg>
         </button>
         <nav id="site-nav" aria-label="Main" className="site-nav" data-open={open}>
           <ul>
@@ -56,7 +58,7 @@ export function SiteHeader() {
               return (
                 <li key={item.href}>
                   <Link href={item.href} aria-current={current ? 'page' : undefined} title={item.full}>
-                    {on ? item.nature : item.plain}
+                    {item.label}
                   </Link>
                 </li>
               );
@@ -68,10 +70,20 @@ export function SiteHeader() {
           href={STAGE_URL}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={on ? 'The Stage, community forum (opens in a new tab)' : 'Stage, community forum (opens in a new tab)'}
+          aria-label="Stage, community forum (opens in a new tab)"
           title="Stage: community forum"
         >
           <StageIcon />
+        </a>
+        <a
+          className="stage-link wiki-link"
+          href={WIKI_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Wiki (opens in a new tab)"
+          title="Wiki: guides and answers"
+        >
+          <WikiIcon />
         </a>
         <NatureToggle />
       </div>

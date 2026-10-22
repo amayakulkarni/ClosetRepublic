@@ -9,6 +9,10 @@ Closet Republic is a nation with no borders, no army and no border guards. It is
 
 We have a constitution, a gazette, ministries and passports. None of them will get you through an airport. All of them are meant seriously anyway.
 
+## Is Closet Republic a business?
+
+No. Closet Republic is an online community run by volunteers. It does not sell goods and it does not aim to make a profit. Reading and taking part on the website is free. People pay to keep it that way, and paid Discord memberships are a digital pass to the Discord server. Closet Republic is not a registered charity or NGO, so what is paid is not a donation. Every payment is recorded in the public ledger.
+
 ## The closet, reconsidered
 
 Most stories treat the closet as a place of exile: somewhere you are pushed into, somewhere you are supposed to escape from as fast as possible, and somewhere you should feel ashamed of having lived.
@@ -36,7 +40,7 @@ The Republic's own constitution sets out the fundamental rights of its citizens 
 
 ## The Public Treasury
 
-Closet Republic is funded entirely by voluntary contributions, which our lore calls an "unfair and entirely optional tax". Every rupee and dollar is recorded in a public ledger, and the balances on the [funding page](/funding) are live. The treasury has four funds:
+Closet Republic is funded entirely by voluntary payments, which our lore calls an "unfair and entirely optional tax". Every rupee and dollar is recorded in a public ledger, and the balances on the [funding page](/funding) are live. The treasury has four funds:
 
 1. **The monthly budget** pays for running the Republic, and starts again from zero on the 1st of every month.
 2. **The legal fund** is set aside for challenging laws that try to put people back in boxes.
@@ -45,7 +49,7 @@ Closet Republic is funded entirely by voluntary contributions, which our lore ca
    - **20% goes to direct mutual aid**: need-based help for queer people facing hardship, given privately and without asking anyone to prove they "deserve" it.
 4. **The infrastructure fund** buys the computers, tablets, accessories and servers that keep the Republic standing.
 
-Closet Republic is not a registered charity, so contributions are not tax-deductible. We publish what comes in and what goes out because trust has to be earned in public.
+Closet Republic is not a registered charity or NGO, so payments are not donations and are not tax-deductible. We publish what comes in and what goes out because trust has to be earned in public.
 
 ## Digital resilience
 
@@ -69,7 +73,7 @@ Everyone in our spaces agrees to the [Community Guidelines](/guidelines). They c
 - **Read** the [Constitution](/constitution) and the [Gazette](/gazette).
 - **Print** your own [passport](/passport).
 - **Build** with us as a developer, writer, artist or constitution drafter on [Public Works](/development).
-- **Fund** the treasury on the [funding page](/funding).
+- **Pay to keep Closet Republic free** on the [funding page](/funding).
 - **Stay reachable** by joining the [Lifeline](/lifeline).
 
 Closet Republic: naturally exceptional.

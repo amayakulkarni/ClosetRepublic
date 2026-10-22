@@ -10,15 +10,13 @@ export default async function DevelopmentLayout({ children }: { children: React.
     <>
       <header className="page-head">
         <div>
-          <h1>{on ? 'Ministry of Public Works' : 'Development and contributing'}</h1>
+          <h1>Development and contributing</h1>
           <p className="lede">
-            {on
-              ? 'The Republic is built in the open by its citizens. Every road, bridge and passport stamp lives in a public repository, and anyone may pick up a shovel.'
-              : 'Closet Republic is open source and built by its community. Help with the code, the constitution, the writing or the artwork.'}
+            Closet Republic is open source and built by its community. Help with the code, the constitution, the writing or the artwork.
           </p>
           <p className="hero__actions">
             <a className="button" href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
-              {on ? 'Visit the public works' : 'View on GitHub'}
+              View on GitHub
               <span className="sr-only"> (opens in a new tab)</span>
             </a>
             <a className="button button--ghost" href={`${GITHUB_URL}/issues`} target="_blank" rel="noopener noreferrer">

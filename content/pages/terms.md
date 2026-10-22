@@ -22,7 +22,7 @@ Closet Republic is a **parody micronation** and an online community. The words w
 - **It is not a state.** Closet Republic does not claim territory, sovereignty, diplomatic status or any power over anyone. It is not recognised by any country, and it does not want to be.
 - **Citizenship is symbolic.** Being a "citizen" means taking part in the community. It gives no nationality, residency, legal status or rights against any government, and it takes none away.
 - **Passports are novelty keepsakes.** The passport generator makes a decorative booklet in your browser. It is **not an identity or travel document**. Never present it to any official, border agency, bank, employer or business as identification, and never use it to deceive anyone. Doing so may be a crime where you live.
-- **"Taxes" are voluntary donations.** Nobody owes the Republic anything. Contributions are gifts, not payments for goods or services. Closet Republic is **not a registered charity**, so contributions are not tax-deductible in any country.
+- **"Taxes" are voluntary payments.** Nobody owes the Republic anything. Money paid to keep Closet Republic free is not a donation and is not a payment for goods. Closet Republic is **not a registered charity or NGO**, so nothing paid is tax-deductible in any country. The only thing with something in return is a paid Discord membership, which is a digital pass to the Discord server. Nothing physical is sold.
 - **Our "laws" bind only our community.** The constitution, ministries and decisions of the GCR describe how the community organises itself and what it expects of people who take part. They do not override the law of any country, and nothing on the Site is legal, medical, financial, immigration or psychological advice.
 - **It is not a political party** and does not campaign for or against candidates in any election.
 
@@ -70,11 +70,11 @@ Ideas and suggestions belong in our public community spaces (GitHub, Reddit or o
 
 If you believe something on the Site infringes your copyright, email {{EMAIL}} with: the work you own, the page where it appears, your contact details, and a statement that you believe in good faith the use is not authorised and that your notice is accurate. We will respond promptly and, where appropriate, remove the material. This process is also how we handle notices under the US Digital Millennium Copyright Act and the Canadian notice-and-notice regime.
 
-## 8. Donations and payment providers
+## 8. Paying to keep Closet Republic free, and payment providers
 
-Donations are made through third-party providers such as Buy Me a Coffee, GitHub Sponsors and UPI apps. Your payment is a contract between you and that provider, under their terms. **We never see or store your card or bank details.** See the [Privacy Policy](/privacy) for what the providers tell us.
+Payments are made through third-party providers such as Buy Me a Coffee, GitHub Sponsors and UPI apps. Your payment is a contract between you and that provider, under their terms. **We never see or store your card or bank details.** See the [Privacy Policy](/privacy) for what the providers tell us.
 
-Because donations are voluntary gifts, we generally can't refund them once received, but contact us if you made a mistake and we will try to help. This does not affect any refund rights you have under the provider's terms or your local law. Monthly sponsorships can be cancelled at any time with the provider.
+Because payments to keep Closet Republic free are voluntary, we generally can't refund them once received, but contact us if you made a mistake and we will try to help. This does not affect any refund rights you have under the provider's terms or your local law. Monthly sponsorships can be cancelled at any time with the provider.
 
 We decide how funds are allocated between the treasury's funds and may change those allocations. We publish balances on the [funding page](/funding).
 
@@ -105,7 +105,7 @@ The Site, its lore, passports, constitution and community are provided **"as is"
 To the extent the law allows:
 
 - we are not liable for indirect or consequential loss, or for loss of profits, data, goodwill or opportunity;
-- our total liability to you for anything arising from the Site is limited to the greater of the amount you donated to us in the 12 months before the claim and 100 US dollars (or the equivalent in your currency).
+- our total liability to you for anything arising from the Site is limited to the greater of the amount you paid to us in the 12 months before the claim and 100 US dollars (or the equivalent in your currency).
 
 We do not exclude or limit liability for death or personal injury caused by our negligence, for fraud or fraudulent misrepresentation, for wilful misconduct or gross negligence, or for anything else that cannot legally be excluded or limited.
 
