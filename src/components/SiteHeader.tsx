@@ -7,21 +7,23 @@ import { STAGE_URL, WIKI_URL } from '@/lib/community';
 import { ClosetMark } from './Logo';
 import { StageIcon } from './StageIcon';
 import { WikiIcon } from './WikiIcon';
+import { useNature } from './NatureProvider';
 import { NatureToggle } from './NatureToggle';
 
-// Short, plain words in both modes. The long name shows as a tooltip.
+// Nature mode names things like a government; monochrome mode uses plain words. The long name shows as a tooltip.
 const NAV = [
-  { href: '/constitution', label: 'Constitution', full: 'The Closet Republic constitution' },
-  { href: '/gazette', label: 'Blog', full: 'Stories and news from Closet Republic' },
-  { href: '/funding', label: 'Keep it free', full: 'Pay to keep Closet Republic free' },
-  { href: '/lawmakers', label: 'Writers', full: 'The people who write for Closet Republic' },
-  { href: '/timeline', label: 'Plans', full: 'Goals and timeline' },
-  { href: '/passport', label: 'Passport', full: 'Make a keepsake passport' },
-  { href: '/development', label: 'Join in', full: 'Ways to contribute' },
+  { href: '/constitution', nature: 'Constitution', plain: 'Constitution', full: 'Constitution of CR' },
+  { href: '/gazette', nature: 'Gazette', plain: 'Blog', full: 'Gazette of Closet Republic' },
+  { href: '/funding', nature: 'Ministry of Finance', plain: 'Keep it free', full: 'Ministry of Finance' },
+  { href: '/lawmakers', nature: 'Lawmakers', plain: 'Writers', full: 'Members of GCR' },
+  { href: '/timeline', nature: 'Five-Year Plan', plain: 'Plans', full: 'Timeline and goals' },
+  { href: '/passport', nature: 'Passport', plain: 'Passport', full: 'Passport of CR' },
+  { href: '/development', nature: 'Public Works', plain: 'Join in', full: 'Development and contributing' },
 ];
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const { on } = useNature();
   const [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [pathname]);
 
@@ -58,7 +60,7 @@ export function SiteHeader() {
               return (
                 <li key={item.href}>
                   <Link href={item.href} aria-current={current ? 'page' : undefined} title={item.full}>
-                    {item.label}
+                    {on ? item.nature : item.plain}
                   </Link>
                 </li>
               );
@@ -70,7 +72,7 @@ export function SiteHeader() {
           href={STAGE_URL}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label="Stage, community forum (opens in a new tab)"
+          aria-label={on ? 'The Stage, community forum (opens in a new tab)' : 'Stage, community forum (opens in a new tab)'}
           title="Stage: community forum"
         >
           <StageIcon />

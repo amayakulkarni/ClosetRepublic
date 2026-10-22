@@ -22,7 +22,7 @@ export function AuthorCard({ author, nature, cta }: { author: GhostAuthor; natur
       <Avatar author={author} />
       <div>
         <h3>
-          <Link href={`/lawmakers/${author.slug}`}>{author.name}</Link>
+          <Link href={`/lawmakers/${author.slug}`}>{nature ? `Hon. ${author.name}` : author.name}</Link>
         </h3>
         {author.bio && <p className="author-card__bio">{author.bio}</p>}
         <SocialLinks author={author} />

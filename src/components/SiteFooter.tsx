@@ -7,7 +7,7 @@ export function SiteFooter() {
       <div className="site-footer__inner">
         <div className="site-footer__brand">
           <ClosetMark size={28} />
-          <span>Closet Republic · an online community</span>
+          <span>Closet Republic · Naturally exceptional</span>
         </div>
         <nav aria-label="Footer">
           <ul>
@@ -15,13 +15,13 @@ export function SiteFooter() {
               <Link href="/about">About</Link>
             </li>
             <li>
-              <Link href="/gazette">Blog</Link>
+              <Link href="/gazette">Gazette</Link>
             </li>
             <li>
               <Link href="/constitution">Constitution</Link>
             </li>
             <li>
-              <Link href="/funding">Keep it free</Link>
+              <Link href="/funding">Funding</Link>
             </li>
             <li>
               <Link href="/lawmakers">Lawmakers</Link>
@@ -119,9 +119,9 @@ export function SiteFooter() {
           state or registered charity. No trackers, no ads.
         </p>
         <p className="site-footer__small">
-          Swipe sideways or use the Colours switch at the top to turn the colours on or off. Add{" "}
+          Swipe sideways or use the Colours switch to change modes. Add{" "}
           <code>?nature=true</code> or <code>?nature=false</code> to any link to
-          share a choice. Illustrations: Open Peeps and Transhumans by Pablo
+          share a mode. Illustrations: Open Peeps and Transhumans by Pablo
           Stanley (CC0).
         </p>
         <p className="site-footer__small">

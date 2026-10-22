@@ -23,10 +23,12 @@ export default async function Home() {
         <div className="hero__text">
           <ClosetMark size={96} />
           <h1>
-            Closet Republic
+            {on ? 'Welcome to the Closet Republic' : 'Closet Republic'}
           </h1>
           <p className="lede">
-            An online home for people who once had to hide who they are to avoid discrimination and being cast out.
+            {on
+              ? 'A sovereign nation for harmonious people who once had to hide their true selves to fit in a box. No borders, no boxes, naturally exceptional.'
+              : 'An online home for people who once had to hide who they are to avoid discrimination and being cast out.'}
           </p>
           <p className="plain-note">
             Closet Republic is an online community, not a shop. Reading and taking part on this website is free. Memberships to the Discord server start at $1 a month, and nothing physical is sold.
@@ -55,7 +57,7 @@ export default async function Home() {
       {latest && (
         <section aria-labelledby="featured-heading" className="featured">
           <h2 id="featured-heading" className="eyebrow">
-            Featured
+            {on ? 'Latest Gazette notification' : 'Featured'}
           </h2>
           <article className="featured__card">
             <FeatureImage post={latest.shown} nature={on} />
@@ -68,7 +70,7 @@ export default async function Home() {
                 <AuthorLink authors={latest.base.authors} nature={on} />
               </p>
               <Link className="button" href={`/gazette/${latest.base.slug}`}>
-                Read
+                Read{on ? ' the notification' : ''}
               </Link>
             </div>
           </article>
@@ -79,7 +81,7 @@ export default async function Home() {
 
       {earlier.length > 0 && (
         <section aria-labelledby="earlier-heading" className="section">
-          <h2 id="earlier-heading">Previously featured</h2>
+          <h2 id="earlier-heading">{on ? 'From the archives of the Gazette' : 'Previously featured'}</h2>
           <div className="card-grid">
             {earlier.map((g) => (
               <PostCard key={g.base.id} post={g.shown} base={g.base} nature={on} />
@@ -91,12 +93,14 @@ export default async function Home() {
       <StageWidget nature={on} />
 
       <section aria-labelledby="lifeline-heading" className="section lifeline-callout">
-        <h2 id="lifeline-heading">If this site ever disappears</h2>
+        <h2 id="lifeline-heading">{on ? 'Register for the Emergency Broadcast' : 'If this site ever disappears'}</h2>
         <p>
-          Join the Lifeline to get an email with the new address and payment links if closetrepublic.com is taken down. Nothing else.
+          {on
+            ? 'Should the Republic be forced into exile, every registered citizen will be told where its new seat is.'
+            : 'Join the Lifeline to get an email with the new address and payment links if closetrepublic.com is taken down. Nothing else.'}
         </p>
         <Link className="button" href="/lifeline">
-          Join the Lifeline
+          {on ? 'Register' : 'Join the Lifeline'}
         </Link>
       </section>
 

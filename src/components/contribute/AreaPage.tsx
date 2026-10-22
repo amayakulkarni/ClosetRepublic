@@ -28,12 +28,12 @@ const COPY: Record<ContributionArea, { work: string; plain: string; nature: stri
 export async function AreaPage({ area }: { area: ContributionArea }) {
   const { on } = await getNature();
   const c = COPY[area];
-  const label = AREA_LABEL[area].plain;
+  const label = on ? AREA_LABEL[area].nature : AREA_LABEL[area].plain;
   return (
     <>
       <section aria-labelledby="area-heading" className="section">
         <h2 id="area-heading">{label}</h2>
-        <p>{c.plain}</p>
+        <p>{on ? c.nature : c.plain}</p>
         <h3>We are looking for</h3>
         <ul className="plain-list">
           {c.looking.map((l) => (
@@ -45,7 +45,7 @@ export async function AreaPage({ area }: { area: ContributionArea }) {
       <CommunityNote links={communityLinks()} work={c.work} />
 
       <section aria-labelledby="form-heading" className="section">
-        <h2 id="form-heading">Get in touch</h2>
+        <h2 id="form-heading">{on ? 'Apply to serve' : 'Get in touch'}</h2>
         <p>Leave your contact details and a link to your public work. We will reply by email after checking the link.</p>
         <ContributorForm area={area} work={c.work} />
       </section>

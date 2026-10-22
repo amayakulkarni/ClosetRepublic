@@ -14,9 +14,11 @@ export default async function LawmakersPage() {
     <>
       <header className="page-head">
         <div>
-          <h1>Writers</h1>
+          <h1>{on ? 'Members of the GCR' : 'Writers'}</h1>
           <p className="lede">
-            The people who write for Closet Republic.
+            {on
+              ? 'The honourable lawmakers of the Government of Closet Republic: founders and elected representatives of the people.'
+              : 'The people who write for Closet Republic.'}
           </p>
         </div>
         <Art name="chaotic-good" nature={on} className="page-head__art" />

@@ -43,14 +43,19 @@ export default async function FundingPage({ searchParams }: { searchParams: Prom
     <>
       <header className="page-head">
         <div>
-          <h1>Pay to keep Closet Republic free</h1>
+          <h1>{on ? 'Ministry of Finance' : 'Pay to keep Closet Republic free'}</h1>
           <p className="lede">{COMMUNITY_APPEAL}</p>
+          <p className="lede">
+            {on
+              ? 'The proposed budget for the governance and management of the Republic. Citizens are kindly reminded that the tax is unfair and entirely optional.'
+              : 'Closet Republic is run by volunteers and kept free by the people who choose to pay. Here is where the money goes.'}
+          </p>
           <p className="plain-note">{PAYMENT_EXPLAINER}</p>
           {(DONATE_URL || UPI_ID || SPONSORS_URL || btcpayConfigured()) && (
             <p className="hero__actions">
               {DONATE_URL && (
                 <a className="button" href={DONATE_URL} target="_blank" rel="noopener noreferrer">
-                  {DONATE_LABEL}
+                  {on ? 'Pay your unfair tax' : DONATE_LABEL}
                   <span className="sr-only"> (opens in a new tab)</span>
                 </a>
               )}
@@ -62,12 +67,12 @@ export default async function FundingPage({ searchParams }: { searchParams: Prom
               )}
               {btcpayConfigured() && (
                 <a className={DONATE_URL || SPONSORS_URL ? 'button button--ghost' : 'button'} href="#crypto-donate">
-                  Pay with crypto
+                  {on ? 'Pay tax in crypto' : 'Pay with crypto'}
                 </a>
               )}
               {UPI_ID && (
                 <a className={DONATE_URL || SPONSORS_URL || btcpayConfigured() ? 'button button--ghost' : 'button'} href={upiLink(UPI_ID)}>
-                  Pay by UPI
+                  {on ? 'Pay tax by UPI' : 'Pay by UPI'}
                   <span className="sr-only"> (opens your UPI app)</span>
                 </a>
               )}
@@ -86,49 +91,49 @@ export default async function FundingPage({ searchParams }: { searchParams: Prom
       {problem && <Notice tone="warn">{problem}</Notice>}
 
       <section aria-labelledby="collection-heading" className="section">
-        <h2 id="collection-heading">Where the money stands</h2>
+        <h2 id="collection-heading">{on ? 'Treasury' : 'Where the money stands'}</h2>
         <div className="fund-widgets">
           <FundWidget
-            title={`Monthly budget, ${funds.monthLabel}`}
+            title={on ? `Tax collected in ${funds.monthLabel}` : `Monthly budget, ${funds.monthLabel}`}
             amount={funds.budget.raised}
             goal={funds.budget.goal}
-            goalLabel="monthly goal"
-            hint="Starts again from zero on the 1st of every month."
+            goalLabel={on ? 'target collection' : 'monthly goal'}
+            hint={on ? 'The treasury is emptied with great ceremony on the 1st of every month.' : 'Starts again from zero on the 1st of every month.'}
             money={money}
           />
           <FundWidget
-            title="Legal fund"
+            title={on ? 'Legal defence fund' : 'Legal fund'}
             amount={funds.legal.balance}
             goal={funds.legal.goal}
             goalLabel="target"
-            hint="Set aside for legal help and challenges. It does not reset."
+            hint={on ? 'For challenging laws that try to put people back in boxes.' : 'Set aside for legal help and challenges. It does not reset.'}
             money={money}
           />
           <FundWidget
-            title="Welfare fund"
+            title={on ? 'Ministry of Welfare' : 'Welfare fund'}
             amount={funds.welfare.balance}
             goal={funds.welfare.goal}
             goalLabel="target"
-            hint="Pays contributors and helps queer people in need. It does not reset."
+            hint={on ? 'Paid to the people who build the Republic, and to citizens who need a hand.' : 'Pays contributors and helps queer people in need. It does not reset.'}
             money={money}
           >
             <dl className="fund-split">
               <div>
                 <dt>
-                  Developers, artists, writers and interns ({funds.welfare.creatorsPct}%)
+                  {on ? 'Builders of the Republic' : 'Developers, artists, writers and interns'} ({funds.welfare.creatorsPct}%)
                 </dt>
                 <dd>{money(funds.welfare.creators)}</dd>
               </div>
               <div>
                 <dt>
-                  Need-based help for queer people ({100 - funds.welfare.creatorsPct}%)
+                  {on ? 'Mutual aid for citizens' : 'Need-based help for queer people'} ({100 - funds.welfare.creatorsPct}%)
                 </dt>
                 <dd>{money(funds.welfare.community)}</dd>
               </div>
             </dl>
           </FundWidget>
           <FundWidget
-            title="Infrastructure fund"
+            title={on ? 'Department of Infrastructure' : 'Infrastructure fund'}
             amount={funds.infrastructure.balance}
             goal={funds.infrastructure.goal}
             goalLabel="target"
@@ -162,18 +167,18 @@ export default async function FundingPage({ searchParams }: { searchParams: Prom
       </section>
 
       <p className="hint ledger-link">
-        <Link href="/funding/ledger">See every expense in the public ledger</Link>
+        <Link href="/funding/ledger">{on ? 'Inspect every expense of the Republic' : 'See every expense in the public ledger'}</Link>
       </p>
 
       {btcpayConfigured() && (
         <section aria-labelledby="crypto-heading" className="section" id="crypto-donate">
-          <h2 id="crypto-heading">Pay with crypto</h2>
+          <h2 id="crypto-heading">{on ? 'Pay your tax in crypto' : 'Pay with crypto'}</h2>
           <CryptoDonate min={DONATION_MIN_USD} max={DONATION_MAX_USD} />
         </section>
       )}
 
       <section aria-labelledby="membership-heading" className="section" id="membership">
-        <h2 id="membership-heading">Memberships: the only thing you get something for</h2>
+        <h2 id="membership-heading">{on ? 'Take a seat in the role-playing Republic' : 'Memberships: the only thing you get something for'}</h2>
         <p>
           A membership is a paid pass to the Closet Republic Discord server: a class (from Alien to Middle Class) opens lounges, roles and colours there. It is
           digital only, and starts at {promoPrice}. A class never buys votes or moderator powers.
@@ -192,18 +197,20 @@ export default async function FundingPage({ searchParams }: { searchParams: Prom
       </section>
 
       <section aria-labelledby="budget-heading" className="section">
-        <h2 id="budget-heading">Budget</h2>
+        <h2 id="budget-heading">{on ? 'Proposed budget for governance and management' : 'Budget'}</h2>
         {budget ? <GhostContent html={budget.html} /> : !problem && <Notice>The budget has not been published yet (Ghost slug “finance”).</Notice>}
       </section>
 
       <section aria-labelledby="writers-heading" className="section">
-        <h2 id="writers-heading">Writers you can support</h2>
+        <h2 id="writers-heading">{on ? 'Fund your lawmaker’s campaign' : 'Writers you can support'}</h2>
         <p>
-          These writers make Closet Republic. Open a profile to read their work and find their links.
+          {on
+            ? 'These members of the GCR are campaigning for your generosity.'
+            : 'These writers make Closet Republic. Open a profile to read their work and find their links.'}
         </p>
         <div className="card-grid">
           {data.authors.map((a) => (
-            <AuthorCard key={a.id} author={a} nature={on} cta="View profile" />
+            <AuthorCard key={a.id} author={a} nature={on} cta={on ? 'Fund this campaign' : 'View profile'} />
           ))}
         </div>
       </section>

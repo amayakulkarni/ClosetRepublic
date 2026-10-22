@@ -24,9 +24,11 @@ export default async function GazettePage({ searchParams }: { searchParams: Prom
       <NewsletterWidget />
       <header className="page-head">
         <div>
-          <h1>Blog</h1>
+          <h1>{on ? 'Gazette of Closet Republic' : 'Blog'}</h1>
           <p className="lede">
-            Every post from Closet Republic, newest first.
+            {on
+              ? 'Official notifications, decrees and dispatches of the Government of Closet Republic.'
+              : 'Every post from Closet Republic, newest first.'}
           </p>
         </div>
         <Art name="new-beginnings" nature={on} className="page-head__art" />

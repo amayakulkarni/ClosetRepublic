@@ -54,9 +54,11 @@ export default async function DiscordLinkPage({
     <>
       <header className="page-head">
         <div>
-          <h1>Link your Discord</h1>
+          <h1>{on ? "Immigration Office" : "Link your Discord"}</h1>
           <p className="lede">
-            Connect the email you use on Buy Me a Coffee to your Discord account, and your class role and lounges appear in our Discord server.
+            {on
+              ? "Present your Buy Me a Coffee papers and receive your class in the Republic’s Discord. The office keeps only your Discord number and the email on your papers."
+              : "Connect the email you use on Buy Me a Coffee to your Discord account, and your class role and lounges appear in our Discord server."}
           </p>
           <a href="https://discord.gg/WGaYEf6tz3">
             Way to Closet Republic's discord
@@ -77,7 +79,9 @@ export default async function DiscordLinkPage({
       )}
 
       <section className="section discord-link" aria-labelledby="steps-heading">
-        <h2 id="steps-heading">Link your accounts</h2>
+        <h2 id="steps-heading">
+          {on ? "Your application" : "Link your accounts"}
+        </h2>
         {!linkingConfigured() ? (
           <Notice>
             Discord linking is not switched on yet. Please check back soon.
@@ -131,7 +135,9 @@ export default async function DiscordLinkPage({
           id="crypto"
           aria-labelledby="crypto-heading"
         >
-          <h2 id="crypto-heading">Pay with crypto</h2>
+          <h2 id="crypto-heading">
+            {on ? "Pay in crypto" : "Pay with crypto"}
+          </h2>
           {session ? (
             <div className="discord-link__card">
               <p>

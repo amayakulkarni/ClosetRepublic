@@ -38,7 +38,7 @@ export default async function GazettePost({ params }: Props) {
   return (
     <article className="post">
       <p className="eyebrow">
-        <Link href="/gazette">Blog</Link>
+        <Link href="/gazette">{on ? 'Gazette of Closet Republic' : 'Blog'}</Link>
         {on && edition && ' · Nature edition'}
       </p>
       <h1>{shown.title}</h1>

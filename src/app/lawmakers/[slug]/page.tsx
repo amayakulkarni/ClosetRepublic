@@ -38,15 +38,15 @@ export default async function LawmakerPage({ params }: Props) {
       <header className="profile__head">
         <Avatar author={author} size={128} />
         <div>
-          <p className="eyebrow">Writer</p>
-          <h1>{author.name}</h1>
-          {author.location && <p className="profile__location">{author.location}</p>}
+          <p className="eyebrow">{on ? 'Member of the GCR' : 'Writer'}</p>
+          <h1>{on ? `Hon. ${author.name}` : author.name}</h1>
+          {author.location && <p className="profile__location">{on ? `Constituency: ${author.location}` : author.location}</p>}
         </div>
       </header>
       {author.bio && <p className="lede">{author.bio}</p>}
       <SocialLinks author={author} size={24} />
       <section aria-labelledby="posts-heading" className="section">
-        <h2 id="posts-heading">Posts</h2>
+        <h2 id="posts-heading">{on ? 'Gazette notifications issued' : 'Posts'}</h2>
         {posts.length === 0 ? (
           <p>Nothing published yet.</p>
         ) : (
