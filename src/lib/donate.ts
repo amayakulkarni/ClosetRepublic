@@ -33,4 +33,4 @@ export const COMMUNITY_APPEAL =
 
 /** What paying is, and is not. Shown on the funding page. */
 export const PAYMENT_EXPLAINER =
-  'Closet Republic is an online community. Money paid to keep it free. It pays for servers and tools, legal help, and the people who build and write for the community. Every payment goes into one of four funds and every expense is listed in the public ledger at <a href="https://closetrepublic.com/funding/ledger"> the ledger </a>.';
+  "Closet Republic is an online community. Money paid to keep it free. It pays for servers and tools, legal help, and the people who build and write for the community. Every payment goes into one of four funds and every expense is listed in the public ledger.";
