@@ -260,9 +260,16 @@ export function PassportForm() {
           <AvatarBuilder value={avatar} onChange={setAvatar} />
         ) : (
           <div className="upload">
+            <ol className="upload-steps">
+              <li>
+                Tap <strong>Choose file</strong> below.
+              </li>
+              <li>Pick a photo from your phone or computer.</li>
+              <li>A preview appears here. Then fill in section 2.</li>
+            </ol>
             <div className="field">
               <label htmlFor="photo">
-                Photo (it is cropped to passport shape and never leaves your
+                Your photo (cropped to passport shape; it never leaves your
                 device)
               </label>
               <input

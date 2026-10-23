@@ -803,6 +803,37 @@ html[data-nature='off'] .gh-content img {
 .field input[type='file'] {
   padding: 8px;
 }
+.field {
+  min-width: 0;
+}
+/* A file input has a wide built-in size; keep it inside its card on narrow screens. */
+.field input:not([type='checkbox']):not([type='radio']),
+.field select,
+.field textarea {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.field input[type='file'] {
+  min-height: 0;
+  padding: 10px;
+}
+.field input[type='file']::file-selector-button {
+  font: inherit;
+  font-weight: 700;
+  color: var(--bg);
+  background: var(--fg);
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 16px;
+  margin-right: 12px;
+  cursor: pointer;
+}
+.upload-steps {
+  margin: 0 0 14px;
+  padding-left: 1.2em;
+}
 .field-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -834,6 +865,24 @@ html[data-nature='off'] .gh-content img {
 .segmented label:has(input:checked) {
   background: var(--fg);
   color: var(--bg);
+}
+@media (max-width: 520px) {
+  /* Two equal buttons side by side, so the chosen one is obvious. */
+  .segmented {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .segmented label {
+    position: relative;
+    text-align: center;
+    padding: 10px 6px;
+    font-size: 0.95rem;
+  }
+  .segmented label:has(input:checked)::before {
+    content: '\2713\00a0';
+  }
 }
 .segmented input {
   position: absolute;
