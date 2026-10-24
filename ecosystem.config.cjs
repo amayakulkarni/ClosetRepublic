@@ -26,6 +26,8 @@ module.exports = {
       // Ambient sound (voice libraries, up to seven Discord connections) needs more room than the
       // membership bot alone; at 256M pm2 stopped the bot every few minutes (exit code 0).
       max_memory_restart: '768M',
+      // Time to unmute Pomodoro members and leave voice before pm2 kills the process on a restart.
+      kill_timeout: 8000,
     },
   ],
 };

@@ -1,6 +1,6 @@
 // Slash commands. Each handler gets a small context (who ran it, their roles, the options)
 // and returns the private reply, so the rules can be tested without Discord.
-import { entitlement } from './core.mjs';
+import { elderProgress, entitlement } from './core.mjs';
 
 const date = (ms) => new Date(ms).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 
@@ -61,6 +61,7 @@ export const COMMANDS = [
       { type: 1, name: 'close', description: 'Close your room now' },
     ],
   },
+  { name: 'rank', description: 'Your class, its rank, and the days left until the Elder role (only you see it)' },
   { name: 'forget-me', description: 'Delete everything the Republic bot keeps about you' },
   { name: 'tiers', description: 'Founders: check which Buy Me a Coffee levels are not mapped to a class' },
 ];
@@ -140,6 +141,24 @@ export async function handleCommand(ctx, { cfg, store, sync, env, discord }) {
       return `Unlinked. You keep your current class for a ${graceDays}-day grace period, then it is removed. Link again any time with /link.`;
     }
 
+    case 'rank': {
+      const m = store.member(ctx.userId);
+      const ent = entitlement(cfg, { memberships: store.membershipsFor(m?.email), grants: store.grantsFor(ctx.userId), member: m });
+      const ladder = cfg.tiers.map((t) => (t === ent.tier ? `**${t.name}**` : t.name)).join(' < ');
+      const cls = ent.tier
+        ? `Your class: ${ent.tier.name}, rank ${cfg.tiers.indexOf(ent.tier) + 1} of ${cfg.tiers.length} (${ladder}).${ent.state === 'grace' ? ` It is in its grace period until ${date(ent.until)}.` : ''}`
+        : `You are a Visitor (no class). Classes, cheapest first: ${ladder}.`;
+      const p = elderProgress(cfg, m, ent);
+      const need = cfg.elder.afterDays;
+      let elder;
+      if (!cfg.elder.roleId) elder = 'The Elder role is not set up yet.';
+      else if (p.elder) elder = `You are an Elder (verified ${p.days} days ago).`;
+      else if (!p.verified) elder = `Elder: the ${need}-day count starts when you verify on the link page (type /link).`;
+      else if (p.remaining > 0) elder = `Elder: verified ${p.days} day(s) ago, ${p.remaining} day(s) to go (around ${date(p.eligibleAt)}).${ent.state === 'none' ? ' The role also needs a class at that point.' : ''}`;
+      else elder = ent.state === 'none' ? `Elder: your ${need} days are done; the role arrives once you hold a class again.` : 'Elder: your days are done; the role arrives within 15 minutes.';
+      return `${cls}\n${elder}`;
+    }
+
     case 'forget-me': {
       store.forget(ctx.userId);
       // Nothing is left to look up, so take every class and lounge role off now.
@@ -148,7 +167,7 @@ export async function handleCommand(ctx, { cfg, store, sync, env, discord }) {
         const managed = new Set(cfg.tiers.flatMap((t) => [t.roleId, t.accessRoleId]).filter(Boolean));
         for (const r of gm.roles) if (managed.has(r)) await discord.removeRole(ctx.userId, r, 'forget-me');
       }
-      return 'Done. Your link, settings and messages are deleted and your class roles are removed. Buy Me a Coffee keeps its own records, and the treasury keeps the payment without your Discord ID. You can link again any time with /link.';
+      return 'Done. Your link, settings, messages and to-do items are deleted and your class roles are removed. Buy Me a Coffee keeps its own records, and the treasury keeps the payment without your Discord ID. You can link again any time with /link.';
     }
 
     case 'tiers': {

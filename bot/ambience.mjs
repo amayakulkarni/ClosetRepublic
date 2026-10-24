@@ -107,8 +107,20 @@ export function createAmbience({ config, notice = () => null, pool, humansIn, ch
   const waiting = new Set();
   const failedAt = new Map();
   const lostCount = new Map();
-  const matches = () => matchRooms(config.rooms, channels());
-  const assetsFor = (room) => ({ notice: notice(room.channel), track: resolveTrack(room, { dir: config.dir, defaultsDir: config.defaultsDir, random, fsApi }), visual: resolveVisual(room, { visualsDir: config.visualsDir, fsApi }) });
+  // Rooms called in for a while by another feature (a Pomodoro session): channelId → room key. They play
+  // that room's sound but leave the channel status and the public notice to the feature that called them.
+  const summoned = new Map();
+  const matches = () => {
+    const list = channels();
+    const found = matchRooms(config.rooms, list);
+    for (const [id, key] of summoned) {
+      const room = config.rooms.find((r) => r.key === key);
+      const channel = list.find((c) => c.id === id);
+      if (room && channel && !found.has(id)) found.set(id, { ...room, status: null, summoned: true, channel });
+    }
+    return found;
+  };
+  const assetsFor = (room) => ({ notice: room.summoned ? null : notice(room.channel), track: resolveTrack(room, { dir: config.dir, defaultsDir: config.defaultsDir, random, fsApi }), visual: resolveVisual(room, { visualsDir: config.visualsDir, fsApi }) });
 
   function cleanup(channelId) {
     const s = sessions.get(channelId);
@@ -132,9 +144,21 @@ export function createAmbience({ config, notice = () => null, pool, humansIn, ch
     cleanup(channelId);
   }
 
+  /** Stops a session at once, people or not (a summoned room that was released). */
+  async function leaveNow(channelId) {
+    const s = sessions.get(channelId);
+    if (!s?.handle) return;
+    await s.handle.stop().catch((err) => log(`could not leave cleanly: ${err.message}`));
+    cleanup(channelId);
+  }
+
   function evaluate(channelId) {
     const room = matches().get(channelId);
-    if (!room || !config.enabled) return;
+    if (!room) {
+      if (sessions.has(channelId)) leaveNow(channelId); // released, and not an ambient room of its own
+      return;
+    }
+    if (!config.enabled) return;
     const people = humansIn(channelId);
     const s = sessions.get(channelId);
     if (people > 0) {
@@ -176,7 +200,7 @@ export function createAmbience({ config, notice = () => null, pool, humansIn, ch
           session.state = 'playing';
           setTimer(() => { if (sessions.get(channelId) === session) lostCount.delete(channelId); }, 120_000)?.unref?.();
           log(`${room.channel.name}: ${entry.name} is playing ${assets.track.source === 'yours' ? 'your' : 'the built-in'} ${room.key} loop`);
-          if (humansIn(channelId) === 0) evaluate(channelId);
+          if (humansIn(channelId) === 0 || !matches().has(channelId)) evaluate(channelId);
         })
         .catch((err) => {
           log(`${room.channel.name}: could not start (${err.message})`);
@@ -191,6 +215,34 @@ export function createAmbience({ config, notice = () => null, pool, humansIn, ch
 
   const scan = () => {
     for (const id of matches().keys()) evaluate(id);
+  };
+
+  /**
+   * Calls a bot into a channel to play `key`'s sound until release(). A channel that already plays its own
+   * sound (the Cafe) keeps it. Returns 'own' (already an ambient room), 'playing', 'waiting' (every bot is
+   * busy) or 'off'.
+   */
+  function summon(channelId, key) {
+    if (!config.enabled || !config.rooms.some((r) => r.key === key)) return 'off';
+    if (matchRooms(config.rooms, channels()).has(channelId)) {
+      evaluate(channelId);
+      return 'own';
+    }
+    summoned.set(channelId, key);
+    evaluate(channelId);
+    return sessions.has(channelId) ? 'playing' : waiting.has(channelId) ? 'waiting' : 'off';
+  }
+
+  function release(channelId) {
+    if (!summoned.delete(channelId)) return;
+    waiting.delete(channelId);
+    evaluate(channelId);
+  }
+
+  /** The status line the room shows when ambience plays there by itself ('' when it does not). */
+  const statusFor = (channelId) => {
+    const room = matchRooms(config.rooms, channels()).get(channelId);
+    return room && sessions.has(channelId) ? room.status || '' : '';
   };
 
   async function stopAll() {
@@ -222,5 +274,5 @@ export function createAmbience({ config, notice = () => null, pool, humansIn, ch
     return lines.join('\n').slice(0, 1900);
   }
 
-  return { evaluate, scan, stopAll, describe };
+  return { evaluate, scan, stopAll, describe, summon, release, statusFor };
 }

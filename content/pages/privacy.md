@@ -100,6 +100,12 @@ If you open a ticket in our Discord server (the button in #open-a-ticket, or `/t
 
 When your Discord account has been verified (signed in with Discord and confirmed your email with a code) for 90 days, the bot gives you the Elder role. For this we use the date you first verified, which our database already keeps with your link. If you start a private voice room from the Elder lobby, the database keeps the room's Discord channel ID and your Discord ID until the room is deleted (a few seconds after it empties, or at the next bot start); nothing said in the room is recorded. Hobby roles you pick in #college are ordinary Discord roles on your account; our database does not store them. `/forget-me` deletes your link, your date and any room record. Voice channels are public places: do not share sensitive information there.
 
+### To-do lists, Pomodoro and voice channel tools
+
+If you use `/todo`, our database keeps the task text you typed, your Discord user ID, the voice channel it belongs to (for a voice channel's shared list) and the date. Ticking a task off deletes it. Unfinished tasks are deleted after 30 days on your own list and after 14 days on a voice channel's list. Your own list is shown only to you; a voice channel's list is read out in that channel's chat during a Pomodoro or a meeting, so never put personal or sensitive details in it. `/forget-me` deletes every task you wrote.
+
+During a Pomodoro in an office or coworking voice channel, the bot only mutes you if you press "Mute me during focus". While it has muted you, the database keeps your Discord user ID and the channel ID, so the bot can unmute you even after a restart; the row is deleted as soon as you are unmuted. Meetings, channel status lines and pins are not stored by us; they exist only in Discord. `/rank` reads the date you first verified, which we already keep with your link.
+
 ### Emails we send
 
 We send emails through an email delivery service. We keep a short log of each email (recipient, subject, date, and whether it was delivered) so we can tell if messages are failing. The log is deleted after 12 months. If an email fails, the recipient's address may also appear in our server's error log, which follows the 14-day limit above.

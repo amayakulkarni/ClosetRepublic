@@ -1,0 +1,11 @@
+{
+  "_readme": "Optional. Copy to config/pomodoro.json to change the Pomodoro rooms or lengths. match: words looked for in voice channel names (emoji, case and spaces ignored). channelIds: when not empty, exactly these voice channels and no name matching. ambienceKey: the ambience room whose sound plays during a session. Minutes: focus 5 to 90, break 1 to 30, rounds 1 to 8. POMODORO=off in the environment turns the feature off.",
+  "enabled": true,
+  "match": ["office", "cowork", "cafe", "study"],
+  "channelIds": [],
+  "ambienceKey": "cafe",
+  "focusMinutes": 20,
+  "breakMinutes": 10,
+  "longBreakMinutes": 30,
+  "rounds": 4
+}

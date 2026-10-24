@@ -80,6 +80,20 @@ export function isElder(cfg, member, ent, now = Date.now()) {
   return Number.isFinite(since) && now - since >= (cfg.elder.afterDays ?? 90) * DAY;
 }
 
+/**
+ * Where a member stands on the way to Elder, for /rank. The count starts at the first verification
+ * (linked_at) and needs elder.afterDays days; the role itself also needs a class (active or grace).
+ * @returns {{ verified: boolean, days: number, remaining: number, eligibleAt: number|null, elder: boolean }}
+ */
+export function elderProgress(cfg, member, ent, now = Date.now()) {
+  const need = cfg.elder?.afterDays ?? 90;
+  const since = member?.email && member.linked_at ? Date.parse(member.linked_at) : NaN;
+  if (!Number.isFinite(since)) return { verified: false, days: 0, remaining: need, eligibleAt: null, elder: false };
+  const days = Math.max(0, Math.floor((now - since) / DAY));
+  const eligibleAt = since + need * DAY;
+  return { verified: true, days, remaining: Math.max(0, Math.ceil((eligibleAt - now) / DAY)), eligibleAt, elder: isElder(cfg, member, ent, now) };
+}
+
 /** The class role (unless discreet) plus the access role of that class and every cheaper one, plus Elder. */
 export function wantedRoles(cfg, tier, { discreet = false, elder = false } = {}) {
   if (!tier) return new Set();

@@ -32,6 +32,25 @@ export function openStore(dbPath) {
     created_at TEXT NOT NULL
   )`);
 
+  // To-do lists: a member's own list (channel_id NULL) or a voice channel's shared list. Only the task
+  // text, who wrote it and when. Ticking an item off deletes it; old items expire (todos.mjs).
+  db.exec(`CREATE TABLE IF NOT EXISTS todos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    owner_id TEXT NOT NULL,
+    channel_id TEXT,
+    text TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  )`);
+  db.exec('CREATE INDEX IF NOT EXISTS todos_channel ON todos (channel_id)');
+
+  // Members the bot server-muted for a Pomodoro focus block, so it can unmute them even after a restart
+  // or when they left voice while muted. A row exists only while the mute is the bot's doing.
+  db.exec(`CREATE TABLE IF NOT EXISTS pomodoro_mutes (
+    user_id TEXT PRIMARY KEY,
+    channel_id TEXT NOT NULL,
+    muted_at TEXT NOT NULL
+  )`);
+
   return {
     db,
     elderRoomCreate: (channelId, ownerId) => db.prepare('INSERT OR REPLACE INTO elder_rooms (channel_id, owner_id, created_at) VALUES (?, ?, ?)').run(channelId, ownerId, nowIso()),
@@ -39,6 +58,27 @@ export function openStore(dbPath) {
     elderRoomByChannel: (channelId) => db.prepare('SELECT * FROM elder_rooms WHERE channel_id = ?').get(channelId) ?? null,
     elderRoomsByOwner: (ownerId) => db.prepare('SELECT * FROM elder_rooms WHERE owner_id = ?').all(ownerId),
     elderRoomsAll: () => db.prepare('SELECT * FROM elder_rooms').all(),
+    todoAdd: (ownerId, channelId, text) =>
+      Number(db.prepare('INSERT INTO todos (owner_id, channel_id, text, created_at) VALUES (?, ?, ?, ?)').run(ownerId, channelId ?? null, text, nowIso()).lastInsertRowid),
+    /** A member's own list (channelId null) or a voice channel's list, oldest first. */
+    todoList: (ownerId, channelId) =>
+      channelId
+        ? db.prepare('SELECT * FROM todos WHERE channel_id = ? ORDER BY id').all(channelId)
+        : db.prepare('SELECT * FROM todos WHERE owner_id = ? AND channel_id IS NULL ORDER BY id').all(ownerId),
+    todoDelete: (id) => db.prepare('DELETE FROM todos WHERE id = ?').run(id).changes === 1,
+    todoClear: (ownerId, channelId) =>
+      channelId
+        ? db.prepare('DELETE FROM todos WHERE channel_id = ?').run(channelId).changes
+        : db.prepare('DELETE FROM todos WHERE owner_id = ? AND channel_id IS NULL').run(ownerId).changes,
+    /** Deletes personal items older than personalDays and voice channel items older than roomDays. */
+    todoExpire: (personalDays, roomDays, at = Date.now()) =>
+      db.prepare('DELETE FROM todos WHERE (channel_id IS NULL AND created_at < ?) OR (channel_id IS NOT NULL AND created_at < ?)')
+        .run(new Date(at - personalDays * 86_400_000).toISOString(), new Date(at - roomDays * 86_400_000).toISOString()).changes,
+    pomodoroMuteAdd: (userId, channelId) =>
+      db.prepare('INSERT OR REPLACE INTO pomodoro_mutes (user_id, channel_id, muted_at) VALUES (?, ?, ?)').run(userId, channelId, nowIso()),
+    pomodoroMuteDelete: (userId) => db.prepare('DELETE FROM pomodoro_mutes WHERE user_id = ?').run(userId),
+    pomodoroMuted: (userId) => db.prepare('SELECT * FROM pomodoro_mutes WHERE user_id = ?').get(userId) ?? null,
+    pomodoroMutesAll: () => db.prepare('SELECT * FROM pomodoro_mutes').all(),
     member: (id) => db.prepare('SELECT * FROM discord_members WHERE discord_id = ?').get(id) ?? null,
     memberByEmail: (email) => db.prepare('SELECT * FROM discord_members WHERE email = ?').get(email) ?? null,
     membershipsFor: (email) => (email ? db.prepare('SELECT * FROM memberships WHERE email = ?').all(email) : []),
@@ -91,6 +131,8 @@ export function openStore(dbPath) {
         for (const table of ['discord_members', 'discord_grants', 'discord_notices', 'discord_link_codes', 'elder_rooms']) {
           db.prepare(`DELETE FROM ${table} WHERE ${table === 'elder_rooms' ? 'owner_id' : 'discord_id'} = ?`).run(id);
         }
+        // Every to-do the member wrote, on their own list and on voice channel lists.
+        db.prepare('DELETE FROM todos WHERE owner_id = ?').run(id);
       })(),
     grant: (id, tier, days, by) => {
       db.prepare('INSERT INTO discord_members (discord_id, updated_at) VALUES (?, ?) ON CONFLICT(discord_id) DO NOTHING').run(id, nowIso());

@@ -21,6 +21,10 @@ import { createElderAdapter } from './discord-elder.mjs';
 import { ensureCollegeMessage, handleHobbyInteraction } from './hobbies.mjs';
 import { createUnlink } from './unlink.mjs';
 import { createTicketAdapter, ensureDeskMessage, handleTicketInteraction } from './discord-tickets.mjs';
+import { createPomodoro, loadPomodoroConfig } from './pomodoro.mjs';
+import { createVcTools } from './vc-tools.mjs';
+import { PRODUCTIVITY_COMMANDS, createProductivityAdapter, handleProductivityInteraction } from './discord-productivity.mjs';
+import { TODO_LIMITS } from './todos.mjs';
 
 const problems = [];
 if (!env.token) problems.push('DISCORD_BOT_TOKEN is not set');
@@ -104,6 +108,7 @@ const rolesOfInteraction = (i) => new Set(i.member?.roles?.cache?.keys?.() ?? i.
 
 // Ambient sound in the voice rooms (ambience.mjs). Off with AMBIENCE=off.
 let ambience = null;
+let helperIds = new Set(); // the helper bots' user ids, once they are logged in
 const ambienceCommand = new SlashCommandBuilder().setName('ambience').setDescription('Mods: show which rooms have ambient sound and which bot is playing where.');
 // Channel ids that an ambience room already covers (they get the notice from the ambience session).
 const ambienceRoomIds = (config) => {
@@ -115,6 +120,7 @@ async function startAmbience() {
   const config = loadAmbienceConfig();
   if (!config.enabled) return;
   const helpers = await startHelperClients(process.env, (t) => console.warn(t));
+  helperIds = new Set(helpers.map((h) => h.client.user.id));
   const pool = [
     createVoiceEntry({ name: 'Snitch', getClient: () => client, guildId: cfg.guildId }),
     ...helpers.map((h) => createVoiceEntry({ name: h.name, getClient: () => h.client, guildId: cfg.guildId })),
@@ -133,12 +139,17 @@ async function startAmbience() {
   console.log(`[ambience] ready with ${pool.length} bot(s)`);
 }
 
+// To-do lists, voice channel tracking and Pomodoro (todos.mjs, vc-tools.mjs, pomodoro.mjs). Off with POMODORO=off.
+const productivity = createProductivityAdapter({ getClient: () => client, getGuild: () => guild, botIds: () => new Set([client.user.id, ...helperIds]) });
+const pomodoro = createPomodoro({ config: loadPomodoroConfig(), store, pd: productivity, ambience: () => ambience, log: (t) => console.log(`[pomodoro] ${t}`) });
+const vcTools = createVcTools({ store, pd: productivity, pomodoro, ambience: () => ambience, log: (t) => console.log(`[vc] ${t}`) });
+
 // ---------- Discord events ----------
 
 function attach(client) {
 client.once(Events.ClientReady, async () => {
   guild = await client.guilds.fetch(cfg.guildId);
-  await guild.commands.set([...commandDefinitions(cfg), ambienceCommand.toJSON()]);
+  await guild.commands.set([...commandDefinitions(cfg), ambienceCommand.toJSON(), ...PRODUCTIVITY_COMMANDS]);
   ensureDeskMessage({ client, cfg }).catch((err) => console.error('[bot] could not set up the ticket button:', err.message));
   console.log(`[bot] connected to ${guild.name} as ${client.user.tag}`);
   discord.post(cfg.channels.botLog, 'Republic Bot is online.').catch(() => {});
@@ -151,6 +162,9 @@ client.once(Events.ClientReady, async () => {
     console.error('[bot] voice notices skipped:', err.message);
   }
   startAmbience().catch((err) => console.error('[bot] ambience is off:', err.message));
+  // Sessions do not survive a restart: lift every Pomodoro mute still on record.
+  queue('pomodoro recover', () => pomodoro.recover());
+  setInterval(() => store.todoExpire(TODO_LIMITS.personalDays, TODO_LIMITS.roomDays), 6 * 60 * 60_000);
   queue('startup sweep', () => sync.syncAll('startup'));
   setInterval(() => queue('sweep', () => sync.syncAll('sweep')), 15 * 60_000);
   const bmc = () =>
@@ -175,6 +189,12 @@ client.on(Events.VoiceStateUpdate, (before, after) => {
     queue('elder room', () =>
       elderRooms.lobbyJoin({ userId: after.id, displayName: after.member?.displayName, roleIds: new Set(after.member?.roles?.cache?.keys?.() ?? []) }),
     ).then((r) => r?.moved === false && console.log(`[elder] ${after.id} joined the lobby: ${r.reason}`));
+  }
+  if (before.channelId !== after.channelId) {
+    queue('pomodoro voice', async () => {
+      await pomodoro.voiceChanged({ userId: after.id, from: before.channelId, to: after.channelId });
+      if (before.channelId && productivity.humans(before.channelId).length === 0) await vcTools.channelEmpty(before.channelId);
+    });
   }
   if (!ambience) return;
   for (const id of new Set([before.channelId, after.channelId])) if (id) ambience.evaluate(id);
@@ -205,6 +225,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     await interaction.reply({ content: allowed ? (ambience ? ambience.describe() : 'Ambient sound is off (AMBIENCE=off, or the voice libraries failed to load; see the bot log).') : 'Only mods can use this.', flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
     return;
   }
+  if (await handleProductivityInteraction(interaction, { cfg, store, pomodoro, vcTools, queue }).catch((err) => (console.error('[bot] productivity tools failed:', err.message), true))) return;
   if (await handleTicketInteraction(interaction, { tickets, unlink, queue, cfg }).catch((err) => (console.error('[bot] ticket interaction failed:', err.message), true))) return;
   if (!interaction.isChatInputCommand()) return;
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -286,7 +307,11 @@ process.on('exit', (code) => console.log(`[bot] exiting with code ${code}`));
 
 const shutdown = () => {
   console.log('[bot] stop signal received (pm2 restart or stop, or its memory limit)');
-  Promise.resolve(ambience?.stopAll()).finally(() => process.exit(0));
+  // Unmute everyone first: a Pomodoro mute must never outlive the bot.
+  Promise.resolve(pomodoro.stopAll())
+    .catch(() => {})
+    .then(() => ambience?.stopAll())
+    .finally(() => process.exit(0));
 };
 process.once('SIGINT', shutdown);
 process.once('SIGTERM', shutdown);
