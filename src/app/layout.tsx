@@ -7,6 +7,7 @@ import { PrismLayers } from '@/components/PrismLayers';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
 import { ThemeGuard } from '@/components/ThemeGuard';
+import { VisitorNotice } from '@/components/VisitorNotice';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -37,6 +38,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <SiteFooter />
           <PrismLayers />
           <ThemeGuard />
+          <VisitorNotice />
         </NatureProvider>
       </body>
     </html>

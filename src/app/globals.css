@@ -1606,6 +1606,47 @@ html[data-nature='on'] .closet-mark {
   flex: none;
 }
 
+/* First-visit and returning-visitor notice: a non-blocking banner at the bottom of the viewport. */
+.visitor-notice {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 900;
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  background: var(--bg);
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.visitor-notice__body {
+  flex: 1;
+}
+.visitor-notice h2 {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+}
+.visitor-notice p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+.visitor-notice__close {
+  flex: none;
+}
+@media (max-width: 560px) {
+  .visitor-notice {
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+  .visitor-notice__close {
+    align-self: flex-end;
+  }
+}
+
 .newsletter,
 .support-widget {
   border: var(--stroke) solid var(--fg);
