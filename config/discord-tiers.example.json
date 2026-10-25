@@ -1,5 +1,5 @@
 {
-  "_readme": "Copy discord-tiers.json from the Discord setup script (discord/setup) to config/discord-tiers.json. Fill bmcLevelIds with each Buy Me a Coffee membership_level_id once known (/tiers in Discord lists unmatched levels); until then levels are matched by name. unknownLevelTier: the class for a level the file does not know. tourist: the free role (verified email, no payment; the membership sweep never removes it). elder: the Elder role (given after afterDays since the first link or Tourist grant, plus activeDaysRequired active days in the last activityWindowDays and no timeouts; creatorRoleIds may also create private rooms), the lobby voice channel that makes private rooms, and the Elder category. hobbies: one entry per hobby role for the #college picker. voiceNotice.categoryIds: extra categories whose voice channels get the public-voice notice even without ambient sound.",
+  "_readme": "Copy discord-tiers.json from the Discord setup script (discord/setup) to config/discord-tiers.json. Fill bmcLevelIds with each Buy Me a Coffee membership_level_id once known (/tiers in Discord lists unmatched levels); until then levels are matched by name. unknownLevelTier: the class for a level the file does not know. tourist: the free role (verified email, no payment; the membership sweep never removes it). elder: the Elder role (given after afterDays since the first link or Tourist grant, plus activeDaysRequired active days in the last activityWindowDays and no timeouts; creatorRoleIds may also create private rooms), the lobby voice channel that makes private rooms, and the Elder category. league: the Republic Esports League for /league (commissioner role, the league category for match rooms, the four team roles and the channels the bot posts in; leave it out to switch /league off). hobbies: one entry per hobby role for the #college picker; add \"requires\": \"gaming\" to the Esports League entry so it is only given with Gaming. voiceNotice.categoryIds: extra categories whose voice channels get the public-voice notice even without ambient sound.",
   "guildId": "1496380917223133264",
   "tiers": [
     {
@@ -80,6 +80,22 @@
     ],
     "privateRoomPrefix": "Private: ",
     "maxRoomsPerElder": 1
+  },
+  "league": {
+    "commissionerRoleId": "",
+    "categoryId": "",
+    "teams": [
+      { "key": "velvet-hangers", "roleId": "" },
+      { "key": "sequin-storm", "roleId": "" },
+      { "key": "mothball-mavericks", "roleId": "" },
+      { "key": "wardrobe-wolves", "roleId": "" }
+    ],
+    "channels": {
+      "fixtures": "",
+      "scoreboard": "",
+      "office": "",
+      "matchReports": ""
+    }
   },
   "hobbies": [
     {

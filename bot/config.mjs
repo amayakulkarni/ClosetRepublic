@@ -2,6 +2,7 @@
 // .env.local (or .env), so both share DATABASE_PATH, the Discord app and BOT_INTERNAL_SECRET.
 import fs from 'node:fs';
 import path from 'node:path';
+import { DEFAULT_GAMES } from './league.mjs';
 
 for (const file of [process.env.BOT_ENV_FILE, '.env.local', '.env'].filter(Boolean)) {
   try {
@@ -18,6 +19,37 @@ const DEFAULT_LEVEL_NAMES = {
   'middle-class': ['middle class'],
 };
 const TIER_NAMES = { alien: 'Alien', citizen: 'Citizen', 'top-1': 'Top 1%', 'upper-middle-class': 'Upper Middle Class', 'middle-class': 'Middle Class' };
+
+const DEFAULT_TEAMS = [
+  { key: 'velvet-hangers', name: 'Velvet Hangers', emoji: '🧥' },
+  { key: 'sequin-storm', name: 'Sequin Storm', emoji: '✨' },
+  { key: 'mothball-mavericks', name: 'Mothball Mavericks', emoji: '🦋' },
+  { key: 'wardrobe-wolves', name: 'Wardrobe Wolves', emoji: '🐺' },
+];
+
+/** league: { commissionerRoleId, categoryId, teams: [{ key, roleId, name?, emoji? }], channels: { fixtures, scoreboard, office, matchReports }, games? } */
+function leagueConfig(raw) {
+  if (!raw?.teams?.length) return null;
+  const teams = raw.teams
+    .filter((t) => t?.key && t?.roleId)
+    .map((t) => {
+      const d = DEFAULT_TEAMS.find((x) => x.key === t.key);
+      return { key: String(t.key), name: String(t.name || d?.name || t.key), emoji: t.emoji ?? d?.emoji ?? '', roleId: String(t.roleId) };
+    });
+  if (teams.length < 2) return null;
+  return {
+    commissionerRoleId: String(raw.commissionerRoleId || ''),
+    categoryId: String(raw.categoryId || ''),
+    teams,
+    channels: {
+      fixtures: String(raw.channels?.fixtures || ''),
+      scoreboard: String(raw.channels?.scoreboard || ''),
+      office: String(raw.channels?.office || ''),
+      matchReports: String(raw.channels?.matchReports || ''),
+    },
+    games: (raw.games?.length ? raw.games : DEFAULT_GAMES).map((g) => ({ slug: String(g.slug), label: String(g.label || g.slug) })),
+  };
+}
 
 /** Reads config/discord-tiers.json, written by discord/setup/setup-server.mjs. */
 export function loadTiers(file = process.env.DISCORD_TIERS_FILE || 'config/discord-tiers.json') {
@@ -57,8 +89,10 @@ export function loadTiers(file = process.env.DISCORD_TIERS_FILE || 'config/disco
       privateRoomPrefix: raw.elder?.privateRoomPrefix == null ? '' : String(raw.elder.privateRoomPrefix),
       maxRoomsPerElder: Number(raw.elder?.maxRoomsPerElder ?? raw.elder?.maxPrivateRoomsPerElder) || 1,
     },
+    // Republic Esports League (league.mjs). Absent or without teams = no /league command.
+    league: leagueConfig(raw.league),
     // Hobby picker in #college: [{ slug, label, emoji, roleId }]
-    hobbies: (raw.hobbies || []).filter((h) => h?.slug && h?.roleId).map((h) => ({ slug: String(h.slug), label: String(h.label || h.slug), emoji: h.emoji ? String(h.emoji) : null, roleId: String(h.roleId) })),
+    hobbies: (raw.hobbies || []).filter((h) => h?.slug && h?.roleId).map((h) => ({ slug: String(h.slug), label: String(h.label || h.slug), emoji: h.emoji ? String(h.emoji) : null, roleId: String(h.roleId), requires: h.requires ? String(h.requires) : null })),
     // Categories whose voice channels get the "voices here are public" notice even without ambient sound.
     voiceNotice: { categoryIds: (raw.voiceNotice?.categoryIds || []).map(String) },
   };

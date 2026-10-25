@@ -26,6 +26,8 @@ import { createPomodoro, loadPomodoroConfig } from './pomodoro.mjs';
 import { createVcTools } from './vc-tools.mjs';
 import { PRODUCTIVITY_COMMANDS, createProductivityAdapter, handleProductivityInteraction } from './discord-productivity.mjs';
 import { TODO_LIMITS } from './todos.mjs';
+import { createLeague } from './league.mjs';
+import { createLeagueAdapter, handleLeagueInteraction, leagueCommand } from './discord-league.mjs';
 
 const problems = [];
 if (!env.token) problems.push('DISCORD_BOT_TOKEN is not set');
@@ -147,12 +149,17 @@ const productivity = createProductivityAdapter({ getClient: () => client, getGui
 const pomodoro = createPomodoro({ config: loadPomodoroConfig(), store, pd: productivity, ambience: () => ambience, log: (t) => console.log(`[pomodoro] ${t}`) });
 const vcTools = createVcTools({ store, pd: productivity, pomodoro, ambience: () => ambience, log: (t) => console.log(`[vc] ${t}`) });
 
+// Republic Esports League (league.mjs): /league commands, fixtures, reminders, match rooms and standings. Needs "league" in config/discord-tiers.json.
+const league = cfg.league
+  ? createLeague({ cfg, store, lg: createLeagueAdapter({ getClient: () => client, getGuild: () => guild, cfg, store }), log: (t) => console.log(`[league] ${t}`) })
+  : null;
+
 // ---------- Discord events ----------
 
 function attach(client) {
 client.once(Events.ClientReady, async () => {
   guild = await client.guilds.fetch(cfg.guildId);
-  await guild.commands.set([...commandDefinitions(cfg), ambienceCommand.toJSON(), ...PRODUCTIVITY_COMMANDS]);
+  await guild.commands.set([...commandDefinitions(cfg), ambienceCommand.toJSON(), ...PRODUCTIVITY_COMMANDS, ...(league ? [leagueCommand(cfg)] : [])]);
   ensureDeskMessage({ client, cfg }).catch((err) => console.error('[bot] could not set up the ticket button:', err.message));
   console.log(`[bot] connected to ${guild.name} as ${client.user.tag}`);
   discord.post(cfg.channels.botLog, 'Republic Bot is online.').catch(() => {});
@@ -177,6 +184,7 @@ client.once(Events.ClientReady, async () => {
   setInterval(() => activity.flush(), 5 * 60_000);
   setInterval(() => activity.expire(), 6 * 60 * 60_000);
   activity.expire();
+  if (league) setInterval(() => queue('league tick', () => league.tick()), 60_000);
   queue('startup sweep', () => sync.syncAll('startup'));
   setInterval(() => queue('sweep', () => sync.syncAll('sweep')), 15 * 60_000);
   const bmc = () =>
@@ -248,6 +256,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     await interaction.reply({ content: allowed ? (ambience ? ambience.describe() : 'Ambient sound is off (AMBIENCE=off, or the voice libraries failed to load; see the bot log).') : 'Only mods can use this.', flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
     return;
   }
+  if (league && (await handleLeagueInteraction(interaction, { cfg, league, queue }).catch((err) => (console.error('[bot] league command failed:', err.message), true)))) return;
   if (await handleProductivityInteraction(interaction, { cfg, store, pomodoro, vcTools, queue }).catch((err) => (console.error('[bot] productivity tools failed:', err.message), true))) return;
   if (await handleTicketInteraction(interaction, { tickets, unlink, queue, cfg }).catch((err) => (console.error('[bot] ticket interaction failed:', err.message), true))) return;
   if (!interaction.isChatInputCommand()) return;

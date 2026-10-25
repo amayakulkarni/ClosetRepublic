@@ -65,6 +65,37 @@ export function openStore(dbPath) {
   )`);
   db.exec('CREATE INDEX IF NOT EXISTS todos_channel ON todos (channel_id)');
 
+  // Republic Esports League (league.mjs): fixtures, per-team results and a few settings. Team keys and times only;
+  // created_by is the one member ID, cleared by /forget-me.
+  db.exec(`CREATE TABLE IF NOT EXISTS league_matches (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    season INTEGER NOT NULL DEFAULT 1,
+    week INTEGER,
+    game TEXT NOT NULL,
+    kind TEXT NOT NULL DEFAULT 'h2h',
+    starts_at INTEGER NOT NULL,
+    teams TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'scheduled',
+    reminded INTEGER NOT NULL DEFAULT 0,
+    room_id TEXT,
+    event_id TEXT,
+    announce_id TEXT,
+    created_by TEXT,
+    created_at TEXT NOT NULL
+  )`);
+  db.exec(`CREATE TABLE IF NOT EXISTS league_results (
+    match_id INTEGER NOT NULL,
+    team TEXT NOT NULL,
+    points INTEGER NOT NULL,
+    outcome TEXT NOT NULL,
+    showed_up INTEGER NOT NULL DEFAULT 1,
+    best_sport INTEGER NOT NULL DEFAULT 0,
+    penalty INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (match_id, team)
+  )`);
+  db.exec('CREATE TABLE IF NOT EXISTS league_state (key TEXT PRIMARY KEY, value TEXT NOT NULL)');
+  const matchRow = (r) => (r ? { ...r, teams: String(r.teams).split(',') } : null);
+
   // Members the bot server-muted for a Pomodoro focus block, so it can unmute them even after a restart
   // or when they left voice while muted. A row exists only while the mute is the bot's doing.
   db.exec(`CREATE TABLE IF NOT EXISTS pomodoro_mutes (
@@ -96,6 +127,28 @@ export function openStore(dbPath) {
     todoExpire: (personalDays, roomDays, at = Date.now()) =>
       db.prepare('DELETE FROM todos WHERE (channel_id IS NULL AND created_at < ?) OR (channel_id IS NOT NULL AND created_at < ?)')
         .run(new Date(at - personalDays * 86_400_000).toISOString(), new Date(at - roomDays * 86_400_000).toISOString()).changes,
+    leagueMatchAdd: ({ season, week, game, kind, startsAt, teams, createdBy }) =>
+      Number(db.prepare('INSERT INTO league_matches (season, week, game, kind, starts_at, teams, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(season, week, game, kind, startsAt, teams.join(','), createdBy ?? null, nowIso()).lastInsertRowid),
+    leagueMatch: (id) => matchRow(db.prepare('SELECT * FROM league_matches WHERE id = ?').get(id)),
+    leagueMatchSet: (id, fields) => {
+      const keys = Object.keys(fields);
+      if (keys.length) db.prepare(`UPDATE league_matches SET ${keys.map((k) => `${k} = ?`).join(', ')} WHERE id = ?`).run(...keys.map((k) => fields[k]), id);
+    },
+    /** Matches that are neither finished nor cancelled (reminders and rooms are handled for these). */
+    leagueActive: () => db.prepare("SELECT * FROM league_matches WHERE status = 'scheduled' ORDER BY starts_at").all().map(matchRow),
+    leagueUpcoming: (since, limit = 10) => db.prepare("SELECT * FROM league_matches WHERE status = 'scheduled' AND starts_at >= ? ORDER BY starts_at LIMIT ?").all(since, limit).map(matchRow),
+    leagueSeasonHasMatches: (season) => db.prepare("SELECT 1 FROM league_matches WHERE season = ? AND status != 'cancelled' LIMIT 1").get(season) != null,
+    leagueResultSet: (matchId, rows) =>
+      db.transaction(() => {
+        db.prepare('DELETE FROM league_results WHERE match_id = ?').run(matchId);
+        for (const r of rows) {
+          db.prepare('INSERT INTO league_results (match_id, team, points, outcome, showed_up, best_sport, penalty) VALUES (?, ?, ?, ?, ?, ?, ?)').run(matchId, r.team, r.points, r.outcome, r.showedUp ? 1 : 0, r.bestSport ? 1 : 0, r.penalty ? 1 : 0);
+        }
+      })(),
+    leagueResults: (season) =>
+      db.prepare("SELECT r.* FROM league_results r JOIN league_matches m ON m.id = r.match_id WHERE m.season = ? AND m.status = 'done'").all(season),
+    leagueState: (key, fallback = null) => db.prepare('SELECT value FROM league_state WHERE key = ?').get(key)?.value ?? fallback,
+    leagueStateSet: (key, value) => db.prepare('INSERT INTO league_state (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').run(key, String(value)),
     pomodoroMuteAdd: (userId, channelId) =>
       db.prepare('INSERT OR REPLACE INTO pomodoro_mutes (user_id, channel_id, muted_at) VALUES (?, ?, ?)').run(userId, channelId, nowIso()),
     pomodoroMuteDelete: (userId) => db.prepare('DELETE FROM pomodoro_mutes WHERE user_id = ?').run(userId),
@@ -184,6 +237,8 @@ export function openStore(dbPath) {
         }
         // Every to-do the member wrote, on their own list and on voice channel lists.
         db.prepare('DELETE FROM todos WHERE owner_id = ?').run(id);
+        // League fixtures keep no name: only the team keys and the result.
+        db.prepare('UPDATE league_matches SET created_by = NULL WHERE created_by = ?').run(id);
       })(),
     grant: (id, tier, days, by) => {
       db.prepare('INSERT INTO discord_members (discord_id, updated_at) VALUES (?, ?) ON CONFLICT(discord_id) DO NOTHING').run(id, nowIso());

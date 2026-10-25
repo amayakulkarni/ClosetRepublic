@@ -7,7 +7,12 @@ export const HOBBY_MENU_ID = 'hobby:pick';
 
 /** What to add and remove so the member holds exactly the picked hobbies (other roles untouched). */
 export function planHobbyChange(cfg, currentRoleIds, pickedSlugs) {
-  const picked = new Set(pickedSlugs);
+  // A hobby with `requires` (for example the Esports League needs Gaming) only counts while the hobby it requires is picked too.
+  const chosen = new Set(pickedSlugs);
+  const picked = new Set([...chosen].filter((slug) => {
+    const need = cfg.hobbies.find((h) => h.slug === slug)?.requires;
+    return !need || chosen.has(need);
+  }));
   const add = [];
   const remove = [];
   for (const h of cfg.hobbies) {
@@ -15,13 +20,15 @@ export function planHobbyChange(cfg, currentRoleIds, pickedSlugs) {
     if (picked.has(h.slug) && !has) add.push(h);
     else if (!picked.has(h.slug) && has) remove.push(h);
   }
-  return { add, remove };
+  const dropped = [...chosen].filter((slug) => !picked.has(slug)).map((slug) => cfg.hobbies.find((h) => h.slug === slug)).filter(Boolean);
+  return { add, remove, dropped };
 }
 
 export const describePlan = (plan, finalLabels) =>
-  finalLabels.length
+  (finalLabels.length
     ? `Your hobbies: ${finalLabels.join(', ')}.${plan.add.length || plan.remove.length ? ' Their channels appear in a moment.' : ''}`
-    : 'You hold no hobby roles now.';
+    : 'You hold no hobby roles now.') +
+  (plan.dropped?.length ? ` ${plan.dropped.map((h) => h.label).join(', ')} needs ${plan.dropped.map((h) => h.requires).join(', ')} picked too, so it was left out.` : '');
 
 export function hobbyMenuRow(cfg) {
   const menu = new StringSelectMenuBuilder()
@@ -59,7 +66,7 @@ export async function handleHobbyInteraction(i, { cfg, queue }) {
   const text = await queue('hobby roles', async () => {
     for (const h of plan.add) await i.guild.members.addRole({ user: i.user.id, role: h.roleId, reason: 'Hobby picker' });
     for (const h of plan.remove) await i.guild.members.removeRole({ user: i.user.id, role: h.roleId, reason: 'Hobby picker' });
-    const final = cfg.hobbies.filter((h) => i.values.includes(h.slug)).map((h) => h.label);
+    const final = cfg.hobbies.filter((h) => i.values.includes(h.slug) && !plan.dropped.includes(h)).map((h) => h.label);
     return describePlan(plan, final);
   });
   await i.editReply({ content: typeof text === 'string' ? text : 'Something went wrong. Please try again, or ask a Minister.', allowedMentions: { parse: [] } }).catch(() => {});
