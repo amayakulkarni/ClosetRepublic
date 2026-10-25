@@ -192,9 +192,83 @@
       "categoryId": "1562690028906352692",
       "textChannelId": "1562690031255289938",
       "voiceChannelId": "1562690033754968144"
+    },
+    {
+      "key": "esports",
+      "slug": "esports",
+      "name": "Esports League",
+      "label": "Esports League",
+      "emoji": "🏆",
+      "roleId": "1563882978667532318",
+      "requires": "gaming",
+      "categoryId": null,
+      "textChannelId": null,
+      "voiceChannelId": null
     }
   ],
   "pickerChannelId": "1560210962567667797",
+  "league": {
+    "commissionerRoleId": "1563877071975874630",
+    "categoryId": "1563877148396101693",
+    "teams": [
+      {
+        "key": "velvet-hangers",
+        "name": "Velvet Hangers",
+        "emoji": "🧥",
+        "roleId": "1563877078170869840"
+      },
+      {
+        "key": "sequin-storm",
+        "name": "Sequin Storm",
+        "emoji": "✨",
+        "roleId": "1563877080137990184"
+      },
+      {
+        "key": "mothball-mavericks",
+        "name": "Mothball Mavericks",
+        "emoji": "🦋",
+        "roleId": "1563877082029625457"
+      },
+      {
+        "key": "wardrobe-wolves",
+        "name": "Wardrobe Wolves",
+        "emoji": "🐺",
+        "roleId": "1563877083762008066"
+      }
+    ],
+    "channels": {
+      "fixtures": "1563877165832085554",
+      "scoreboard": "1563877163361378384",
+      "office": "1563877158508699698",
+      "matchReports": "1563882997046837268"
+    },
+    "games": [
+      {
+        "slug": "fortnite",
+        "label": "Fortnite"
+      },
+      {
+        "slug": "roblox",
+        "label": "Roblox"
+      },
+      {
+        "slug": "genshin",
+        "label": "Genshin Impact"
+      },
+      {
+        "slug": "minecraft",
+        "label": "Minecraft (side quest)"
+      },
+      {
+        "slug": "gta-6",
+        "label": "GTA 6 (side quest)"
+      },
+      {
+        "slug": "cyberpunk",
+        "label": "Cyberpunk 2077 (side quest)"
+      }
+    ]
+  },
   "voiceDisclaimer": [
     "1562028959254708264",
     "1560211046231187486",
@@ -205,13 +279,6 @@
     "1560211040636239968",
     "1560211018586521640",
     "1563877179324891218",
-    "1563877181988536434",
-    "1563877184546799616",
-    "1563877186598084668",
-    "1563877188883980380",
-    "1563877213479378975",
-    "1563877216021127321",
-    "1563877218852020244",
     "1563877225718226945",
     "1563877229879103528",
     "1563877234945822813",
@@ -221,6 +288,8 @@
     "1562689964389568554",
     "1562689967023718471",
     "1562689976146071644",
+    "1563877213479378975",
+    "1563877216021127321",
     "1562689983087644722",
     "1562689990205378640",
     "1562690005485486141",
@@ -234,7 +303,6 @@
     "categoryIds": [
       "1560211042863288413",
       "1563877148396101693",
-      "1563877190871814184",
       "1563877220789915758",
       "1562689971188404326",
       "1562689978398670868",
