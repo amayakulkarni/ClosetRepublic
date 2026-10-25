@@ -40,7 +40,7 @@ Get the Content API key in Ghost Admin → Settings → Integrations → Add cus
 
 ## Nature mode
 
-One site-wide switch, like dark/light mode, remembered in a cookie. It is **on by default** when no mode has been chosen.
+One site-wide switch, like dark/light mode, remembered in a cookie. It is **off by default** (monochrome) when no mode has been chosen; the Nature switch, `?nature=true` or a `/nature` URL turns it on.
 
 - The **Nature** switch in the header, or a quick sideways swipe anywhere on a touch screen, toggles it.
 - `?nature=true` or `?nature=false` (also `?nature=`) on any URL sets it.

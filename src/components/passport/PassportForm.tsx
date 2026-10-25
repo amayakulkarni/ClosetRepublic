@@ -346,19 +346,18 @@ export function PassportForm() {
             <input id="pronouns" name="pronouns" placeholder="e.g. she/they" />
           </div>
           <div className="field">
-            <label htmlFor="dob">Date of birth</label>
+            <label htmlFor="dob">Date of birth (optional)</label>
             <input
               id="dob"
               name="dob"
               type="date"
-              required
               autoComplete="bday"
               max={new Date().toISOString().slice(0, 10)}
             />
           </div>
           <div className="field">
-            <label htmlFor="pob">Place of birth</label>
-            <input id="pob" name="pob" required />
+            <label htmlFor="pob">Place of birth (optional)</label>
+            <input id="pob" name="pob" />
           </div>
           <div className="field">
             <label htmlFor="marital">Marital status</label>
@@ -380,12 +379,11 @@ export function PassportForm() {
             </div>
           )}
           <div className="field field--wide">
-            <label htmlFor="address">Address</label>
+            <label htmlFor="address">Address (optional)</label>
             <textarea
               id="address"
               name="address"
               rows={3}
-              required
               autoComplete="street-address"
             />
           </div>

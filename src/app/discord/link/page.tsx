@@ -60,6 +60,7 @@ export default async function DiscordLinkPage({
               ? "Present your Buy Me a Coffee papers and receive your class in the Republic’s Discord. The office keeps only your Discord number and the email on your papers."
               : "Connect the email you use on Buy Me a Coffee to your Discord account, and your class role and lounges appear in our Discord server."}
           </p>
+          {on && <p className="hint">Parody name: this is not an official immigration service.</p>}
           <a href="https://discord.gg/WGaYEf6tz3">
             Way to Closet Republic's discord
           </a>

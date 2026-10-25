@@ -94,7 +94,7 @@ npm run dev   # http://localhost:40001`}</code>
       <section aria-labelledby="rules-heading" className="section">
         <h2 id="rules-heading">{on ? 'Building codes' : 'A few house rules'}</h2>
         <ul className="plain-list">
-          <li>The site is dark only, and nature mode is on by default. Check your change in both modes.</li>
+          <li>The site is dark only, and nature mode is off by default. Check your change in both modes.</li>
           <li>Every image needs alt text, including a description of any visual effect it has.</li>
           <li>Be kind. Many citizens spent years hiding who they are; this is a place where they do not have to.</li>
         </ul>

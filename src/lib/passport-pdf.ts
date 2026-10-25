@@ -19,7 +19,7 @@ export type PassportData = {
   genderIdentity: string;
   sexMarker: 'F' | 'M' | 'X';
   pronouns: string;
-  dateOfBirth: string; // yyyy-mm-dd
+  dateOfBirth: string; // yyyy-mm-dd, or empty when left out
   placeOfBirth: string;
   maritalStatus: string;
   spouseName: string;
@@ -230,10 +230,9 @@ function idPage(b: Box, ctx: Ctx) {
   y = field(b, 'Surname', d.surname.toUpperCase(), col, y, ctx, 38);
   y = field(b, 'Given names', d.givenNames.toUpperCase(), col, y, ctx, 38);
   y = field(b, 'Nationality', 'CITIZEN OF CLOSET REPUBLIC', col, y, ctx, 38);
-  const dob = new Date(`${d.dateOfBirth}T00:00:00Z`);
-  y = field(b, 'Date of birth', fmtDate(dob), col, y, ctx, 38);
+  y = field(b, 'Date of birth', d.dateOfBirth ? fmtDate(new Date(`${d.dateOfBirth}T00:00:00Z`)) : '-', col, y, ctx, 38);
   field(b, 'Sex', d.sexMarker, col + 27, y + 7.2, ctx, 10);
-  y = field(b, 'Place of birth', d.placeOfBirth.toUpperCase(), col, y, ctx, 38);
+  y = field(b, 'Place of birth', (d.placeOfBirth || '-').toUpperCase(), col, y, ctx, 38);
   y = field(b, 'Date of issue', fmtDate(ctx.issued), col, y, ctx, 38);
   y = field(b, 'Date of expiry', fmtDate(ctx.expires), col, y, ctx, 38);
   field(b, 'Authority', 'GCR', col, y, ctx, 38);
@@ -373,7 +372,7 @@ export async function buildPassportPdf(data: PassportData): Promise<Uint8Array> 
     surname: data.surname,
     givenNames: data.givenNames,
     passportNo,
-    birth: new Date(`${data.dateOfBirth}T00:00:00Z`),
+    birth: data.dateOfBirth ? new Date(`${data.dateOfBirth}T00:00:00Z`) : null,
     sex: data.sexMarker,
     expiry: expires,
   });

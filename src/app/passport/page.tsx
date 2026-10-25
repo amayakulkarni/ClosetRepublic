@@ -18,6 +18,7 @@ export default async function PassportPage() {
               ? 'Citizenship is granted on the spot. Fill in your particulars, take the oath, and print your passport booklet at home.'
               : 'Build an avatar or add a photo, fill in your details and get a printable passport booklet as a PDF. It is made entirely in your browser.'}
           </p>
+          {on && <p className="hint">Parody: this is not an official government office.</p>}
         </div>
         <Art name="walking-contradiction" nature={on} className="page-head__art" />
       </header>

@@ -16,6 +16,6 @@ export async function getNature(): Promise<NatureState> {
   const fromQuery = h.get(NATURE_HEADER);
   if (fromQuery) return { on: fromQuery === '1', forcedByPath };
   const c = await cookies();
-  // Nature mode is the default: only an explicit "off" turns it off.
-  return { on: c.get(NATURE_COOKIE)?.value !== '0', forcedByPath };
+  // Monochrome is the default: nature mode is on only after an explicit choice (switch, ?nature=true or a /nature URL).
+  return { on: c.get(NATURE_COOKIE)?.value === '1', forcedByPath };
 }

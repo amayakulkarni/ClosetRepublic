@@ -21,6 +21,7 @@ export default async function LifelinePage() {
               ? 'Should the Republic ever be forced into exile, the government will broadcast its new seat to every registered citizen. Register your address below.'
               : 'Sites like this one can be taken down. Leave your email and, if that ever happens, we will tell you where to find us.'}
           </p>
+          {on && <p className="hint">Parody name: this is a plain email list, not an official alert system.</p>}
         </div>
         <Art name="reflecting" nature={on} className="page-head__art" />
       </header>

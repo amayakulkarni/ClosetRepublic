@@ -33,7 +33,7 @@ export type MrzInput = {
   givenNames: string;
   passportNo: string;
   nationality: string;
-  birth: Date;
+  birth: Date | null; // null when left out: the field is filled with < as ICAO allows
   sex: 'F' | 'M' | 'X';
   expiry: Date;
 };
@@ -43,7 +43,7 @@ export function buildMrz(p: MrzInput): [string, string] {
   const line1 = pad(`P<${pad(p.country, 3)}${name}`, LINE);
 
   const doc = pad(mrzText(p.passportNo), 9);
-  const dob = yymmdd(p.birth);
+  const dob = p.birth ? yymmdd(p.birth) : '<<<<<<';
   const exp = yymmdd(p.expiry);
   const personal = pad('', 14);
   const sex = p.sex === 'X' ? '<' : p.sex;
