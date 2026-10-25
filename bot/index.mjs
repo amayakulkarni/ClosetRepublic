@@ -20,6 +20,7 @@ import { createElderRooms } from './elder-rooms.mjs';
 import { createElderAdapter } from './discord-elder.mjs';
 import { ensureCollegeMessage, handleHobbyInteraction } from './hobbies.mjs';
 import { createUnlink } from './unlink.mjs';
+import { createActivity } from './activity.mjs';
 import { createTicketAdapter, ensureDeskMessage, handleTicketInteraction } from './discord-tickets.mjs';
 import { createPomodoro, loadPomodoroConfig } from './pomodoro.mjs';
 import { createVcTools } from './vc-tools.mjs';
@@ -35,6 +36,7 @@ try {
   if (!cfg.guildId) problems.push('no guildId in config/discord-tiers.json (or DISCORD_GUILD_ID)');
   const missing = cfg.tiers.filter((t) => !/^\d+$/.test(t.roleId) || !/^\d+$/.test(t.accessRoleId)).map((t) => t.slug);
   if (missing.length) problems.push(`role ids missing in config/discord-tiers.json for: ${missing.join(', ')}`);
+  if (cfg.tourist && !/^\d+$/.test(cfg.tourist.accessRoleId)) problems.push('tourist.accessRoleId is missing in config/discord-tiers.json');
 } catch (err) {
   problems.push(`cannot read config/discord-tiers.json: ${err.message}`);
 }
@@ -93,6 +95,7 @@ const queue = (name, task) => {
 };
 
 const sync = createSync({ cfg, store, discord, env });
+const activity = createActivity({ store });
 const ticketAdapter = createTicketAdapter({ getClient: () => client, getGuild: () => guild, cfg, contentIntent: () => contentIntent });
 const tickets = createTickets({ cfg, store, tk: ticketAdapter });
 const unlink = createUnlink({ cfg, store, sync, discord });
@@ -165,6 +168,15 @@ client.once(Events.ClientReady, async () => {
   // Sessions do not survive a restart: lift every Pomodoro mute still on record.
   queue('pomodoro recover', () => pomodoro.recover());
   setInterval(() => store.todoExpire(TODO_LIMITS.personalDays, TODO_LIMITS.roomDays), 6 * 60 * 60_000);
+  // Activity for the Elder rule: one minute of voice per person in a voice channel, flushed with the messages every 5 minutes.
+  setInterval(() => {
+    for (const vs of guild.voiceStates.cache.values()) {
+      if (vs.channelId && !vs.member?.user?.bot && vs.channelId !== guild.afkChannelId) activity.voiceMinute(vs.id);
+    }
+  }, 60_000);
+  setInterval(() => activity.flush(), 5 * 60_000);
+  setInterval(() => activity.expire(), 6 * 60 * 60_000);
+  activity.expire();
   queue('startup sweep', () => sync.syncAll('startup'));
   setInterval(() => queue('sweep', () => sync.syncAll('sweep')), 15 * 60_000);
   const bmc = () =>
@@ -179,6 +191,17 @@ client.once(Events.ClientReady, async () => {
 
 client.on(Events.GuildMemberAdd, (member) => {
   if (member.guild.id === cfg.guildId) queue('join', () => sync.syncMember(member.id, 'rejoined the server'));
+});
+
+client.on(Events.MessageCreate, (message) => {
+  if (message.guildId === cfg.guildId && !message.author.bot && !message.webhookId) activity.message(message.author.id);
+});
+
+// A timeout counts as a moderation action for the Elder rule.
+client.on(Events.GuildMemberUpdate, (before, after) => {
+  if (after.guild.id !== cfg.guildId) return;
+  const until = after.communicationDisabledUntilTimestamp;
+  if (until && until > Date.now() && until !== before.communicationDisabledUntilTimestamp) store.strikeAdd(after.id, 'timeout');
 });
 
 client.on(Events.VoiceStateUpdate, (before, after) => {
@@ -281,7 +304,7 @@ http
   .listen(env.port, env.host, () => console.log(`[bot] listening on http://${env.host}:${env.port}`));
 
 function connect() {
-  const intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildVoiceStates];
+  const intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.GuildMessages];
   if (contentIntent) intents.push(GatewayIntentBits.MessageContent);
   client = new Client({ intents, partials: [Partials.Channel] });
   client.on('error', (e) => console.error('[bot] Discord client error:', e.message));
@@ -308,6 +331,9 @@ process.on('exit', (code) => console.log(`[bot] exiting with code ${code}`));
 const shutdown = () => {
   console.log('[bot] stop signal received (pm2 restart or stop, or its memory limit)');
   // Unmute everyone first: a Pomodoro mute must never outlive the bot.
+  try {
+    activity.flush();
+  } catch {}
   Promise.resolve(pomodoro.stopAll())
     .catch(() => {})
     .then(() => ambience?.stopAll())

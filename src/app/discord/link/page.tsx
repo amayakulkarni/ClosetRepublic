@@ -11,6 +11,7 @@ import {
   linkStatus,
   linkingConfigured,
   maskEmail,
+  touristEnabled,
 } from "@/lib/discord-link";
 
 export const metadata: Metadata = {
@@ -101,7 +102,9 @@ export default async function DiscordLinkPage({
               </li>
               <li>
                 Your class appears in Discord within a minute. Alien is the $1
-                entry class, per month or per year.
+                entry class, per month or per year. No membership yet: the
+                free Tourist role opens the public places once the email is
+                verified.
               </li>
             </ol>
             <p>
@@ -126,6 +129,8 @@ export default async function DiscordLinkPage({
             }
             tierState={status?.appliedState ?? null}
             donateUrl={donateUrl}
+            tourist={Boolean(status?.tourist)}
+            touristEnabled={touristEnabled()}
           />
         )}
       </section>
@@ -174,7 +179,8 @@ export default async function DiscordLinkPage({
             ) : (
               "Buy Me a Coffee"
             )}
-            , then come back here.
+            , then come back here. Prefer to start free? Verify the email, then
+            join as a Tourist.
           </li>
           <li>
             Your class comes from your membership. Paying never buys votes in

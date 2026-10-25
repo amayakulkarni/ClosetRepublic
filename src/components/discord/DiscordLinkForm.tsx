@@ -10,6 +10,8 @@ type Props = {
   tierName: string | null;
   tierState: string | null;
   donateUrl: string;
+  tourist: boolean;
+  touristEnabled: boolean;
 };
 
 const STATUS: Record<string, string> = {
@@ -26,7 +28,7 @@ async function post(url: string, body?: unknown) {
   return { ok: Boolean(res?.ok), data: data as { error?: string; hasMembership?: boolean } };
 }
 
-export function DiscordLinkForm({ name, linkedEmail, membership, tierName, tierState, donateUrl }: Props) {
+export function DiscordLinkForm({ name, linkedEmail, membership, tierName, tierState, donateUrl, tourist, touristEnabled }: Props) {
   const id = useId();
   const router = useRouter();
   const [step, setStep] = useState<'email' | 'code'>('email');
@@ -68,6 +70,16 @@ export function DiscordLinkForm({ name, linkedEmail, membership, tierName, tierS
             Membership: <strong>{membership.level || 'Buy Me a Coffee member'}</strong>, {STATUS[membership.status] || membership.status}
             {membership.paidUntil && membership.status !== 'active' ? ` (paid until ${new Date(membership.paidUntil).toLocaleDateString('en-GB', { dateStyle: 'long' })})` : ''}.
           </p>
+        ) : touristEnabled ? (
+          <p>
+            {tourist ? (
+              <>You are a <strong>Tourist</strong>: the public places of the Discord server are open to you, free. </>
+            ) : (
+              <>No membership for this email yet. You can join the Discord server for free as a <strong>Tourist</strong>, which opens the public places (not the government rooms). </>
+            )}
+            {donateUrl && <a href={donateUrl}>Choose a class on Buy Me a Coffee</a>}
+            {donateUrl && ' any time to open more.'}
+          </p>
         ) : (
           <p>
             We don’t see a membership for this email yet. {donateUrl && <a href={donateUrl}>Choose a class on Buy Me a Coffee</a>}
@@ -76,12 +88,27 @@ export function DiscordLinkForm({ name, linkedEmail, membership, tierName, tierS
         )}
         <p>
           Discord class:{' '}
-          <strong>{tierName ? `${tierName}${tierState === 'grace' ? ' (grace period)' : ''}` : 'none yet'}</strong>
-          {!tierName && membership && ' (it can take a minute; reload this page)'}
+          <strong>{tierName ? `${tierName}${tierState === 'grace' ? ' (grace period)' : ''}` : tourist ? 'Tourist (free)' : 'none yet'}</strong>
+          {!tierName && !tourist && membership && ' (it can take a minute; reload this page)'}
         </p>
         {status}
         {shown}
         <p className="hero__actions">
+          {touristEnabled && !tourist && !tierName && (
+            <button
+              className="button"
+              disabled={busy}
+              onClick={() =>
+                run(async () => {
+                  const r = await post('/api/discord/link/tourist');
+                  if (r.ok) router.refresh();
+                  else setMessage({ tone: 'error', text: r.data.error || 'Could not join as a Tourist. Try again.' });
+                })
+              }
+            >
+              Join as a Tourist (free)
+            </button>
+          )}
           <button
             className="button button--ghost"
             disabled={busy}
@@ -127,7 +154,7 @@ export function DiscordLinkForm({ name, linkedEmail, membership, tierName, tierS
           }}
         >
           <div className="field">
-            <label htmlFor={`${id}-email`}>Email you use on Buy Me a Coffee</label>
+            <label htmlFor={`${id}-email`}>{touristEnabled ? 'Your email (the one on Buy Me a Coffee, or any email you own for the free Tourist role)' : 'Email you use on Buy Me a Coffee'}</label>
             <input id={`${id}-email`} type="email" required maxLength={200} autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div className="hp" aria-hidden="true">

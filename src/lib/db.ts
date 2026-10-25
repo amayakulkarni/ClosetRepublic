@@ -130,6 +130,8 @@ const SCHEMA = `
     carry_until TEXT,
     applied_tier TEXT,
     applied_state TEXT,
+    tourist_since TEXT,
+    elder_since TEXT,
     updated_at TEXT NOT NULL
   );
 
@@ -231,6 +233,9 @@ const globalForDb = globalThis as unknown as { crDb?: Database.Database };
 
 /** Upgrades databases created before the welfare and infrastructure funds existed. */
 function migrate(conn: Database.Database) {
+  // Tourist (free role) and Elder dates on Discord members.
+  const cols = new Set((conn.prepare('PRAGMA table_info(discord_members)').all() as { name: string }[]).map((c) => c.name));
+  for (const col of ['tourist_since', 'elder_since']) if (!cols.has(col)) conn.exec(`ALTER TABLE discord_members ADD COLUMN ${col} TEXT`);
   const ledger = conn.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'ledger'").get() as { sql: string } | undefined;
   if (!ledger || ledger.sql.includes("'welfare'")) return;
   // SQLite can't change a CHECK constraint in place, so rebuild the table with the same rows.

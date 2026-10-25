@@ -11,7 +11,11 @@
 //
 // No class is free: Alien is the $1 entry level (per month or per year) on Buy Me a Coffee and on crypto.
 // Verification is two steps on the link page (Discord sign-in, then a code sent to the email).
-// Elder: a verified member whose link is at least elder.afterDays old (90) also gets the Elder role.
+// Tourist is a free role below the paid classes: a verified member (same two-step check) who asks for it keeps
+// it until a class replaces it, and falls back to it when a class lapses. It is not a Buy Me a Coffee level.
+// Elder: a verified member (paid class or Tourist) whose first verification is at least elder.afterDays old (90),
+// with good activity (active on elder.activeDaysRequired days of the last elder.activityWindowDays, and no
+// moderation action in that window), gets the Elder role and keeps it while they still hold a class or Tourist.
 
 const DAY = 86_400_000;
 const ms = (iso) => (iso ? Date.parse(iso) : NaN);
@@ -70,14 +74,38 @@ export function entitlement(cfg, { memberships = [], grants = [], member = null 
   };
 }
 
-/** Every role id the bot is allowed to manage: class roles, lounge access roles and the Elder role. */
-export const managedRoles = (cfg) => new Set([...cfg.tiers.flatMap((t) => [t.roleId, t.accessRoleId]), cfg.elder?.roleId].filter(Boolean));
+/** Every role id the bot is allowed to manage: class roles, lounge access roles, the Tourist roles and the Elder role. */
+export const managedRoles = (cfg) =>
+  new Set([...cfg.tiers.flatMap((t) => [t.roleId, t.accessRoleId]), cfg.tourist?.roleId, cfg.tourist?.accessRoleId, cfg.elder?.roleId].filter(Boolean));
 
-/** Verified for long enough (default 90 days) and still in a class (active or grace). */
-export function isElder(cfg, member, ent, now = Date.now()) {
-  if (!cfg.elder?.roleId || !member?.email || !member.linked_at || ent.state === 'none') return false;
-  const since = Date.parse(member.linked_at);
-  return Number.isFinite(since) && now - since >= (cfg.elder.afterDays ?? 90) * DAY;
+/** A verified (linked) member who took the free Tourist role. */
+export const isTourist = (cfg, member) => Boolean(cfg.tourist?.roleId && member?.email && member.tourist_since);
+
+/** When the first verification happened: the earlier of the link date and the Tourist date. */
+const verifiedSince = (member) => {
+  const dates = [member?.linked_at, member?.tourist_since].map((d) => Date.parse(d)).filter(Number.isFinite);
+  return dates.length ? Math.min(...dates) : NaN;
+};
+
+/**
+ * activity: { activeDays, moderated } from the store, or undefined to skip the activity check.
+ * A member who already has elder_since keeps the role while they hold a class or Tourist.
+ */
+export function isElder(cfg, member, ent, now = Date.now(), activity) {
+  if (!cfg.elder?.roleId || !member?.email) return false;
+  const standing = ent.state !== 'none' || isTourist(cfg, member);
+  if (!standing) return false;
+  if (member.elder_since) return true;
+  const since = verifiedSince(member);
+  if (!Number.isFinite(since) || now - since < (cfg.elder.afterDays ?? 90) * DAY) return false;
+  return activityOk(cfg, activity);
+}
+
+/** Good activity: enough active days in the window and no moderation action. No data (undefined) skips the check. */
+export function activityOk(cfg, activity) {
+  const need = cfg.elder?.activeDaysRequired ?? 0;
+  if (!need || !activity) return true;
+  return activity.activeDays >= need && !activity.moderated;
 }
 
 /**
@@ -85,20 +113,36 @@ export function isElder(cfg, member, ent, now = Date.now()) {
  * (linked_at) and needs elder.afterDays days; the role itself also needs a class (active or grace).
  * @returns {{ verified: boolean, days: number, remaining: number, eligibleAt: number|null, elder: boolean }}
  */
-export function elderProgress(cfg, member, ent, now = Date.now()) {
+export function elderProgress(cfg, member, ent, now = Date.now(), activity) {
   const need = cfg.elder?.afterDays ?? 90;
-  const since = member?.email && member.linked_at ? Date.parse(member.linked_at) : NaN;
-  if (!Number.isFinite(since)) return { verified: false, days: 0, remaining: need, eligibleAt: null, elder: false };
+  const since = member?.email ? verifiedSince(member) : NaN;
+  if (!Number.isFinite(since)) return { verified: false, days: 0, remaining: need, eligibleAt: null, elder: false, activityOk: true };
   const days = Math.max(0, Math.floor((now - since) / DAY));
   const eligibleAt = since + need * DAY;
-  return { verified: true, days, remaining: Math.max(0, Math.ceil((eligibleAt - now) / DAY)), eligibleAt, elder: isElder(cfg, member, ent, now) };
+  return {
+    verified: true,
+    days,
+    remaining: Math.max(0, Math.ceil((eligibleAt - now) / DAY)),
+    eligibleAt,
+    elder: isElder(cfg, member, ent, now, activity),
+    activityOk: activityOk(cfg, activity),
+  };
 }
 
-/** The class role (unless discreet) plus the access role of that class and every cheaper one, plus Elder. */
-export function wantedRoles(cfg, tier, { discreet = false, elder = false } = {}) {
-  if (!tier) return new Set();
-  const roles = cfg.tiers.filter((t) => t.rank <= tier.rank).map((t) => t.accessRoleId);
-  if (!discreet) roles.push(tier.roleId);
+/**
+ * The class role (unless discreet) plus the access role of that class and every cheaper one, plus Elder.
+ * Without a class, a Tourist gets the Tourist role and its access role; a class replaces them.
+ */
+export function wantedRoles(cfg, tier, { discreet = false, elder = false, tourist = false } = {}) {
+  let roles = [];
+  if (tier) {
+    roles = cfg.tiers.filter((t) => t.rank <= tier.rank).map((t) => t.accessRoleId);
+    if (!discreet) roles.push(tier.roleId);
+  } else if (tourist) {
+    roles = [cfg.tourist?.accessRoleId, ...(discreet ? [] : [cfg.tourist?.roleId])];
+  } else {
+    return new Set();
+  }
   if (elder) roles.push(cfg.elder?.roleId);
   return new Set(roles.filter(Boolean));
 }

@@ -1,4 +1,4 @@
-// Private voice rooms for Elders. An Elder who joins the lobby voice channel gets a room of their own in
+// Private voice rooms. An Elder, Founder, Representative or Minister of Order (cfg.elder.creatorRoleIds, plus the Elder role) who joins the lobby voice channel gets a room of their own in
 // the Elder category, visible only to them and the people they invite, and is moved into it. The room is
 // deleted when it has been empty for a short while. The rules are here; discord-elder.mjs talks to Discord.
 
@@ -13,17 +13,24 @@ const clean = (s) => String(s ?? '').replace(/[^\p{L}\p{N} '’_-]/gu, '').repla
  */
 export function createElderRooms({ cfg, store, dc, log = () => {}, setTimer = setTimeout, clearTimer = clearTimeout }) {
   const timers = new Map();
-  const isElder = (roleIds) => Boolean(cfg.elder.roleId) && roleIds.has(cfg.elder.roleId);
+  /** Who may open a private room: the Elder role and every role in elder.creatorRoleIds. */
+  const isElder = (roleIds) => [cfg.elder.roleId, ...(cfg.elder.creatorRoleIds || [])].some((id) => id && roleIds.has(id));
   const maxRooms = cfg.elder.maxRoomsPerElder || 1;
+  const roomName = (displayName) => {
+    const who = clean(displayName) || 'Member';
+    return cfg.elder.privateRoomPrefix ? `${cfg.elder.privateRoomPrefix}${who}` : `${who}'s room`;
+  };
 
   /** Someone entered the lobby. Creates their room (or reuses it) and moves them in. */
   async function lobbyJoin({ userId, displayName, roleIds }) {
-    if (!isElder(roleIds)) return { moved: false, reason: 'not an Elder' };
+    if (!isElder(roleIds)) return { moved: false, reason: 'not allowed to create private rooms' };
     let rooms = store.elderRoomsByOwner(userId);
-    let channelId = rooms.find((r) => dc.exists(r.channel_id))?.channel_id;
+    // Rooms that were deleted in Discord are forgotten; below the limit a new room is made, at the limit the first one is reused.
+    for (const r of rooms) if (!dc.exists(r.channel_id)) store.elderRoomDelete(r.channel_id);
+    rooms = rooms.filter((r) => dc.exists(r.channel_id));
+    let channelId = rooms.length >= maxRooms ? rooms[0].channel_id : null;
     if (!channelId) {
-      for (const r of rooms) store.elderRoomDelete(r.channel_id);
-      channelId = await dc.createRoom({ ownerId: userId, name: `${clean(displayName) || 'Elder'}'s room` });
+      channelId = await dc.createRoom({ ownerId: userId, name: roomName(displayName) });
       store.elderRoomCreate(channelId, userId);
       log(`created a private room for <@${userId}>`);
     }
@@ -63,7 +70,7 @@ export function createElderRooms({ cfg, store, dc, log = () => {}, setTimer = se
 
   /** /room invite|remove|rename|limit|close, for the owner of a room. */
   async function command({ sub, userId, roleIds, target, name, limit }) {
-    if (!isElder(roleIds)) return 'Private rooms are for Elders.';
+    if (!isElder(roleIds)) return 'Private rooms are for Elders, Founders, Representatives and Ministers of Order.';
     const room = myRoom(userId);
     if (!room) return 'You have no private room yet. Join the Elder lobby voice channel to get one.';
     const id = room.channel_id;

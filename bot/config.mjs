@@ -40,13 +40,22 @@ export function loadTiers(file = process.env.DISCORD_TIERS_FILE || 'config/disco
     grace: { lapseDays: 7, remindDaysBeforeEnd: [3], remindDuringGrace: [0, 5], ...(raw.grace || {}) },
     channels: raw.channels || {},
     unknownLevelTier: raw.unknownLevelTier ?? 'alien',
-    // Elder role after afterDays of verified membership, and the lobby voice channel that creates private rooms.
+    // Free role for verified members without a class (not a Buy Me a Coffee level). Absent = no Tourist role.
+    tourist: raw.tourist?.roleId
+      ? { roleId: String(raw.tourist.roleId), accessRoleId: String(raw.tourist.accessRoleId || ''), free: true }
+      : null,
+    // Elder role after afterDays of verified membership (paid or Tourist) with good activity, the lobby voice channel
+    // ("Create a Room") that makes private rooms, and who may use it (Elder plus Founder, Representative, Minister).
     elder: {
       roleId: String(raw.elder?.roleId || ''),
-      afterDays: Number(raw.elder?.afterDays) || 90,
-      lobbyChannelId: String(raw.elder?.lobbyChannelId || ''),
+      afterDays: Number(raw.elder?.afterDays ?? raw.elder?.minDaysInCommunity) || 90,
+      activeDaysRequired: Number(raw.elder?.activeDaysRequired ?? 30),
+      activityWindowDays: Number(raw.elder?.activityWindowDays) || 90,
+      lobbyChannelId: String(raw.elder?.lobbyChannelId || raw.elder?.hubChannelId || ''),
       categoryId: String(raw.elder?.categoryId || ''),
-      maxRoomsPerElder: Number(raw.elder?.maxRoomsPerElder) || 1,
+      creatorRoleIds: (raw.elder?.creatorRoleIds || []).map(String).filter((id) => /^\d+$/.test(id)),
+      privateRoomPrefix: raw.elder?.privateRoomPrefix == null ? '' : String(raw.elder.privateRoomPrefix),
+      maxRoomsPerElder: Number(raw.elder?.maxRoomsPerElder ?? raw.elder?.maxPrivateRoomsPerElder) || 1,
     },
     // Hobby picker in #college: [{ slug, label, emoji, roleId }]
     hobbies: (raw.hobbies || []).filter((h) => h?.slug && h?.roleId).map((h) => ({ slug: String(h.slug), label: String(h.label || h.slug), emoji: h.emoji ? String(h.emoji) : null, roleId: String(h.roleId) })),

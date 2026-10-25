@@ -32,6 +32,28 @@ export function openStore(dbPath) {
     created_at TEXT NOT NULL
   )`);
 
+  // Tourist and Elder dates on the member row (the site adds the same columns; this covers a bot that starts first).
+  const memberCols = new Set(db.prepare('PRAGMA table_info(discord_members)').all().map((c) => c.name));
+  for (const col of ['tourist_since', 'elder_since']) if (!memberCols.has(col)) db.exec(`ALTER TABLE discord_members ADD COLUMN ${col} TEXT`);
+
+  // Activity counts for the Elder rule: per member per day, how many messages and voice minutes. Never any
+  // message text or channel. Rows older than the Elder window are deleted (activityExpire).
+  db.exec(`CREATE TABLE IF NOT EXISTS discord_activity (
+    discord_id TEXT NOT NULL,
+    day TEXT NOT NULL,
+    msgs INTEGER NOT NULL DEFAULT 0,
+    voice_min INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (discord_id, day)
+  )`);
+  // Moderation actions (a timeout) that stand in the way of the Elder role for the length of the window.
+  db.exec(`CREATE TABLE IF NOT EXISTS discord_strikes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    discord_id TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  )`);
+  db.exec('CREATE INDEX IF NOT EXISTS discord_strikes_member ON discord_strikes (discord_id)');
+
   // To-do lists: a member's own list (channel_id NULL) or a voice channel's shared list. Only the task
   // text, who wrote it and when. Ticking an item off deletes it; old items expire (todos.mjs).
   db.exec(`CREATE TABLE IF NOT EXISTS todos (
@@ -79,6 +101,35 @@ export function openStore(dbPath) {
     pomodoroMuteDelete: (userId) => db.prepare('DELETE FROM pomodoro_mutes WHERE user_id = ?').run(userId),
     pomodoroMuted: (userId) => db.prepare('SELECT * FROM pomodoro_mutes WHERE user_id = ?').get(userId) ?? null,
     pomodoroMutesAll: () => db.prepare('SELECT * FROM pomodoro_mutes').all(),
+    /** Adds counts to a member's day (UTC date yyyy-mm-dd). */
+    activityAdd: (id, day, msgs, voiceMin) =>
+      db.prepare(
+        `INSERT INTO discord_activity (discord_id, day, msgs, voice_min) VALUES (?, ?, ?, ?)
+         ON CONFLICT(discord_id, day) DO UPDATE SET msgs = msgs + excluded.msgs, voice_min = voice_min + excluded.voice_min`,
+      ).run(id, day, msgs, voiceMin),
+    /** Days in the window with at least minMsgs messages or minVoice voice minutes, and whether a strike falls in it. */
+    activitySummary: (id, windowDays, at = Date.now(), minMsgs = 1, minVoice = 5) => {
+      const since = new Date(at - windowDays * 86_400_000).toISOString();
+      const activeDays = db
+        .prepare('SELECT COUNT(*) n FROM discord_activity WHERE discord_id = ? AND day >= ? AND (msgs >= ? OR voice_min >= ?)')
+        .get(id, since.slice(0, 10), minMsgs, minVoice).n;
+      const moderated = db.prepare('SELECT 1 FROM discord_strikes WHERE discord_id = ? AND created_at >= ? LIMIT 1').get(id, since) != null;
+      return { activeDays, moderated };
+    },
+    activityExpire: (keepDays, at = Date.now()) => {
+      const cut = new Date(at - keepDays * 86_400_000).toISOString();
+      db.prepare('DELETE FROM discord_activity WHERE day < ?').run(cut.slice(0, 10));
+      db.prepare('DELETE FROM discord_strikes WHERE created_at < ?').run(cut);
+    },
+    strikeAdd: (id, kind) => db.prepare('INSERT INTO discord_strikes (discord_id, kind, created_at) VALUES (?, ?, ?)').run(id, kind, nowIso()),
+    /** Tourist: a verified (linked) member takes the free role. Returns false when there is no verified link. */
+    touristSet: (id) => {
+      const m = db.prepare('SELECT email FROM discord_members WHERE discord_id = ? AND email IS NOT NULL').get(id);
+      if (!m) return false;
+      db.prepare('UPDATE discord_members SET tourist_since = COALESCE(tourist_since, ?), updated_at = ? WHERE discord_id = ?').run(nowIso(), nowIso(), id);
+      return true;
+    },
+    elderSet: (id) => db.prepare('UPDATE discord_members SET elder_since = COALESCE(elder_since, ?), updated_at = ? WHERE discord_id = ?').run(nowIso(), nowIso(), id),
     member: (id) => db.prepare('SELECT * FROM discord_members WHERE discord_id = ?').get(id) ?? null,
     memberByEmail: (email) => db.prepare('SELECT * FROM discord_members WHERE email = ?').get(email) ?? null,
     membershipsFor: (email) => (email ? db.prepare('SELECT * FROM memberships WHERE email = ?').all(email) : []),
@@ -103,7 +154,7 @@ export function openStore(dbPath) {
       const m = db.prepare('SELECT applied_tier FROM discord_members WHERE discord_id = ? AND email IS NOT NULL').get(id);
       if (!m) return false;
       const until = m.applied_tier ? new Date(Date.now() + graceDays * 86_400_000).toISOString() : null;
-      db.prepare('UPDATE discord_members SET email = NULL, linked_at = NULL, carry_tier = ?, carry_until = ?, updated_at = ? WHERE discord_id = ?')
+      db.prepare('UPDATE discord_members SET email = NULL, linked_at = NULL, tourist_since = NULL, elder_since = NULL, carry_tier = ?, carry_until = ?, updated_at = ? WHERE discord_id = ?')
         .run(until ? m.applied_tier : null, until, nowIso(), id);
       return true;
     },
@@ -111,7 +162,7 @@ export function openStore(dbPath) {
     adminUnlink: (id) => {
       const m = db.prepare('SELECT email FROM discord_members WHERE discord_id = ? AND email IS NOT NULL').get(id);
       if (!m) return false;
-      db.prepare('UPDATE discord_members SET email = NULL, linked_at = NULL, carry_tier = NULL, carry_until = NULL, updated_at = ? WHERE discord_id = ?').run(nowIso(), id);
+      db.prepare('UPDATE discord_members SET email = NULL, linked_at = NULL, tourist_since = NULL, elder_since = NULL, carry_tier = NULL, carry_until = NULL, updated_at = ? WHERE discord_id = ?').run(nowIso(), id);
       return true;
     },
     ticketCreate: (openerId, at) => Number(db.prepare("INSERT INTO tickets (opener_id, status, opened_at) VALUES (?, 'open', ?)").run(openerId, at).lastInsertRowid),
@@ -128,7 +179,7 @@ export function openStore(dbPath) {
       db.transaction(() => {
         // An archived ticket keeps its number and dates but loses the link to the person.
         db.prepare("UPDATE tickets SET opener_id = 'deleted' WHERE opener_id = ? AND status = 'archived'").run(id);
-        for (const table of ['discord_members', 'discord_grants', 'discord_notices', 'discord_link_codes', 'elder_rooms']) {
+        for (const table of ['discord_members', 'discord_grants', 'discord_notices', 'discord_link_codes', 'elder_rooms', 'discord_activity', 'discord_strikes']) {
           db.prepare(`DELETE FROM ${table} WHERE ${table === 'elder_rooms' ? 'owner_id' : 'discord_id'} = ?`).run(id);
         }
         // Every to-do the member wrote, on their own list and on voice channel lists.

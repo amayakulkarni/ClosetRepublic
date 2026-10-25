@@ -64,16 +64,35 @@
   },
   "roles": {
     "verified": "1562689768301662228",
-    "elder": "1562689766280011878"
+    "elder": "1562689766280011878",
+    "tourist": "1563877068373102692"
+  },
+  "tourist": {
+    "roleId": "1563877068373102692",
+    "accessRoleId": "1563877070021464164",
+    "free": true
   },
   "elder": {
     "minDaysInCommunity": 90,
     "privateRoomPrefix": "Private: ",
     "maxPrivateRoomsPerElder": 1,
-    "_note": "Read by the bot. Promotion to Elder needs the days in the community and the second verification step.",
+    "_note": "Read by the bot. Elder needs the days in the community, the second verification step and an active, positive history (positiveHistory). Private rooms: Elders, Founder, Representative and Minister of Order (room-creators) via Create a Room; staff also host in the Underground (staffHost).",
+    "requirePositiveHistory": true,
+    "positiveHistory": {
+      "minActiveDays": 30,
+      "maxModerationStrikes": 0,
+      "confirmation": "one Elder or staff member confirms",
+      "_note": "Read by the bot. Applies to Tourists and paid members alike; the 90-day count alone is not enough."
+    },
     "afterDays": 90,
     "lobbyChannelId": "1562689969259282583",
     "roleId": "1562689766280011878",
+    "creatorRoleIds": [
+      "1562689766280011878",
+      "1560194486175277168",
+      "1560194488155111444",
+      "1560194489983832225"
+    ],
     "categoryId": "1562689954986074155",
     "hubChannelId": "1562689969259282583",
     "channels": {
@@ -185,6 +204,18 @@
     "1560211023812894800",
     "1560211040636239968",
     "1560211018586521640",
+    "1563877179324891218",
+    "1563877181988536434",
+    "1563877184546799616",
+    "1563877186598084668",
+    "1563877188883980380",
+    "1563877213479378975",
+    "1563877216021127321",
+    "1563877218852020244",
+    "1563877225718226945",
+    "1563877229879103528",
+    "1563877234945822813",
+    "1563877240280711179",
     "1562689959532695663",
     "1562689961797623818",
     "1562689964389568554",
@@ -202,6 +233,9 @@
   "voiceNotice": {
     "categoryIds": [
       "1560211042863288413",
+      "1563877148396101693",
+      "1563877190871814184",
+      "1563877220789915758",
       "1562689971188404326",
       "1562689978398670868",
       "1562689985830723604",

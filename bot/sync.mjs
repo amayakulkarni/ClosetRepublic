@@ -1,7 +1,7 @@
 // Compares what each member should have with what they have in Discord, and fixes the
 // difference. Webhooks, /link, joins and the 15-minute sweep all end up here, so the same
 // rules serve new members, renewals, expiries and manual fixes.
-import { entitlement, isElder, roleDiff, wantedRoles } from './core.mjs';
+import { entitlement, isElder, isTourist, roleDiff, wantedRoles } from './core.mjs';
 
 const DAY = 86_400_000;
 const date = (ms) => new Date(ms).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
@@ -33,26 +33,40 @@ export function createSync({ cfg, store, discord, env, now = () => Date.now() })
     const prevState = member?.applied_state ?? 'none';
 
     const gm = await discord.fetchMember(id);
+    const tourist = isTourist(cfg, member);
+    // Members who already hold the Elder role when this rule starts keep it (their date is recorded now).
+    if (gm && cfg.elder?.roleId && gm.roles.has(cfg.elder.roleId) && member && !member.elder_since && (ent.state !== 'none' || tourist)) {
+      store.elderSet(id);
+      member.elder_since = new Date(at).toISOString();
+    }
+    const activity = cfg.elder?.activeDaysRequired ? store.activitySummary(id, cfg.elder.activityWindowDays ?? 90, at) : undefined;
+    const elder = isElder(cfg, member, ent, at, activity);
+    if (elder && member && !member.elder_since) store.elderSet(id);
     let changed = { add: [], remove: [] };
     if (gm) {
-      changed = roleDiff(cfg, gm.roles, wantedRoles(cfg, ent.tier, { discreet: Boolean(member?.discreet), elder: isElder(cfg, member, ent, at) }));
+      changed = roleDiff(cfg, gm.roles, wantedRoles(cfg, ent.tier, { discreet: Boolean(member?.discreet), elder, tourist }));
       const why = `Closet Republic membership: ${reason}`;
       for (const r of changed.add) await discord.addRole(id, r, why);
       for (const r of changed.remove) await discord.removeRole(id, r, why);
     }
     store.ensureMember(id);
-    store.setApplied(id, tierSlug, ent.state);
+    store.setApplied(id, tierSlug, ent.state === 'none' && tourist ? 'tourist' : ent.state);
 
     // Messages for what changed since last time.
     const name = ent.tier?.name;
-    const tierChanged = tierSlug !== prevTier || ent.state !== prevState;
+    const appliedState = ent.state === 'none' && tourist ? 'tourist' : ent.state;
+    const tierChanged = tierSlug !== prevTier || appliedState !== prevState;
     if (tierChanged) {
-      const from = prevTier ? `${cfg.tiers.find((t) => t.slug === prevTier)?.name ?? prevTier}${prevState === 'grace' ? ' (grace)' : ''}` : 'Visitor';
-      const to = name ? `${name}${ent.state === 'grace' ? ' (grace)' : ''}` : 'Visitor';
+      const none = prevState === 'tourist' ? 'Tourist' : 'Visitor';
+      const from = prevTier ? `${cfg.tiers.find((t) => t.slug === prevTier)?.name ?? prevTier}${prevState === 'grace' ? ' (grace)' : ''}` : none;
+      const to = name ? `${name}${ent.state === 'grace' ? ' (grace)' : ''}` : tourist ? 'Tourist' : 'Visitor';
       log(`<@${id}>: ${from} → ${to} (${reason})`);
     }
+    if (cfg.tourist?.roleId && changed.add.includes(cfg.tourist.roleId) && !tierSlug) {
+      await tell(id, 'tourist', 'Welcome, Tourist! You can now visit the public places of Closet Republic: Law of the Land, Town Square, Recreation District, Safe Harbour and the Embassy. The government rooms are for members. Join in, and after about three months of good activity you can become an Elder.');
+    }
     if (cfg.elder?.roleId && changed.add.includes(cfg.elder.roleId)) {
-      await tell(id, 'elder', `You have been verified for ${cfg.elder.afterDays} days, so you are now an Elder of Closet Republic. The Elder rooms are open, and you can start a private voice room from the Elder lobby.`);
+      await tell(id, 'elder', `You have been verified for ${cfg.elder.afterDays} days and have been active in the community, so you are now an Elder of Closet Republic. The Elder rooms are open, and you can start a private voice room from the Elder lobby.`);
       log(`<@${id}> became an Elder.`);
     }
     if (ent.state === 'active' && (prevState === 'none' || !prevTier)) {
@@ -79,9 +93,10 @@ export function createSync({ cfg, store, discord, env, now = () => Date.now() })
     }
     if (ent.state === 'none' && prevTier) {
       if (reason !== 'revoked' && reason !== 'forget-me') {
-        await tell(id, `goodbye:${at}`, `Your Closet Republic visa has run out, so your class and lounges have been removed. You're always welcome back.${renew}`);
+        const fallback = tourist ? ' You stay a Tourist, so the public places remain open to you.' : '';
+        await tell(id, `goodbye:${at}`, `Your Closet Republic visa has run out, so your class and lounges have been removed.${fallback} You're always welcome back.${renew}`);
       }
-      modLog(`<@${id}> is a Visitor again (${reason}).`);
+      modLog(`<@${id}> is ${tourist ? 'a Tourist' : 'a Visitor'} again (${reason}).`);
     }
     return { tier: tierSlug, state: ent.state, added: changed.add, removed: changed.remove, inServer: Boolean(gm) };
   }

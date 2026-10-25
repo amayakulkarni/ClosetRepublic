@@ -1,6 +1,6 @@
 // Slash commands. Each handler gets a small context (who ran it, their roles, the options)
 // and returns the private reply, so the rules can be tested without Discord.
-import { elderProgress, entitlement } from './core.mjs';
+import { elderProgress, entitlement, isTourist } from './core.mjs';
 
 const date = (ms) => new Date(ms).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 
@@ -52,7 +52,7 @@ export const COMMANDS = [
     ],
   },
   {
-    name: 'room', description: 'Elders: manage your private voice room',
+    name: 'room', description: 'Elders, Founders, Representatives, Ministers: manage your private voice room',
     options: [
       { type: 1, name: 'invite', description: 'Let a member see and join your room', options: [{ type: 6, name: 'member', description: 'Who', required: true }] },
       { type: 1, name: 'remove', description: 'Take a member out of your room', options: [{ type: 6, name: 'member', description: 'Who', required: true }] },
@@ -147,15 +147,21 @@ export async function handleCommand(ctx, { cfg, store, sync, env, discord }) {
       const ladder = cfg.tiers.map((t) => (t === ent.tier ? `**${t.name}**` : t.name)).join(' < ');
       const cls = ent.tier
         ? `Your class: ${ent.tier.name}, rank ${cfg.tiers.indexOf(ent.tier) + 1} of ${cfg.tiers.length} (${ladder}).${ent.state === 'grace' ? ` It is in its grace period until ${date(ent.until)}.` : ''}`
-        : `You are a Visitor (no class). Classes, cheapest first: ${ladder}.`;
-      const p = elderProgress(cfg, m, ent);
+        : isTourist(cfg, m)
+          ? `You are a Tourist (free): the public places are open to you. Classes, cheapest first: ${ladder}.`
+          : `You are a Visitor (no class). Verify on the link page (type /link) to become a Tourist for free, or pick a class: ${ladder}.`;
+      const activity = cfg.elder.activeDaysRequired ? store.activitySummary(ctx.userId, cfg.elder.activityWindowDays) : undefined;
+      const p = elderProgress(cfg, m, ent, Date.now(), activity);
       const need = cfg.elder.afterDays;
+      const standing = ent.state !== 'none' || isTourist(cfg, m);
       let elder;
       if (!cfg.elder.roleId) elder = 'The Elder role is not set up yet.';
       else if (p.elder) elder = `You are an Elder (verified ${p.days} days ago).`;
       else if (!p.verified) elder = `Elder: the ${need}-day count starts when you verify on the link page (type /link).`;
-      else if (p.remaining > 0) elder = `Elder: verified ${p.days} day(s) ago, ${p.remaining} day(s) to go (around ${date(p.eligibleAt)}).${ent.state === 'none' ? ' The role also needs a class at that point.' : ''}`;
-      else elder = ent.state === 'none' ? `Elder: your ${need} days are done; the role arrives once you hold a class again.` : 'Elder: your days are done; the role arrives within 15 minutes.';
+      else if (p.remaining > 0) elder = `Elder: verified ${p.days} day(s) ago, ${p.remaining} day(s) to go (around ${date(p.eligibleAt)}).${standing ? '' : ' The role also needs a class or the Tourist role at that point.'}`;
+      else if (!standing) elder = `Elder: your ${need} days are done; the role arrives once you hold a class or the Tourist role again.`;
+      else if (!p.activityOk) elder = `Elder: your ${need} days are done. The role also needs activity on ${cfg.elder.activeDaysRequired} of the last ${cfg.elder.activityWindowDays} days (you have ${activity.activeDays}${activity.moderated ? ', and a moderation action in that time counts against it' : ''}).`;
+      else elder = 'Elder: your days are done; the role arrives within 15 minutes.';
       return `${cls}\n${elder}`;
     }
 
