@@ -60,12 +60,14 @@
     "ticketTranscripts": "1562029004146475028",
     "college": "1560210962567667797",
     "elderCategory": "1562689954986074155",
-    "elderRoomHub": "1562689969259282583"
+    "elderRoomHub": "1562689969259282583",
+    "introReview": "1564140417446973520"
   },
   "roles": {
     "verified": "1562689768301662228",
     "elder": "1562689766280011878",
-    "tourist": "1563877068373102692"
+    "tourist": "1563877068373102692",
+    "grandElder": "1564140392427814943"
   },
   "tourist": {
     "roleId": "1563877068373102692",
@@ -84,11 +86,13 @@
       "confirmation": "one Elder or staff member confirms",
       "_note": "Read by the bot. Applies to Tourists and paid members alike; the 90-day count alone is not enough."
     },
+    "grandElderRoleKey": "grand-elder",
     "afterDays": 90,
     "lobbyChannelId": "1562689969259282583",
     "roleId": "1562689766280011878",
     "creatorRoleIds": [
       "1562689766280011878",
+      "1564140392427814943",
       "1560194486175277168",
       "1560194488155111444",
       "1560194489983832225"
