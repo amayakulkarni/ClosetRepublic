@@ -26,6 +26,8 @@ import { createPomodoro, loadPomodoroConfig } from './pomodoro.mjs';
 import { createVcTools } from './vc-tools.mjs';
 import { PRODUCTIVITY_COMMANDS, createProductivityAdapter, handleProductivityInteraction } from './discord-productivity.mjs';
 import { TODO_LIMITS } from './todos.mjs';
+import { createIntro } from './intro.mjs';
+import { createIntroAdapter, handleIntroDm, handleIntroInteraction } from './discord-intro.mjs';
 import { createLeague } from './league.mjs';
 import { createLeagueAdapter, handleLeagueInteraction, leagueCommand } from './discord-league.mjs';
 
@@ -101,6 +103,8 @@ const activity = createActivity({ store });
 const ticketAdapter = createTicketAdapter({ getClient: () => client, getGuild: () => guild, cfg, contentIntent: () => contentIntent });
 const tickets = createTickets({ cfg, store, tk: ticketAdapter });
 const unlink = createUnlink({ cfg, store, sync, discord });
+// Tourist role by intro: a DM to the bot becomes a private staff channel; a mod approves or declines (intro.mjs).
+const intro = createIntro({ cfg, store, sync, ix: createIntroAdapter({ getClient: () => client, getGuild: () => guild, cfg }) });
 
 // Private voice rooms for Elders (elder-rooms.mjs): joining the Elder lobby channel creates one.
 const elderRooms = createElderRooms({
@@ -164,7 +168,7 @@ client.once(Events.ClientReady, async () => {
   console.log(`[bot] connected to ${guild.name} as ${client.user.tag}`);
   discord.post(cfg.channels.botLog, 'Republic Bot is online.').catch(() => {});
   ensureCollegeMessage({ client, cfg }).catch((err) => console.error('[bot] could not set up the hobby picker:', err.message));
-  elderRooms.cleanup().catch((err) => console.error('[elder] cleanup failed:', err.message));
+  elderRooms.cleanup().then(() => elderRooms.scan()).catch((err) => console.error('[elder] cleanup failed:', err.message));
   try {
     const ac = loadAmbienceConfig();
     ensureStaticNotices({ client, guild, categoryIds: cfg.voiceNotice.categoryIds, skipIds: ac.enabled ? ambienceRoomIds(ac) : new Set(), log: (t) => console.warn(`[bot] ${t}`) }).catch(() => {});
@@ -184,6 +188,8 @@ client.once(Events.ClientReady, async () => {
   setInterval(() => activity.flush(), 5 * 60_000);
   setInterval(() => activity.expire(), 6 * 60 * 60_000);
   activity.expire();
+  setInterval(() => queue('intro expire', () => intro.expire()), 6 * 60 * 60_000);
+  queue('intro expire', () => intro.expire());
   if (league) setInterval(() => queue('league tick', () => league.tick()), 60_000);
   queue('startup sweep', () => sync.syncAll('startup'));
   setInterval(() => queue('sweep', () => sync.syncAll('sweep')), 15 * 60_000);
@@ -197,11 +203,22 @@ client.once(Events.ClientReady, async () => {
   bmc();
 });
 
+// A voice channel staff add to the Elder category gets the private-room notice too (a few seconds' wait lets the
+// bot's own rooms post theirs first, so there is never a duplicate).
+client.on(Events.ChannelCreate, (channel) => {
+  if (channel.guildId !== cfg.guildId || !cfg.elder.categoryId || channel.parentId !== cfg.elder.categoryId || channel.type !== 2) return;
+  setTimeout(() => queue('elder room notice', () => elderRooms.noteIfMissing(channel.id)), 5000);
+});
+
 client.on(Events.GuildMemberAdd, (member) => {
   if (member.guild.id === cfg.guildId) queue('join', () => sync.syncMember(member.id, 'rejoined the server'));
 });
 
 client.on(Events.MessageCreate, (message) => {
+  if (!message.guildId) {
+    handleIntroDm(message, { intro, queue }).catch((err) => console.error('[bot] intro DM failed:', err.message));
+    return;
+  }
   if (message.guildId === cfg.guildId && !message.author.bot && !message.webhookId) activity.message(message.author.id);
 });
 
@@ -256,6 +273,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     await interaction.reply({ content: allowed ? (ambience ? ambience.describe() : 'Ambient sound is off (AMBIENCE=off, or the voice libraries failed to load; see the bot log).') : 'Only mods can use this.', flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
     return;
   }
+  if (await handleIntroInteraction(interaction, { intro, queue }).catch((err) => (console.error('[bot] intro interaction failed:', err.message), true))) return;
   if (league && (await handleLeagueInteraction(interaction, { cfg, league, queue }).catch((err) => (console.error('[bot] league command failed:', err.message), true)))) return;
   if (await handleProductivityInteraction(interaction, { cfg, store, pomodoro, vcTools, queue }).catch((err) => (console.error('[bot] productivity tools failed:', err.message), true))) return;
   if (await handleTicketInteraction(interaction, { tickets, unlink, queue, cfg }).catch((err) => (console.error('[bot] ticket interaction failed:', err.message), true))) return;
@@ -271,7 +289,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       return o?.user?.id ?? o?.value ?? null;
     },
   };
-  const reply = await queue(`/${ctx.command}`, () => handleCommand(ctx, { cfg, store, sync, env, discord }));
+  const reply = await queue(`/${ctx.command}`, () => handleCommand(ctx, { cfg, store, sync, env, discord, intro }));
   const text = typeof reply === 'string' ? reply : 'Something went wrong. Please try again, or ask a Minister.';
   await interaction.editReply({ content: withPendingNotices(store, ctx.userId, text), allowedMentions: { parse: [] } }).catch(() => {});
 });
@@ -313,7 +331,7 @@ http
   .listen(env.port, env.host, () => console.log(`[bot] listening on http://${env.host}:${env.port}`));
 
 function connect() {
-  const intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.GuildMessages];
+  const intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages];
   if (contentIntent) intents.push(GatewayIntentBits.MessageContent);
   client = new Client({ intents, partials: [Partials.Channel] });
   client.on('error', (e) => console.error('[bot] Discord client error:', e.message));

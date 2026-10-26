@@ -65,6 +65,24 @@ export function openStore(dbPath) {
   )`);
   db.exec('CREATE INDEX IF NOT EXISTS todos_channel ON todos (channel_id)');
 
+  // Intro checks for the free Tourist role (intro.mjs): one row while an intro waits for a mod. The intro text
+  // is never stored here; it exists only in the private staff channel, which is deleted when a mod decides.
+  db.exec(`CREATE TABLE IF NOT EXISTS intro_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    discord_id TEXT NOT NULL,
+    channel_id TEXT,
+    created_at TEXT NOT NULL
+  )`);
+
+  // Approved intros are kept as a text file in #ticket-transcripts; this table holds only where that message is, so
+  // /forget-me can delete it. No intro text is stored here.
+  db.exec(`CREATE TABLE IF NOT EXISTS intro_records (
+    discord_id TEXT NOT NULL,
+    channel_id TEXT NOT NULL,
+    message_id TEXT NOT NULL,
+    approved_at TEXT NOT NULL
+  )`);
+
   // Republic Esports League (league.mjs): fixtures, per-team results and a few settings. Team keys and times only;
   // created_by is the one member ID, cleared by /forget-me.
   db.exec(`CREATE TABLE IF NOT EXISTS league_matches (
@@ -175,13 +193,22 @@ export function openStore(dbPath) {
       db.prepare('DELETE FROM discord_strikes WHERE created_at < ?').run(cut);
     },
     strikeAdd: (id, kind) => db.prepare('INSERT INTO discord_strikes (discord_id, kind, created_at) VALUES (?, ?, ?)').run(id, kind, nowIso()),
-    /** Tourist: a verified (linked) member takes the free role. Returns false when there is no verified link. */
+    /** Tourist: a mod approved the member's intro. No email is needed; the row is made if the member has none yet. */
     touristSet: (id) => {
-      const m = db.prepare('SELECT email FROM discord_members WHERE discord_id = ? AND email IS NOT NULL').get(id);
-      if (!m) return false;
+      db.prepare('INSERT INTO discord_members (discord_id, updated_at) VALUES (?, ?) ON CONFLICT(discord_id) DO NOTHING').run(id, nowIso());
       db.prepare('UPDATE discord_members SET tourist_since = COALESCE(tourist_since, ?), updated_at = ? WHERE discord_id = ?').run(nowIso(), nowIso(), id);
       return true;
     },
+    introCreate: (discordId, at) => Number(db.prepare('INSERT INTO intro_requests (discord_id, created_at) VALUES (?, ?)').run(discordId, at).lastInsertRowid),
+    introSetChannel: (id, channelId) => db.prepare('UPDATE intro_requests SET channel_id = ? WHERE id = ?').run(channelId, id),
+    introGet: (id) => db.prepare('SELECT * FROM intro_requests WHERE id = ?').get(id) ?? null,
+    introByUser: (discordId) => db.prepare('SELECT * FROM intro_requests WHERE discord_id = ? ORDER BY id DESC').get(discordId) ?? null,
+    introDelete: (id) => db.prepare('DELETE FROM intro_requests WHERE id = ?').run(id).changes === 1,
+    introsOlderThan: (cutoffIso) => db.prepare('SELECT * FROM intro_requests WHERE created_at < ?').all(cutoffIso),
+    introRecordAdd: (discordId, channelId, messageId, at) => db.prepare('INSERT INTO intro_records (discord_id, channel_id, message_id, approved_at) VALUES (?, ?, ?, ?)').run(discordId, channelId, messageId, at),
+    introRecords: (discordId) => db.prepare('SELECT * FROM intro_records WHERE discord_id = ?').all(discordId),
+    introRecordsDelete: (discordId) => db.prepare('DELETE FROM intro_records WHERE discord_id = ?').run(discordId),
+    introPending: () => db.prepare('SELECT * FROM intro_requests ORDER BY id').all(),
     elderSet: (id) => db.prepare('UPDATE discord_members SET elder_since = COALESCE(elder_since, ?), updated_at = ? WHERE discord_id = ?').run(nowIso(), nowIso(), id),
     member: (id) => db.prepare('SELECT * FROM discord_members WHERE discord_id = ?').get(id) ?? null,
     memberByEmail: (email) => db.prepare('SELECT * FROM discord_members WHERE email = ?').get(email) ?? null,
@@ -207,7 +234,7 @@ export function openStore(dbPath) {
       const m = db.prepare('SELECT applied_tier FROM discord_members WHERE discord_id = ? AND email IS NOT NULL').get(id);
       if (!m) return false;
       const until = m.applied_tier ? new Date(Date.now() + graceDays * 86_400_000).toISOString() : null;
-      db.prepare('UPDATE discord_members SET email = NULL, linked_at = NULL, tourist_since = NULL, elder_since = NULL, carry_tier = ?, carry_until = ?, updated_at = ? WHERE discord_id = ?')
+      db.prepare('UPDATE discord_members SET email = NULL, linked_at = NULL, elder_since = NULL, carry_tier = ?, carry_until = ?, updated_at = ? WHERE discord_id = ?')
         .run(until ? m.applied_tier : null, until, nowIso(), id);
       return true;
     },
@@ -215,7 +242,7 @@ export function openStore(dbPath) {
     adminUnlink: (id) => {
       const m = db.prepare('SELECT email FROM discord_members WHERE discord_id = ? AND email IS NOT NULL').get(id);
       if (!m) return false;
-      db.prepare('UPDATE discord_members SET email = NULL, linked_at = NULL, tourist_since = NULL, elder_since = NULL, carry_tier = NULL, carry_until = NULL, updated_at = ? WHERE discord_id = ?').run(nowIso(), id);
+      db.prepare('UPDATE discord_members SET email = NULL, linked_at = NULL, elder_since = NULL, carry_tier = NULL, carry_until = NULL, updated_at = ? WHERE discord_id = ?').run(nowIso(), id);
       return true;
     },
     ticketCreate: (openerId, at) => Number(db.prepare("INSERT INTO tickets (opener_id, status, opened_at) VALUES (?, 'open', ?)").run(openerId, at).lastInsertRowid),
@@ -232,7 +259,7 @@ export function openStore(dbPath) {
       db.transaction(() => {
         // An archived ticket keeps its number and dates but loses the link to the person.
         db.prepare("UPDATE tickets SET opener_id = 'deleted' WHERE opener_id = ? AND status = 'archived'").run(id);
-        for (const table of ['discord_members', 'discord_grants', 'discord_notices', 'discord_link_codes', 'elder_rooms', 'discord_activity', 'discord_strikes']) {
+        for (const table of ['discord_members', 'discord_grants', 'discord_notices', 'discord_link_codes', 'elder_rooms', 'discord_activity', 'discord_strikes', 'intro_requests', 'intro_records']) {
           db.prepare(`DELETE FROM ${table} WHERE ${table === 'elder_rooms' ? 'owner_id' : 'discord_id'} = ?`).run(id);
         }
         // Every to-do the member wrote, on their own list and on voice channel lists.

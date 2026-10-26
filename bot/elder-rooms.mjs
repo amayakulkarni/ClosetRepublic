@@ -11,10 +11,15 @@ const clean = (s) => String(s ?? '').replace(/[^\p{L}\p{N} '’_-]/gu, '').repla
  *       allow(channelId, userId), deny(channelId, userId), rename(channelId, name), setLimit(channelId, n),
  *       peopleIn(channelId) → number, exists(channelId) → boolean }
  */
+/** Posted in the text chat of every private room: the text chat is not private, only voice and video are. */
+export const ROOM_NOTICE =
+  '🔒 **Notice:** the text chat of this room is public to everyone who can see this channel (in the Underground, every Elder). Only the voice and video here are private. Do not post anything private in text, and remember anyone you invite can hear and see you.';
+
 export function createElderRooms({ cfg, store, dc, log = () => {}, setTimer = setTimeout, clearTimer = clearTimeout }) {
   const timers = new Map();
-  /** Who may open a private room: the Elder role and every role in elder.creatorRoleIds. */
-  const isElder = (roleIds) => [cfg.elder.roleId, ...(cfg.elder.creatorRoleIds || [])].some((id) => id && roleIds.has(id));
+  /** Who may open a private room: the Elder and Grand Elder roles and every role in elder.creatorRoleIds. */
+  const isElder = (roleIds) => [cfg.elder.roleId, cfg.elder.grandElderRoleId, ...(cfg.elder.creatorRoleIds || [])].some((id) => id && roleIds.has(id));
+  const note = (channelId) => Promise.resolve(dc.postNote?.(channelId, ROOM_NOTICE)).catch((err) => log(`could not post the room notice: ${err.message}`));
   const maxRooms = cfg.elder.maxRoomsPerElder || 1;
   const roomName = (displayName) => {
     const who = clean(displayName) || 'Member';
@@ -32,6 +37,7 @@ export function createElderRooms({ cfg, store, dc, log = () => {}, setTimer = se
     if (!channelId) {
       channelId = await dc.createRoom({ ownerId: userId, name: roomName(displayName) });
       store.elderRoomCreate(channelId, userId);
+      await note(channelId);
       log(`created a private room for <@${userId}>`);
     }
     await dc.moveMember(userId, channelId);
@@ -62,15 +68,31 @@ export function createElderRooms({ cfg, store, dc, log = () => {}, setTimer = se
       else if (dc.peopleIn(r.channel_id) === 0) {
         await dc.deleteChannel(r.channel_id).catch(() => {});
         store.elderRoomDelete(r.channel_id);
+      } else if (dc.hasNote && !(await Promise.resolve(dc.hasNote(r.channel_id)).catch(() => true))) {
+        // A room made before the notice existed gets it once.
+        await note(r.channel_id);
       }
     }
+  }
+
+  /** A voice channel in the Elder category (made by the bot or by staff) gets the notice if it has none yet. */
+  async function noteIfMissing(channelId) {
+    if (channelId === cfg.elder.lobbyChannelId || !dc.exists(channelId)) return false;
+    if (dc.hasNote && (await Promise.resolve(dc.hasNote(channelId)).catch(() => true))) return false;
+    await note(channelId);
+    return true;
+  }
+
+  /** At start-up: every voice channel in the Elder category (staff-made rooms included) gets the notice once. */
+  async function scan() {
+    for (const id of dc.categoryVoiceIds?.() ?? []) await noteIfMissing(id);
   }
 
   const myRoom = (userId) => store.elderRoomsByOwner(userId).find((r) => dc.exists(r.channel_id));
 
   /** /room invite|remove|rename|limit|close, for the owner of a room. */
   async function command({ sub, userId, roleIds, target, name, limit }) {
-    if (!isElder(roleIds)) return 'Private rooms are for Elders, Founders, Representatives and Ministers of Order.';
+    if (!isElder(roleIds)) return 'Private rooms are for Elders, Grand Elders, Founders, Representatives and Ministers of Order.';
     const room = myRoom(userId);
     if (!room) return 'You have no private room yet. Join the Elder lobby voice channel to get one.';
     const id = room.channel_id;
@@ -100,5 +122,5 @@ export function createElderRooms({ cfg, store, dc, log = () => {}, setTimer = se
     return 'Unknown command.';
   }
 
-  return { lobbyJoin, roomChanged, cleanup, command, maxRooms };
+  return { lobbyJoin, roomChanged, cleanup, command, maxRooms, noteIfMissing, scan };
 }

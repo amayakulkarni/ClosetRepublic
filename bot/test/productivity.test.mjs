@@ -120,7 +120,7 @@ test('/rank shows the class, its place on the ladder and the days left to Elder'
 
 test('/rank for a Visitor, an unverified member and an Elder', async () => {
   const t = rankSetup();
-  assert.match(await t.rank('nobody'), /You are a Visitor.*\n.*starts when you verify/);
+  assert.match(await t.rank('nobody'), /You are a Visitor.*\n.*starts when you get the Tourist role/);
   t.verify('u2', 'b@example.com', 95);
   t.pay('b@example.com', 'alien');
   assert.match(await t.rank('u2'), /You are an Elder \(verified 95 days ago\)/);
@@ -132,7 +132,7 @@ test('elderProgress counts whole days and agrees with the Elder rule on day 90',
   const now = Date.now();
   const member = { email: 'x@example.com', linked_at: new Date(now - 90 * DAY).toISOString() };
   const ent = { state: 'active' };
-  assert.deepEqual(elderProgress(cfg, member, ent, now), { verified: true, days: 90, remaining: 0, eligibleAt: now, elder: true, activityOk: true });
+  assert.deepEqual(elderProgress(cfg, member, ent, now), { verified: true, days: 90, remaining: 0, eligibleAt: now, elder: true, activityOk: true, needsEmail: false });
   const p = elderProgress(cfg, member, ent, now - 1);
   assert.equal(p.remaining, 1);
   assert.equal(p.elder, false);

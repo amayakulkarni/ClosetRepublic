@@ -102,9 +102,10 @@ export default async function DiscordLinkPage({
               </li>
               <li>
                 Your class appears in Discord within a minute. Alien is the $1
-                entry class, per month or per year. No membership yet: the
-                free Tourist role opens the public places once the email is
-                verified.
+                entry class, per month or per year. No membership? The free
+                Tourist role opens the public places: send Snitch an intro by
+                DM (type /intro in the server for the template) and a mod
+                checks it.
               </li>
             </ol>
             <p>
@@ -179,8 +180,8 @@ export default async function DiscordLinkPage({
             ) : (
               "Buy Me a Coffee"
             )}
-            , then come back here. Prefer to start free? Verify the email, then
-            join as a Tourist.
+            , then come back here. Prefer to start free? Send Snitch an intro by
+            DM to become a Tourist (type /intro in the server).
           </li>
           <li>
             Your class comes from your membership. Paying never buys votes in

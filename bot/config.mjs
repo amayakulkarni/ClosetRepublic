@@ -74,12 +74,14 @@ export function loadTiers(file = process.env.DISCORD_TIERS_FILE || 'config/disco
     unknownLevelTier: raw.unknownLevelTier ?? 'alien',
     // Free role for verified members without a class (not a Buy Me a Coffee level). Absent = no Tourist role.
     tourist: raw.tourist?.roleId
-      ? { roleId: String(raw.tourist.roleId), accessRoleId: String(raw.tourist.accessRoleId || ''), free: true }
+      ? { roleId: String(raw.tourist.roleId), accessRoleId: String(raw.tourist.accessRoleId || ''), free: true, introOptionalFields: (raw.tourist.introOptionalFields || []).map(String) }
       : null,
     // Elder role after afterDays of verified membership (paid or Tourist) with good activity, the lobby voice channel
     // ("Create a Room") that makes private rooms, and who may use it (Elder plus Founder, Representative, Minister).
     elder: {
       roleId: String(raw.elder?.roleId || ''),
+      // Assigned by hand by the Founder. The bot never gives or removes it; holders may create private rooms like Elders (the layout gives them the Elder lounges and the office).
+      grandElderRoleId: String(raw.elder?.grandElderRoleId || raw.roles?.grandElder || ''),
       afterDays: Number(raw.elder?.afterDays ?? raw.elder?.minDaysInCommunity) || 90,
       activeDaysRequired: Number(raw.elder?.activeDaysRequired ?? 30),
       activityWindowDays: Number(raw.elder?.activityWindowDays) || 90,

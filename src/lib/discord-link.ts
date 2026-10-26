@@ -162,7 +162,7 @@ export function unlink(discordId: string) {
   return true;
 }
 
-/** Tourist is the free role for verified members. It exists when config/discord-tiers.json (written by the Discord setup script) has a tourist role. */
+/** Tourist is the free role given after a mod approves an intro sent to Snitch by DM. It exists when config/discord-tiers.json (written by the Discord setup script) has a tourist role. */
 export function touristEnabled(): boolean {
   try {
     const raw = JSON.parse(fs.readFileSync(path.resolve(process.env.DISCORD_TIERS_FILE || 'config/discord-tiers.json'), 'utf8')) as { tourist?: { roleId?: string } };
@@ -170,16 +170,6 @@ export function touristEnabled(): boolean {
   } catch {
     return false;
   }
-}
-
-/** A member who passed both verification steps (Discord sign-in and the email code) asks for the free Tourist role. */
-export function becomeTourist(discordId: string): boolean {
-  const at = new Date().toISOString();
-  return (
-    db()
-      .prepare('UPDATE discord_members SET tourist_since = COALESCE(tourist_since, ?), updated_at = ? WHERE discord_id = ? AND email IS NOT NULL AND linked_at IS NOT NULL')
-      .run(at, at, discordId).changes === 1
-  );
 }
 
 export type LinkStatus = {
@@ -202,7 +192,7 @@ export function linkStatus(discordId: string): LinkStatus {
         )
         .get(m.email) as LinkStatus['membership'] | undefined) ?? null
     : null;
-  return { tourist: Boolean(m?.email && m.tourist_since), email: m?.email ?? null, membership, appliedTier: m?.applied_tier ?? null, appliedState: m?.applied_state ?? null };
+  return { tourist: Boolean(m?.tourist_since), email: m?.email ?? null, membership, appliedTier: m?.applied_tier ?? null, appliedState: m?.applied_state ?? null };
 }
 
 /** "a•••@example.com", so the page never shows a full address. */

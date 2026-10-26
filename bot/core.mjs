@@ -78,8 +78,8 @@ export function entitlement(cfg, { memberships = [], grants = [], member = null 
 export const managedRoles = (cfg) =>
   new Set([...cfg.tiers.flatMap((t) => [t.roleId, t.accessRoleId]), cfg.tourist?.roleId, cfg.tourist?.accessRoleId, cfg.elder?.roleId].filter(Boolean));
 
-/** A verified (linked) member who took the free Tourist role. */
-export const isTourist = (cfg, member) => Boolean(cfg.tourist?.roleId && member?.email && member.tourist_since);
+/** A member whose intro a mod approved (Tourist is free and never comes from Buy Me a Coffee). */
+export const isTourist = (cfg, member) => Boolean(cfg.tourist?.roleId && member?.tourist_since);
 
 /** When the first verification happened: the earlier of the link date and the Tourist date. */
 const verifiedSince = (member) => {
@@ -115,8 +115,9 @@ export function activityOk(cfg, activity) {
  */
 export function elderProgress(cfg, member, ent, now = Date.now(), activity) {
   const need = cfg.elder?.afterDays ?? 90;
-  const since = member?.email ? verifiedSince(member) : NaN;
-  if (!Number.isFinite(since)) return { verified: false, days: 0, remaining: need, eligibleAt: null, elder: false, activityOk: true };
+  // The count starts at the first verification: an approved intro or the email link, whichever came first.
+  const since = member?.email || member?.tourist_since ? verifiedSince(member) : NaN;
+  if (!Number.isFinite(since)) return { verified: false, days: 0, remaining: need, eligibleAt: null, elder: false, activityOk: true, needsEmail: false };
   const days = Math.max(0, Math.floor((now - since) / DAY));
   const eligibleAt = since + need * DAY;
   return {
@@ -126,6 +127,7 @@ export function elderProgress(cfg, member, ent, now = Date.now(), activity) {
     eligibleAt,
     elder: isElder(cfg, member, ent, now, activity),
     activityOk: activityOk(cfg, activity),
+    needsEmail: !member?.email,
   };
 }
 

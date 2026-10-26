@@ -9,7 +9,7 @@ import { openStore } from '../store.mjs';
 import { createSync } from '../sync.mjs';
 import { isElder, wantedRoles } from '../core.mjs';
 import { createActivity } from '../activity.mjs';
-import { createElderRooms } from '../elder-rooms.mjs';
+import { ROOM_NOTICE, createElderRooms } from '../elder-rooms.mjs';
 
 mock.timers.enable({ apis: ['Date'], now: Date.parse('2026-10-25T12:00:00Z') });
 
@@ -24,7 +24,7 @@ const cfg = {
   grace: { lapseDays: 7, remindDaysBeforeEnd: [3], remindDuringGrace: [0, 5] },
   channels: { botLog: 'botlog', modLog: 'modlog' },
   unknownLevelTier: 'alien',
-  elder: { roleId: 'elder', afterDays: 90, activeDaysRequired: 30, activityWindowDays: 90, lobbyChannelId: 'lobby', categoryId: 'elders', creatorRoleIds: ['founder', 'rep', 'minister'], privateRoomPrefix: 'Private: ', maxRoomsPerElder: 2 },
+  elder: { roleId: 'elder', afterDays: 90, activeDaysRequired: 30, activityWindowDays: 90, lobbyChannelId: 'lobby', categoryId: 'elders', grandElderRoleId: 'grand', creatorRoleIds: ['founder', 'rep', 'minister'], privateRoomPrefix: 'Private: ', maxRoomsPerElder: 2 },
   hobbies: [],
 };
 const env = { siteUrl: 'https://closetrepublic.com', renewUrl: '', bmcApiToken: '', bmcApiUrl: '' };
@@ -76,9 +76,12 @@ test('a Tourist gets the free roles, a paid class replaces them, and a lapse fal
   assert.deepEqual(t.roles('u1'), ['a-tourist', 'tourist']);
 });
 
-test('the sweep never removes Tourist and touristSet needs a verified email', async () => {
+test('the sweep never removes Tourist, and an approved intro needs no email', async () => {
   const t = setup();
-  assert.equal(t.store.touristSet('nobody'), false);
+  t.guildRoles.set('nomail', new Set());
+  assert.equal(t.store.touristSet('nomail'), true);
+  await t.sync.syncMember('nomail', 'intro approved');
+  assert.deepEqual(t.roles('nomail'), ['a-tourist', 'tourist']);
   t.verify('u2', 'x@y.z');
   t.store.touristSet('u2');
   await t.sync.syncMember('u2', 'sweep');
@@ -166,4 +169,65 @@ test('private rooms: staff creator roles may create, rooms get the prefix, the c
   await rooms.lobbyJoin({ userId: 'u-founder', displayName: 'Fae', roleIds: new Set(['founder']) });
   await rooms.lobbyJoin({ userId: 'u-founder', displayName: 'Fae', roleIds: new Set(['founder']) });
   assert.equal(names.length, 4 + 1);
+});
+
+function roomHarness() {
+  const t = setup();
+  const channels = new Map();
+  const notes = [];
+  const dc = {
+    createRoom: async ({ name }) => (channels.set(`v${channels.size + 1}`, 1), `v${channels.size}`),
+    moveMember: async () => {},
+    deleteChannel: async (id) => channels.delete(id),
+    peopleIn: (id) => channels.get(id) ?? 0,
+    exists: (id) => channels.has(id),
+    postNote: async (id, text) => notes.push([id, text]),
+    hasNote: async (id) => notes.some((n) => n[0] === id),
+    categoryVoiceIds: () => [...channels.keys()],
+  };
+  return { ...t, dc, channels, notes, rooms: createElderRooms({ cfg, store: t.store, dc }) };
+}
+
+test('Grand Elders may create private rooms, and every new private room gets the public-text-chat notice', async () => {
+  const h = roomHarness();
+  assert.equal((await h.rooms.lobbyJoin({ userId: 'g', displayName: 'Gus', roleIds: new Set(['grand']) })).moved, true);
+  assert.equal(h.notes.length, 1);
+  assert.equal(h.notes[0][1], ROOM_NOTICE);
+  assert.match(ROOM_NOTICE, /text chat of this room is public/);
+  assert.match(ROOM_NOTICE, /Only the voice and video here are private/);
+});
+
+test('rooms that predate the notice get it once at startup; rooms that have it are left alone', async () => {
+  const h = roomHarness();
+  h.channels.set('old', 2); // occupied, no notice yet
+  h.store.elderRoomCreate('old', 'g');
+  h.channels.set('has', 1);
+  h.store.elderRoomCreate('has', 'g2');
+  h.notes.push(['has', ROOM_NOTICE]);
+  await h.rooms.cleanup();
+  await h.rooms.cleanup();
+  assert.equal(h.notes.filter((n) => n[0] === 'old').length, 1);
+  assert.equal(h.notes.filter((n) => n[0] === 'has').length, 1);
+});
+
+test('the Grand Elder role is assigned by hand: the sweep never adds or removes it', async () => {
+  const t = setup();
+  t.verify('ge', 'g@e.f');
+  t.guildRoles.get('ge').add('grand');
+  await t.sync.syncMember('ge', 'sweep');
+  await t.sync.syncMember('ge', 'sweep');
+  assert.ok(t.roles('ge').includes('grand'));
+});
+
+test('staff-made rooms in the Elder category get the notice from the scan or a channel-create check, once, never the lobby', async () => {
+  const h = roomHarness();
+  h.channels.set('staff-room', 1);
+  h.channels.set('lobby', 1);
+  h.rooms = createElderRooms({ cfg: { ...cfg, elder: { ...cfg.elder, lobbyChannelId: 'lobby' } }, store: h.store, dc: h.dc });
+  await h.rooms.scan();
+  assert.deepEqual(h.notes.map((n) => n[0]), ['staff-room']);
+  assert.equal(await h.rooms.noteIfMissing('staff-room'), false);
+  h.channels.set('new', 1);
+  assert.equal(await h.rooms.noteIfMissing('new'), true);
+  assert.equal(await h.rooms.noteIfMissing('lobby'), false);
 });

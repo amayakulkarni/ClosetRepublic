@@ -75,7 +75,7 @@ export function DiscordLinkForm({ name, linkedEmail, membership, tierName, tierS
             {tourist ? (
               <>You are a <strong>Tourist</strong>: the public places of the Discord server are open to you, free. </>
             ) : (
-              <>No membership for this email yet. You can join the Discord server for free as a <strong>Tourist</strong>, which opens the public places (not the government rooms). </>
+              <>No membership for this email yet. You can still join the Discord server for free as a <strong>Tourist</strong>, which opens the public places (not the government rooms): send Snitch your intro in a Discord DM (type <code>/intro</code> in the server for the template) and a mod will check it. </>
             )}
             {donateUrl && <a href={donateUrl}>Choose a class on Buy Me a Coffee</a>}
             {donateUrl && ' any time to open more.'}
@@ -94,21 +94,6 @@ export function DiscordLinkForm({ name, linkedEmail, membership, tierName, tierS
         {status}
         {shown}
         <p className="hero__actions">
-          {touristEnabled && !tourist && !tierName && (
-            <button
-              className="button"
-              disabled={busy}
-              onClick={() =>
-                run(async () => {
-                  const r = await post('/api/discord/link/tourist');
-                  if (r.ok) router.refresh();
-                  else setMessage({ tone: 'error', text: r.data.error || 'Could not join as a Tourist. Try again.' });
-                })
-              }
-            >
-              Join as a Tourist (free)
-            </button>
-          )}
           <button
             className="button button--ghost"
             disabled={busy}
@@ -154,7 +139,7 @@ export function DiscordLinkForm({ name, linkedEmail, membership, tierName, tierS
           }}
         >
           <div className="field">
-            <label htmlFor={`${id}-email`}>{touristEnabled ? 'Your email (the one on Buy Me a Coffee, or any email you own for the free Tourist role)' : 'Email you use on Buy Me a Coffee'}</label>
+            <label htmlFor={`${id}-email`}>Email you use on Buy Me a Coffee</label>
             <input id={`${id}-email`} type="email" required maxLength={200} autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div className="hp" aria-hidden="true">

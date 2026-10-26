@@ -52,7 +52,7 @@ export const COMMANDS = [
     ],
   },
   {
-    name: 'room', description: 'Elders, Founders, Representatives, Ministers: manage your private voice room',
+    name: 'room', description: 'Elders, Grand Elders, Founders, Representatives, Ministers: manage your private voice room',
     options: [
       { type: 1, name: 'invite', description: 'Let a member see and join your room', options: [{ type: 6, name: 'member', description: 'Who', required: true }] },
       { type: 1, name: 'remove', description: 'Take a member out of your room', options: [{ type: 6, name: 'member', description: 'Who', required: true }] },
@@ -61,6 +61,7 @@ export const COMMANDS = [
       { type: 1, name: 'close', description: 'Close your room now' },
     ],
   },
+  { name: 'intro', description: 'How to join as a free Tourist: the intro template (only you see it)' },
   { name: 'rank', description: 'Your class, its rank, and the days left until the Elder role (only you see it)' },
   { name: 'forget-me', description: 'Delete everything the Republic bot keeps about you' },
   { name: 'tiers', description: 'Founders: check which Buy Me a Coffee levels are not mapped to a class' },
@@ -78,7 +79,7 @@ export function commandDefinitions(cfg) {
  * ctx: { command, sub, userId, roleIds: Set<string>, option(name) → value }
  * deps: { cfg, store, sync, env, discord }
  */
-export async function handleCommand(ctx, { cfg, store, sync, env, discord }) {
+export async function handleCommand(ctx, { cfg, store, sync, env, discord, intro }) {
   const founder = cfg.staffRoleIds[0] && ctx.roleIds.has(cfg.staffRoleIds[0]);
   const linkUrl = `${env.siteUrl}/discord/link`;
   const graceDays = cfg.grace.lapseDays ?? 7;
@@ -141,6 +142,9 @@ export async function handleCommand(ctx, { cfg, store, sync, env, discord }) {
       return `Unlinked. You keep your current class for a ${graceDays}-day grace period, then it is removed. Link again any time with /link.`;
     }
 
+    case 'intro':
+      return intro ? intro.help() : 'The Tourist role is not open yet. Ask a mod.';
+
     case 'rank': {
       const m = store.member(ctx.userId);
       const ent = entitlement(cfg, { memberships: store.membershipsFor(m?.email), grants: store.grantsFor(ctx.userId), member: m });
@@ -149,7 +153,7 @@ export async function handleCommand(ctx, { cfg, store, sync, env, discord }) {
         ? `Your class: ${ent.tier.name}, rank ${cfg.tiers.indexOf(ent.tier) + 1} of ${cfg.tiers.length} (${ladder}).${ent.state === 'grace' ? ` It is in its grace period until ${date(ent.until)}.` : ''}`
         : isTourist(cfg, m)
           ? `You are a Tourist (free): the public places are open to you. Classes, cheapest first: ${ladder}.`
-          : `You are a Visitor (no class). Verify on the link page (type /link) to become a Tourist for free, or pick a class: ${ladder}.`;
+          : `You are a Visitor (no class). Send your intro to Snitch in a DM (type /intro for the template) to become a Tourist for free, or pick a class: ${ladder}.`;
       const activity = cfg.elder.activeDaysRequired ? store.activitySummary(ctx.userId, cfg.elder.activityWindowDays) : undefined;
       const p = elderProgress(cfg, m, ent, Date.now(), activity);
       const need = cfg.elder.afterDays;
@@ -157,7 +161,8 @@ export async function handleCommand(ctx, { cfg, store, sync, env, discord }) {
       let elder;
       if (!cfg.elder.roleId) elder = 'The Elder role is not set up yet.';
       else if (p.elder) elder = `You are an Elder (verified ${p.days} days ago).`;
-      else if (!p.verified) elder = `Elder: the ${need}-day count starts when you verify on the link page (type /link).`;
+      else if (!p.verified) elder = `Elder: the ${need}-day count starts when you get the Tourist role (DM Snitch your intro, type /intro) or verify an email on the link page (type /link).`;
+      else if (p.needsEmail) elder = `Elder: the ${need}-day count is running from your intro (${p.days} day(s) so far), but the role also needs the second verification step: confirm an email on the link page (type /link). Any email you own works.`;
       else if (p.remaining > 0) elder = `Elder: verified ${p.days} day(s) ago, ${p.remaining} day(s) to go (around ${date(p.eligibleAt)}).${standing ? '' : ' The role also needs a class or the Tourist role at that point.'}`;
       else if (!standing) elder = `Elder: your ${need} days are done; the role arrives once you hold a class or the Tourist role again.`;
       else if (!p.activityOk) elder = `Elder: your ${need} days are done. The role also needs activity on ${cfg.elder.activeDaysRequired} of the last ${cfg.elder.activityWindowDays} days (you have ${activity.activeDays}${activity.moderated ? ', and a moderation action in that time counts against it' : ''}).`;
@@ -166,11 +171,12 @@ export async function handleCommand(ctx, { cfg, store, sync, env, discord }) {
     }
 
     case 'forget-me': {
+      await intro?.withdraw(ctx.userId); // also deletes the mods' copy of a waiting intro
       store.forget(ctx.userId);
       // Nothing is left to look up, so take every class and lounge role off now.
       const gm = await discord.fetchMember(ctx.userId);
       if (gm) {
-        const managed = new Set(cfg.tiers.flatMap((t) => [t.roleId, t.accessRoleId]).filter(Boolean));
+        const managed = new Set([...cfg.tiers.flatMap((t) => [t.roleId, t.accessRoleId]), cfg.tourist?.roleId, cfg.tourist?.accessRoleId].filter(Boolean));
         for (const r of gm.roles) if (managed.has(r)) await discord.removeRole(ctx.userId, r, 'forget-me');
       }
       return 'Done. Your link, settings, messages and to-do items are deleted and your class roles are removed. Buy Me a Coffee keeps its own records, and the treasury keeps the payment without your Discord ID. You can link again any time with /link.';

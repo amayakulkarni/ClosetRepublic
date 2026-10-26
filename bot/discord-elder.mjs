@@ -35,5 +35,21 @@ export function createElderAdapter({ getClient, getGuild, cfg }) {
     setLimit: async (id, n) => ch(id).setUserLimit(n),
     peopleIn: (id) => [...(ch(id)?.members?.values() ?? [])].filter((m) => !m.user.bot).length,
     exists: (id) => Boolean(ch(id)),
+    postNote: async (id, text) => {
+      const m = await ch(id)?.send({ content: text, allowedMentions: { parse: [] } });
+      await m?.pin().catch(() => {}); // needs Pin Messages; the notice still stands without the pin
+    },
+    /** Voice channels in the Elder category, except the lobby: rooms the bot made and rooms staff made. */
+    categoryVoiceIds: () =>
+      [...guild().channels.cache.values()]
+        .filter((c) => c.parentId && c.parentId === cfg.elder.categoryId && c.type === ChannelType.GuildVoice && c.id !== cfg.elder.lobbyChannelId)
+        .map((c) => c.id),
+    /** True when the bot already posted the notice in this room's chat (recent messages). */
+    hasNote: async (id) => {
+      const c = ch(id);
+      if (!c?.messages) return true;
+      const recent = await c.messages.fetch({ limit: 30 });
+      return recent.some((m) => m.author.id === getClient().user.id && m.content.startsWith('🔒 **Notice:**'));
+    },
   };
 }
