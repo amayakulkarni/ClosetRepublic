@@ -154,6 +154,10 @@ const pomodoro = createPomodoro({ config: loadPomodoroConfig(), store, pd: produ
 const vcTools = createVcTools({ store, pd: productivity, pomodoro, ambience: () => ambience, log: (t) => console.log(`[vc] ${t}`) });
 
 // Republic Esports League (league.mjs): /league commands, fixtures, reminders, match rooms and standings. Needs "league" in config/discord-tiers.json.
+for (const [from, to] of Object.entries(cfg.league?.renameKeys ?? {})) {
+  const n = store.leagueRenameTeam(from, to);
+  if (n) console.log(`[league] renamed team ${from} to ${to} in ${n} stored row(s)`);
+}
 const league = cfg.league
   ? createLeague({ cfg, store, lg: createLeagueAdapter({ getClient: () => client, getGuild: () => guild, cfg, store }), log: (t) => console.log(`[league] ${t}`) })
   : null;

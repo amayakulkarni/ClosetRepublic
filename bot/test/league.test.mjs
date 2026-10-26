@@ -194,3 +194,13 @@ test('hobby picker: Esports League needs Gaming picked too', () => {
   assert.deepEqual(planHobbyChange(c, new Set(['g', 'e']), []).remove.map((h) => h.slug), ['gaming', 'esports']);
   assert.deepEqual(planHobbyChange(c, new Set(['g', 'e']), ['esports']).remove.map((h) => h.slug), ['gaming', 'esports']);
 });
+
+test('renaming a team key moves stored matches and results over', async () => {
+  const t = setup();
+  await t.league.schedule({ roleIds: crew, userId: 'u', game: 'fortnite', kind: 'h2h', when: '2026-11-07 20:00', teams: ['velvet-hangers', 'sequin-storm'] });
+  await t.league.result({ roleIds: crew, matchId: 1, winner: 'velvet-hangers', bestSport: [], late: [], forfeit: [], penalty: [], placements: [], draw: false });
+  assert.ok(t.store.leagueRenameTeam('velvet-hangers', 'hanger') >= 2);
+  assert.deepEqual(t.store.leagueMatch(1).teams, ['hanger', 'sequin-storm']);
+  assert.equal(t.store.leagueResults(1).filter((r) => r.team === 'hanger').length, 1);
+  assert.equal(t.store.leagueRenameTeam('velvet-hangers', 'hanger'), 0, 'running it again changes nothing');
+});

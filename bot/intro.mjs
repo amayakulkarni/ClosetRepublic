@@ -39,14 +39,14 @@ export const INTRO_FIELDS = [
 ];
 
 export const INTRO_TEMPLATE = [
-  'Age: 23',
-  'Gender: male',
-  'Pronouns: he/his',
-  'Orientation: bisexual',
-  'Location: Delhi',
-  'Education/career: BCA',
-  'Hobbies: music',
-  'Trivia: Love to eat ice cream',
+  'Age: 22',
+  'Gender: female',
+  'Pronouns: she/her',
+  'Orientation: straight',
+  'Location: Pune/Maharashtra/India',
+  '*Education/career: CS',
+  'Hobbies: lego, software, electronics projects',
+  '*Trivia: Married to maths and physics but they had a child without me : (',
 ].join('\n');
 
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');

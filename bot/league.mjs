@@ -133,7 +133,7 @@ export function standings(cfg, resultRows) {
 export function formatStandings(cfg, list, { season, seasonName } = {}) {
   const pad = (s, n) => String(s).padEnd(n);
   const lines = [pad('Team', 22) + pad('Played', 8) + pad('Points', 8) + 'Best Sport'];
-  for (const r of list) lines.push(pad(r.team.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()), 22) + pad(r.played, 8) + pad(r.points, 8) + r.bestSport + (r.tied ? '  =' : ''));
+  for (const r of list) lines.push(pad(cfg.league.teams.find((t) => t.key === r.team)?.name ?? r.team, 22) + pad(r.played, 8) + pad(r.points, 8) + r.bestSport + (r.tied ? '  =' : ''));
   const tie = list.some((r) => r.tied) ? '\n= level on points and Best Sport: settled by rock-paper-scissors in The Arena.' : '';
   return `# 📊 Season ${season}${seasonName ? `: ${seasonName}` : ''} standings\n\`\`\`\n${lines.join('\n')}\n\`\`\`${tie}\nUpdated by the League Commissioners after every league night.`;
 }

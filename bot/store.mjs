@@ -165,6 +165,18 @@ export function openStore(dbPath) {
       })(),
     leagueResults: (season) =>
       db.prepare("SELECT r.* FROM league_results r JOIN league_matches m ON m.id = r.match_id WHERE m.season = ? AND m.status = 'done'").all(season),
+    /** Renames a team key in stored matches and results (after a team is renamed in the layout). Returns how many rows changed. */
+    leagueRenameTeam: (from, to) =>
+      db.transaction(() => {
+        let n = db.prepare('UPDATE league_results SET team = ? WHERE team = ?').run(to, from).changes;
+        for (const m of db.prepare('SELECT id, teams FROM league_matches').all()) {
+          const parts = String(m.teams).split(',');
+          if (!parts.includes(from)) continue;
+          db.prepare('UPDATE league_matches SET teams = ? WHERE id = ?').run(parts.map((k) => (k === from ? to : k)).join(','), m.id);
+          n += 1;
+        }
+        return n;
+      })(),
     leagueState: (key, fallback = null) => db.prepare('SELECT value FROM league_state WHERE key = ?').get(key)?.value ?? fallback,
     leagueStateSet: (key, value) => db.prepare('INSERT INTO league_state (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').run(key, String(value)),
     pomodoroMuteAdd: (userId, channelId) =>

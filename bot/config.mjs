@@ -21,10 +21,10 @@ const DEFAULT_LEVEL_NAMES = {
 const TIER_NAMES = { alien: 'Alien', citizen: 'Citizen', 'top-1': 'Top 1%', 'upper-middle-class': 'Upper Middle Class', 'middle-class': 'Middle Class' };
 
 const DEFAULT_TEAMS = [
-  { key: 'velvet-hangers', name: 'Velvet Hangers', emoji: '🧥' },
-  { key: 'sequin-storm', name: 'Sequin Storm', emoji: '✨' },
-  { key: 'mothball-mavericks', name: 'Mothball Mavericks', emoji: '🦋' },
-  { key: 'wardrobe-wolves', name: 'Wardrobe Wolves', emoji: '🐺' },
+  { key: 'hanger', name: 'Hanger', emoji: '🧥' },
+  { key: 'drawer', name: 'Drawer', emoji: '🗄️' },
+  { key: 'shelf', name: 'Shelf', emoji: '📚' },
+  { key: 'termites', name: 'Termites', emoji: '🐜' },
 ];
 
 /** league: { commissionerRoleId, categoryId, teams: [{ key, roleId, name?, emoji? }], channels: { fixtures, scoreboard, office, matchReports }, games? } */
@@ -41,6 +41,8 @@ function leagueConfig(raw) {
     commissionerRoleId: String(raw.commissionerRoleId || ''),
     categoryId: String(raw.categoryId || ''),
     teams,
+    // Optional one-off: { "old-key": "new-key" } renames teams in stored matches and results at start (safe to leave in).
+    renameKeys: raw.renameKeys && typeof raw.renameKeys === 'object' ? Object.fromEntries(Object.entries(raw.renameKeys).map(([a, b]) => [String(a), String(b)])) : {},
     channels: {
       fixtures: String(raw.channels?.fixtures || ''),
       scoreboard: String(raw.channels?.scoreboard || ''),

@@ -56,7 +56,7 @@ function setup(overrides = {}) {
   return { intro, store, calls, dms, guildRoles };
 }
 const mod = new Set(['founder']);
-const text = (extra = '') => INTRO_TEMPLATE.replace('Age: 23', `Age: ${extra || 23}`);
+const text = (extra = '') => INTRO_TEMPLATE.replace('Age: 22', `Age: ${extra || 23}`);
 
 test('parseIntro reads the template, starred and loose labels, and multi-line values', () => {
   const v = parseIntro(`Age: 23\nGender: male\nPronouns: he/his\nOrientation: bisexual\nLocation: Delhi\n*Education/career: Bca\nHobbies: music\nand books\n*Trivia: Love to eat ice cream`);
