@@ -42,7 +42,7 @@ export const teamName = (cfg, key) => {
   return t ? `${t.emoji ? `${t.emoji} ` : ''}${t.name}` : key;
 };
 
-/** "velvet-hangers, Sequin Storm" → team keys (names, keys and role words all work), or { error }. */
+/** "hanger, Drawer" → team keys (names, keys and role words all work), or { error }. */
 export function resolveTeams(cfg, text) {
   const keys = [];
   for (const part of String(text ?? '').split(/[,;]/).map((s) => s.trim().toLowerCase()).filter(Boolean)) {

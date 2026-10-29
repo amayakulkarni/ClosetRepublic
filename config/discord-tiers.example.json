@@ -86,10 +86,10 @@
     "commissionerRoleId": "",
     "categoryId": "",
     "teams": [
-      { "key": "velvet-hangers", "roleId": "" },
-      { "key": "sequin-storm", "roleId": "" },
-      { "key": "mothball-mavericks", "roleId": "" },
-      { "key": "wardrobe-wolves", "roleId": "" }
+      { "key": "hanger", "roleId": "" },
+      { "key": "drawer", "roleId": "" },
+      { "key": "shelf", "roleId": "" },
+      { "key": "termites", "roleId": "" }
     ],
     "channels": {
       "fixtures": "",

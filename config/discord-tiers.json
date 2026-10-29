@@ -216,27 +216,27 @@
     "categoryId": "1563877148396101693",
     "teams": [
       {
-        "key": "velvet-hangers",
-        "name": "Velvet Hangers",
+        "key": "hanger",
+        "name": "Hanger",
         "emoji": "🧥",
         "roleId": "1563877078170869840"
       },
       {
-        "key": "sequin-storm",
-        "name": "Sequin Storm",
-        "emoji": "✨",
+        "key": "drawer",
+        "name": "Drawer",
+        "emoji": "🗄️",
         "roleId": "1563877080137990184"
       },
       {
-        "key": "mothball-mavericks",
-        "name": "Mothball Mavericks",
-        "emoji": "🦋",
+        "key": "shelf",
+        "name": "Shelf",
+        "emoji": "📚",
         "roleId": "1563877082029625457"
       },
       {
-        "key": "wardrobe-wolves",
-        "name": "Wardrobe Wolves",
-        "emoji": "🐺",
+        "key": "termites",
+        "name": "Termites",
+        "emoji": "🐜",
         "roleId": "1563877083762008066"
       }
     ],
