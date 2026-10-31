@@ -171,6 +171,17 @@ export function PassportForm() {
     [result],
   );
 
+  // After a successful generation, bring the instructions and the download button into view.
+  useEffect(() => {
+    if (!result || !status.current) return;
+    const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    status.current.focus({ preventScroll: true });
+    status.current.scrollIntoView({
+      behavior: calm ? "auto" : "smooth",
+      block: "start",
+    });
+  }, [result]);
+
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
@@ -219,7 +230,6 @@ export function PassportForm() {
       a.href = url;
       a.download = name;
       a.click();
-      requestAnimationFrame(() => status.current?.focus());
     } catch (err) {
       console.error(err);
       setError(
@@ -404,9 +414,11 @@ export function PassportForm() {
         </p>
       )}
 
-      <button type="submit" className="button button--big" disabled={busy}>
-        {busy ? "Printing your passport…" : "Generate my passport (PDF)"}
-      </button>
+      {!result && (
+        <button type="submit" className="button button--big" disabled={busy}>
+          {busy ? "Printing your passport…" : "Generate locally"}
+        </button>
+      )}
       <p className="hint">
         Everything happens in your browser. Nothing you type or upload is sent
         anywhere.
@@ -420,14 +432,15 @@ export function PassportForm() {
           role="status"
         >
           <h2>Your passport is ready</h2>
-          <p>
-            <a className="button" href={result.url} download={result.name}>
-              Download {result.name}
-            </a>
+          <p className="notice passport-ready__print">
+            <strong>Print it back to back (double-sided), flipping on the long
+            edge.</strong>{" "}
+            The pages only line up when both sides of each sheet are printed
+            and the sheet is turned over along its long edge.
           </p>
           <ol>
             <li>
-              Print the 6 pages on A4 at actual size (100%), double-sided,
+              Print the 6 pages on A4 at actual size (100%), back to back,
               flipping on the long edge. Sheet 1 holds the covers, so you can
               print it on matte or glossy photo paper.
             </li>
@@ -442,6 +455,11 @@ export function PassportForm() {
             </li>
             <li>Staple or stitch along the fold. Welcome home, citizen.</li>
           </ol>
+          <p>
+            <a className="button button--big" href={result.url} download={result.name}>
+              Download {result.name}
+            </a>
+          </p>
         </div>
       )}
     </form>

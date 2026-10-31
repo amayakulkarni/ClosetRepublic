@@ -25,8 +25,8 @@ export default async function Home() {
           <h1>{on ? "Welcome to the Closet Republic" : "Closet Republic"}</h1>
           <p className="lede">
             {on
-              ? "A sovereign nation for harmonious people who once had to hide their true selves to fit in a box. No borders, no boxes, naturally exceptional."
-              : "An online home for people who once had to hide who they are to avoid discrimination and being cast out."}
+              ? "A sovereign nation for harmonious people who once had to hide their true selves to fit in a box. No borders, no boxes, naturally exceptional. For gender and sexual minorities, and for neurodivergent people too."
+              : "An online home for people who once had to hide or mask who they are to avoid discrimination and being cast out, including gender and sexual minorities and neurodivergent people."}
           </p>
 
           <p className="hero__actions">

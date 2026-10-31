@@ -1,13 +1,38 @@
 ---
 title: About Closet Republic
-description: A playful online nation for everyone who once hid who they are to stay safe, and a real, open-source home for queer creators and mutual aid.
+description: A playful online nation for everyone who once hid who they are to stay safe, including gender and sexual minorities and neurodivergent people, and a real, open-source home for creators and mutual aid.
 ---
 
 # About Closet Republic
 
 Closet Republic is a nation with no borders, no army and no border guards. It is a playful online republic for everyone who has ever hidden who they are to stay safe, to keep a job, to keep a family, or simply to get through the day.
 
+Closet Republic began as a home for gender and sexual minorities. It now stands for neurodivergent people too, including people with ADHD and autism, because the same habit of hiding, fitting in and masking runs through all three.
+
 We have a constitution, a gazette, ministries and passports. None of them will get you through an airport. All of them are meant seriously anyway.
+
+## The story so far
+
+Closet Republic lives in a parallel universe. It never crosses with the real one, and nothing in the story is about real people or real governments.
+
+In that universe a dictator rules, and the whole country runs on black and white. Everything gets sorted into one of two boxes, including people, their gender and their sex. The system was built for people who fit the boxes. It has no room for neurodivergent people, and it ignores people with ADHD and autism or paints them in a bad light for no good reason.
+
+History in that universe is a child of all humans, and it carries all of their bias. It works hard to keep things black and white, so the boxes look like they were always there.
+
+Ama is a woman with a trans experience, and she lives in that world. Everywhere she looks there are comical, unnatural, compulsory binaries. She is tired, and she does not know why. The reason, which she only learns later, is masking: years of acting like someone else to get by.
+
+Along the way she finds out that she wants to be a bit like the other side of the binary too, and that feels completely backwards to her. She explores it anyway. She discovers that her real identity is colourful, and that white light is made of a whole spectrum. She starts telling other people, and most of them recognise themselves in it.
+
+Together they found a new republic and call it Closet Republic. It acknowledges the true, natural side of things that the regime refuses to see. The story goes on from there, with the rebels and the regime in a long struggle. The regime will be forced to accept nature as it is, and it will fall.
+
+## What we think
+
+- **Everyone is unique, and valid as they are.**
+- **It is unnatural to sort people into boxes.**
+- **Nothing is wrong with accommodating someone's needs.**
+- **Nature is diverse and unique by default.**
+
+Closet Republic speaks up for gender and sexual minorities and for neurodivergent people, and for building a world that works better for all three.
 
 ## Is Closet Republic a business?
 
@@ -31,10 +56,10 @@ So the Republic is not a parade you have to march in. It is a place you can ente
 
 You belong to yourself. That is the founding principle of the Republic.
 
-- **No gatekeeping.** We don't ask for proof of who you are, how you identify, what your documents say, or whether you have "really" been through enough. Nobody here issues certificates of queerness.
+- **No gatekeeping.** We don't ask for proof of who you are, how you identify, what your documents say, or whether you have "really" been through enough. Nobody here issues certificates of queerness, or of neurodivergence.
 - **No paperwork for your identity.** Your name, your pronouns and your story are yours to state and to change. We will never ask a doctor, a court, a government office or a family member to confirm them.
 - **Pseudonyms are welcome.** Citizenship needs no legal name. Our passport is generated entirely in your own browser; the details you put in it never reach our server.
-- **Allies are welcome too.** Closet Republic is for anyone who has hidden part of themselves to fit in and avoid discrimination, and for the people who stand with them.
+- **Allies are welcome too.** Closet Republic is for anyone who has hidden or masked part of themselves to fit in and avoid discrimination, and for the people who stand with them.
 
 The Republic's own constitution sets out the fundamental rights of its citizens and how its government, the GCR, is chosen. It is a living document, and it can only be changed by the community it governs.
 

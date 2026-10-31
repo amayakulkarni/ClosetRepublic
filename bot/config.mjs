@@ -27,22 +27,29 @@ const DEFAULT_TEAMS = [
   { key: 'termites', name: 'Termites', emoji: '🐜' },
 ];
 
+// The league teams were renamed. A config written before that (old keys and names) is read as the new teams, so a
+// stale discord-tiers.json can never show the old names; stored matches under old keys are moved at start.
+const LEGACY_TEAM_KEYS = { 'velvet-hangers': 'hanger', 'sequin-storm': 'drawer', 'mothball-mavericks': 'shelf', 'wardrobe-wolves': 'termites' };
+
 /** league: { commissionerRoleId, categoryId, teams: [{ key, roleId, name?, emoji? }], channels: { fixtures, scoreboard, office, matchReports }, games? } */
 function leagueConfig(raw) {
   if (!raw?.teams?.length) return null;
   const teams = raw.teams
     .filter((t) => t?.key && t?.roleId)
     .map((t) => {
-      const d = DEFAULT_TEAMS.find((x) => x.key === t.key);
-      return { key: String(t.key), name: String(t.name || d?.name || t.key), emoji: t.emoji ?? d?.emoji ?? '', roleId: String(t.roleId) };
+      const legacy = LEGACY_TEAM_KEYS[t.key];
+      const key = legacy ?? String(t.key);
+      const d = DEFAULT_TEAMS.find((x) => x.key === key);
+      // A legacy entry takes the new name and emoji whatever the old file says.
+      return { key, name: String((legacy ? d?.name : t.name) || d?.name || key), emoji: (legacy ? d?.emoji : t.emoji) ?? d?.emoji ?? '', roleId: String(t.roleId) };
     });
   if (teams.length < 2) return null;
   return {
     commissionerRoleId: String(raw.commissionerRoleId || ''),
     categoryId: String(raw.categoryId || ''),
     teams,
-    // Optional one-off: { "old-key": "new-key" } renames teams in stored matches and results at start (safe to leave in).
-    renameKeys: raw.renameKeys && typeof raw.renameKeys === 'object' ? Object.fromEntries(Object.entries(raw.renameKeys).map(([a, b]) => [String(a), String(b)])) : {},
+    // { "old-key": "new-key" }: renames teams in stored matches and results at start (the earlier team names are built in; add more here; safe to leave in).
+    renameKeys: { ...LEGACY_TEAM_KEYS, ...(raw.renameKeys && typeof raw.renameKeys === 'object' ? Object.fromEntries(Object.entries(raw.renameKeys).map(([a, b]) => [String(a), String(b)])) : {}) },
     channels: {
       fixtures: String(raw.channels?.fixtures || ''),
       scoreboard: String(raw.channels?.scoreboard || ''),

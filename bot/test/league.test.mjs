@@ -8,6 +8,7 @@ import Database from 'better-sqlite3';
 import { openStore } from '../store.mjs';
 import { DEFAULT_GAMES, createLeague, formatStandings, parseWhen, resolveTeams, scoreMatch, standings } from '../league.mjs';
 import { planHobbyChange } from '../hobbies.mjs';
+import { loadTiers } from '../config.mjs';
 
 mock.timers.enable({ apis: ['Date'], now: Date.parse('2026-11-01T12:00:00Z') });
 
@@ -203,4 +204,13 @@ test('renaming a team key moves stored matches and results over', async () => {
   assert.deepEqual(t.store.leagueMatch(1).teams, ['hanger', 'sequin-storm']);
   assert.equal(t.store.leagueResults(1).filter((r) => r.team === 'hanger').length, 1);
   assert.equal(t.store.leagueRenameTeam('velvet-hangers', 'hanger'), 0, 'running it again changes nothing');
+});
+
+test('an older config with the old team keys and names is read as Hanger, Drawer, Shelf and Termites', () => {
+  const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'crtiers-')), 'tiers.json');
+  const old = [['velvet-hangers', 'Velvet Hangers'], ['sequin-storm', 'Sequin Storm'], ['mothball-mavericks', 'Mothball Mavericks'], ['wardrobe-wolves', 'Wardrobe Wolves']];
+  fs.writeFileSync(file, JSON.stringify({ guildId: '1', tiers: [], league: { teams: old.map(([key, name], i) => ({ key, name, emoji: 'x', roleId: `r${i}` })), channels: {} } }));
+  const { league } = loadTiers(file);
+  assert.deepEqual(league.teams.map((t) => [t.key, t.name, t.roleId]), [['hanger', 'Hanger', 'r0'], ['drawer', 'Drawer', 'r1'], ['shelf', 'Shelf', 'r2'], ['termites', 'Termites', 'r3']]);
+  assert.equal(league.renameKeys['velvet-hangers'], 'hanger');
 });

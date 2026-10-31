@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: 'Closet Republic', template: '%s · Closet Republic' },
   description:
-    'Closet Republic: a parody online country for harmonious people who once had to hide their true selves to fit in a box.',
+    'Closet Republic: a parody online country for harmonious people, including gender and sexual minorities and neurodivergent people, who once had to hide their true selves to fit in a box.',
   openGraph: { images: ['/brand/social-logo.png'], siteName: 'Closet Republic' },
 };
 
